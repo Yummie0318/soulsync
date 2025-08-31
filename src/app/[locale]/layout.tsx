@@ -2,20 +2,19 @@
 import type { ReactNode } from "react";
 import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
-import { use } from "react";
 
 type Props = {
   children: ReactNode;
-  params: Promise<{ locale: string }>;
+  params: { locale: string };
 };
 
-export default function LocaleLayout({ children, params }: Props) {
-  const { locale } = use(params);
-  console.log("📂 LocaleLayout -> Unwrapped params:", { locale });
+export default async function LocaleLayout({ children, params }: Props) {
+  const { locale } = params;
+  console.log("📂 LocaleLayout -> Params:", { locale });
 
-  let messages;
+  let messages: Record<string, string>;
   try {
-    messages = require(`../../messages/${locale}.json`);
+    messages = (await import(`../../messages/${locale}.json`)).default;
     console.log("✅ LocaleLayout -> Loaded messages:", messages);
   } catch (error) {
     console.error(`❌ No messages file found for locale: ${locale}`, error);
@@ -23,7 +22,6 @@ export default function LocaleLayout({ children, params }: Props) {
   }
 
   return (
-    // ❌ don’t add <html> or <body> here
     <NextIntlClientProvider locale={locale} messages={messages}>
       {children}
     </NextIntlClientProvider>
