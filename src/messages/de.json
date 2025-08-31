@@ -1,0 +1,18 @@
+{
+  "LandingPage": {
+   "welcome": "SoulSync AI",
+    "tagline": "KI-gestütztes Dating",
+    "subtitle": "Entdecken Sie bedeutungsvolle Verbindungen durch intelligente Persönlichkeitsanalyse und authentische Kompatibilitäts-Matching.",
+    "trending": "🔥 Im Trend",
+    "getStarted": "Jetzt starten",
+    "login": "Einloggen",
+    "feature1": "KI-Analyse",
+    "feature2": "Echte Übereinstimmungen",
+    "feature3": "Wahre Liebe"
+  },
+  "HomePage": {
+    "subtitle": "KI-gestütztes Dating",
+    "choose": "Wähle deine Sprache",
+    "continue": "Fortfahren"
+  }
+}

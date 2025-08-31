@@ -24,3 +24,22 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes dual-gradient-wave {
+  0% { background-position: 100% 50%; }
+  50% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+.dual-wave-btn {
+  background: linear-gradient(90deg, #ff1493, #00ffff); /* pink to light blue */
+  background-size: 300% 300%;
+  animation: dual-gradient-wave 6s ease infinite;
+  color: white;
+}
+.dual-wave-btn:hover {
+  background: linear-gradient(90deg, #ff69b4, #00bfff); /* stronger colors on hover */
+}
+
+
+

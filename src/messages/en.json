@@ -1,0 +1,18 @@
+{
+  "LandingPage": {
+  "welcome": "SoulSync AI",
+    "tagline": "AI-Powered Dating",
+    "subtitle": "Discover meaningful connections through intelligent personality analysis and authentic compatibility matching.",
+    "trending": "🔥 TRENDING NOW",
+    "getStarted": "Get Started",
+    "login": "Login",
+    "feature1": "AI Analysis",
+    "feature2": "True Matches",
+    "feature3": "Real Love"
+  },
+  "HomePage": {
+    "subtitle": "AI-Powered Dating",
+    "choose": "Choose your language",
+    "continue": "Continue"
+  }
+}

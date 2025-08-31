@@ -1,0 +1,18 @@
+{
+  "LandingPage": {
+    "welcome": "SoulSync AI",
+    "tagline": "AI智能约会",
+    "subtitle": "通过智能个性分析和真实的匹配机制，发现有意义的连接。",
+    "trending": "🔥 热门",
+    "getStarted": "开始使用",
+    "login": "登录",
+    "feature1": "AI分析",
+    "feature2": "真实匹配",
+    "feature3": "真爱"
+  },
+  "HomePage": {
+    "subtitle": "AI驱动的约会",
+    "choose": "选择你的语言",
+    "continue": "继续"
+  }
+}
