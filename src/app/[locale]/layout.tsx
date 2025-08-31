@@ -5,11 +5,11 @@ import { notFound } from "next/navigation";
 
 type Props = {
   children: ReactNode;
-  params: { locale: string };
+  params: { locale: string }; // ✅ plain object
 };
 
 export default async function LocaleLayout({ children, params }: Props) {
-  const { locale } = params;
+  const { locale } = params; // ✅ works now
   console.log("📂 LocaleLayout -> Params:", { locale });
 
   let messages: Record<string, string>;
