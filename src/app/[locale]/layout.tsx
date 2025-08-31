@@ -3,13 +3,13 @@ import type { ReactNode } from "react";
 import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
 
-type Props = {
+type LocaleLayoutProps = {
   children: ReactNode;
-  params: { locale: string }; // ✅ plain object
+  params: Promise<{ locale: string }>; // ✅ params is a Promise
 };
 
-export default async function LocaleLayout({ children, params }: Props) {
-  const { locale } = params; // ✅ works now
+export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
+  const { locale } = await params; // ✅ must await
   console.log("📂 LocaleLayout -> Params:", { locale });
 
   let messages: Record<string, string>;
