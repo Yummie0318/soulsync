@@ -5,9 +5,16 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { CheckCircle } from "lucide-react";
 
+// ✅ Import the logo animation
+import LogoAnimation from "./[locale]/animation/LogoAnimation";
+
+
 type Lang = "en" | "de" | "zh";
 
-const translations: Record<Lang, { subtitle: string; choose: string; continue: string }> = {
+const translations: Record<
+  Lang,
+  { subtitle: string; choose: string; continue: string }
+> = {
   en: {
     subtitle: "AI-Powered Dating",
     choose: "Choose your language",
@@ -42,71 +49,51 @@ export default function HomePage() {
   ];
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen relative overflow-hidden text-center px-6 bg-gradient-to-br from-purple-900 via-purple-800 to-pink-600">
-      {/* Logo + Title */}
-      <div className="flex flex-col sm:flex-row items-center justify-center mb-8">
-        
-        {/* Animated Logo */}
-       {/* Animated Logo */}
-<div className="w-24 h-24 flex items-center justify-center bg-white/10 rounded-2xl backdrop-blur-sm shadow-lg mr-4">
-  <motion.svg width="60" height="60" viewBox="0 0 60 60">
-    {/* Rotating ring ellipses */}
-    <motion.ellipse
-      cx="30"
-      cy="30"
-      rx="20"
-      ry="15"
-      fill="none"
-      stroke="#FF8C00"
-      strokeWidth="3"
-      transform="rotate(-20 30 30)"
-      animate={{ rotate: 360 }}
-      transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
-    />
-    <motion.ellipse
-      cx="30"
-      cy="30"
-      rx="20"
-      ry="15"
-      fill="none"
-      stroke="#FF8C00"
-      strokeWidth="3"
-      transform="rotate(20 30 30)"
-      animate={{ rotate: -360 }}
-      transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
-    />
-    {/* Two small hearts side by side */}
-    <motion.path
-      d="M15 20c-1.5-3-6-3-6 0 0 3 6 7 6 7s6-4 6-7c0-3-4.5-3-6 0z"
-      fill="#DC2626"
-      animate={{ scale: [1, 1.1, 1] }}
-      transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-    />
-    <motion.path
-      d="M35 20c-1.5-3-6-3-6 0 0 3 6 7 6 7s6-4 6-7c0-3-4.5-3-6 0z"
-      fill="#DC2626"
-      animate={{ scale: [1, 1.1, 1] }}
-      transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-    />
-  </motion.svg>
-</div>
-
-        {/* Title & Subtitle */}
-        <div className="text-center sm:text-left mt-4 sm:mt-0">
-          <h1 className="text-5xl font-extrabold text-white">SoulSync AI</h1>
-          <p className="text-orange-400 text-lg mt-2">{translations[selectedLang].subtitle}</p>
-        </div>
+    <main className="relative flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 px-6 text-center overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-pink-600/30 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-purple-600/30 rounded-full blur-3xl animate-pulse delay-300" />
       </div>
 
+      {/* ✅ Logo Animation + Title */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="flex flex-col items-center mb-10"
+      >
+        <LogoAnimation />
+
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-white drop-shadow-md">
+          SoulSync AI
+        </h1>
+        <p className="text-pink-400 text-lg sm:text-xl mt-2">
+          {translations[selectedLang].subtitle}
+        </p>
+      </motion.div>
+
       {/* Choose Language */}
-      <p className="text-white text-md mb-5">{translations[selectedLang].choose}</p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl w-full mb-8">
-        {languages.map((lang) => (
-          <button
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="text-white/80 text-md sm:text-lg mb-6"
+      >
+        {translations[selectedLang].choose}
+      </motion.p>
+
+      {/* Language Options */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl w-full mb-10">
+        {languages.map((lang, index) => (
+          <motion.button
             key={lang.code}
             onClick={() => setSelectedLang(lang.code)}
-            className={`relative bg-white/10 shadow-md rounded-2xl p-6 hover:shadow-xl transition border-2 ${
-              selectedLang === lang.code ? "border-orange-500" : "border-transparent"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 * index }}
+            className={`relative bg-white/10 backdrop-blur-lg shadow-lg rounded-2xl p-6 hover:shadow-pink-500/30 hover:border-pink-500/60 transition border-2 ${
+              selectedLang === lang.code ? "border-pink-500" : "border-transparent"
             } text-white text-left`}
           >
             <div className="flex items-center justify-between">
@@ -115,21 +102,23 @@ export default function HomePage() {
                 <p className="text-sm text-white/70">{lang.description}</p>
               </div>
               {selectedLang === lang.code && (
-                <CheckCircle className="text-orange-500 w-6 h-6" />
+                <CheckCircle className="text-pink-500 w-6 h-6 shrink-0" />
               )}
             </div>
-          </button>
+          </motion.button>
         ))}
       </div>
 
       {/* Continue Button */}
-      <button
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={handleContinue}
         disabled={!selectedLang}
-        className="w-full max-w-md bg-orange-500 text-white py-4 rounded-2xl shadow-md hover:bg-orange-600 transition disabled:opacity-50"
+        className="w-full max-w-md bg-pink-600 text-white py-4 rounded-2xl shadow-lg hover:bg-pink-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg"
       >
         {translations[selectedLang].continue}
-      </button>
+      </motion.button>
     </main>
   );
 }

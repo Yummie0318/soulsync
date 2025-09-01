@@ -14,5 +14,38 @@
     "subtitle": "AI-Powered Dating",
     "choose": "Choose your language",
     "continue": "Continue"
-  }
+  },
+  "Login": {
+    "welcomeBack": "Welcome Back!",
+    "signingIn": "Sign in to continue your journey",
+    "email": "Email Address",
+    "enterEmail": "Enter your email",
+    "password": "Password",
+    "enterPassword": "Enter your password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "signIn": "Sign In",
+    "newToSoulSync": "New to SoulSync?",
+    "startNewJourney": "Start your journey"
+  },
+  "AiDrawing": {
+  "title": "Draw a heart or just wait...",
+  "loading": "Redirecting once loading finishes..."
+},
+"TreeQuiz": {
+  "chooseYourTree": "Choose Your Tree",
+  "subtitle": "Which tree speaks to your soul?",
+  "optionEvergreen": "Strong and evergreen",
+  "optionGrounded": "Wise and grounded",
+  "optionTropical": "Free-spirited and tropical",
+  "optionDelicate": "Beautiful and delicate"
+},
+"FeelingsQuiz": {
+  "title": "How Are You Feeling?",
+  "subtitle": "Select the emotion that resonates with you right now.",
+  "happy": "Happy",
+  "sad": "Sad",
+  "peaceful": "Peaceful",
+  "inLove": "In Love"
+}
 }

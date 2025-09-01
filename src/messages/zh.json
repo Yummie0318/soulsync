@@ -14,5 +14,40 @@
     "subtitle": "AI驱动的约会",
     "choose": "选择你的语言",
     "continue": "继续"
-  }
+  },
+"Login": {
+  "welcomeBack": "欢迎回来！",
+  "signingIn": "登录以继续探索智能匹配",
+  "email": "电子邮箱",
+  "enterEmail": "请输入您的电子邮箱",
+  "password": "密码",
+  "enterPassword": "请输入您的密码",
+  "rememberMe": "记住我",
+  "forgotPassword": "忘记密码？",
+  "signIn": "登录",
+  "newToSoulSync": "第一次使用 SoulSync？",
+  "startNewJourney": "开启新的旅程"
+},
+"AiDrawing": {
+  "title": "画一个心，或者耐心等待…",
+  "loading": "加载完成后将自动跳转..."
+},
+"TreeQuiz": {
+  "chooseYourTree": "选择你的树",
+  "subtitle": "哪棵树与你的灵魂共鸣？",
+  "optionEvergreen": "坚强而常青",
+  "optionGrounded": "智慧而踏实",
+  "optionTropical": "自由奔放又热带",
+  "optionDelicate": "美丽而娇柔"
+},
+"FeelingsQuiz": {
+  "title": "你现在的感觉是？",
+  "subtitle": "请选择最符合你此刻的情绪。",
+  "happy": "开心",
+  "sad": "难过",
+  "peaceful": "平静",
+  "inLove": "恋爱中"
+}
+
+
 }

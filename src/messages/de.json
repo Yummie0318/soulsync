@@ -14,5 +14,40 @@
     "subtitle": "KI-gestütztes Dating",
     "choose": "Wähle deine Sprache",
     "continue": "Fortfahren"
-  }
+  },
+  "Login": {
+    "welcomeBack": "Willkommen zurück",
+    "signingIn": "Anmeldung läuft...",
+    "email": "E-Mail",
+    "enterEmail": "Geben Sie Ihre E-Mail ein",
+    "password": "Passwort",
+    "enterPassword": "Passwort eingeben",
+    "rememberMe": "Angemeldet bleiben",
+    "signIn": "Einloggen",
+    "forgotPassword": "Passwort vergessen?",
+    "newToSoulSync": "Neu bei SoulSync?",
+    "startNewJourney": "Neue Reise beginnen"
+  },
+  "AiDrawing": {
+  "title": "Zeichne ein Herz oder warte einfach...",
+  "loading": "Weiterleitung sobald das Laden abgeschlossen ist..."
+},
+"TreeQuiz": {
+  "chooseYourTree": "Wähle deinen Baum",
+  "subtitle": "Welcher Baum spricht zu deiner Seele?",
+  "optionEvergreen": "Stark und immergrün",
+  "optionGrounded": "Weise und geerdet",
+  "optionTropical": "Freiheitsliebend und tropisch",
+  "optionDelicate": "Schön und zart"
+},
+"FeelingsQuiz": {
+  "title": "Wie fühlst du dich?",
+  "subtitle": "Wähle die Emotion, die gerade zu dir passt.",
+  "happy": "Glücklich",
+  "sad": "Traurig",
+  "peaceful": "Friedlich",
+  "inLove": "Verliebt"
+}
+
+
 }
