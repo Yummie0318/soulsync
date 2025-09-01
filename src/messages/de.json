@@ -47,6 +47,13 @@
   "sad": "Traurig",
   "peaceful": "Friedlich",
   "inLove": "Verliebt"
+},
+"JourneyBegin": {
+  "titleLine1": "Deine Reise",
+  "titleLine2": "beginnt gleich",
+  "subtitle": "Jetzt ist es Zeit, bedeutsame Verbindungen mit Menschen zu entdecken, die dich wirklich verstehen.",
+  "cta": "Registrieren",
+  "footerPrompt": "Bereit, dein perfektes Match zu finden?"
 }
 
 

@@ -47,6 +47,13 @@
   "sad": "难过",
   "peaceful": "平静",
   "inLove": "恋爱中"
+},
+"JourneyBegin": {
+  "titleLine1": "你的旅程",
+  "titleLine2": "即将开始",
+  "subtitle": "现在是时候与真正理解你的人建立有意义的连接了。",
+  "cta": "注册",
+  "footerPrompt": "准备好找到你的理想匹配了吗？"
 }
 
 

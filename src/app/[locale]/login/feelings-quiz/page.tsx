@@ -2,12 +2,13 @@
 
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 
 export default function FeelingsQuizPage() {
   const t = useTranslations("FeelingsQuiz");
   const { locale } = useParams() as { locale: string };
+  const router = useRouter();
 
   const feelings = [
     { emoji: "😊", label: t("happy"), color: "text-yellow-300" },
@@ -18,7 +19,8 @@ export default function FeelingsQuizPage() {
 
   const handleSelect = (feeling: string) => {
     console.log("Selected feeling:", feeling, "locale:", locale);
-    // 👉 You can route to a result page or store response
+    // Redirect to journey-begin page
+    router.push(`/${locale}/login/journey-begin`);
   };
 
   return (
@@ -44,21 +46,19 @@ export default function FeelingsQuizPage() {
           <p className="text-white/70 mt-2">{t("subtitle")}</p>
         </motion.div>
 
-   {/* Image */}
-<div className="mb-6 flex justify-center">
-  <div className="rounded-xl overflow-hidden border-2 border-pink-400/50 shadow-lg shadow-pink-500/30 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mx-auto">
-    <Image
-      src="/images/feeling.png"
-      alt="Feelings"
-      width={600}
-      height={300} // reduced height
-      className="object-cover w-full h-48 sm:h-56 md:h-64 lg:h-72" // responsive height
-      priority
-    />
-  </div>
-</div>
-
-
+        {/* Image */}
+        <div className="mb-6 flex justify-center">
+          <div className="rounded-xl overflow-hidden border-2 border-pink-400/50 shadow-lg shadow-pink-500/30 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mx-auto">
+            <Image
+              src="/images/feeling.png"
+              alt="Feelings"
+              width={600}
+              height={300}
+              className="object-cover w-full h-48 sm:h-56 md:h-64 lg:h-72"
+              priority
+            />
+          </div>
+        </div>
 
         {/* Feeling Options */}
         <div className="grid grid-cols-2 gap-4">

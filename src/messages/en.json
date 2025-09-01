@@ -47,5 +47,12 @@
   "sad": "Sad",
   "peaceful": "Peaceful",
   "inLove": "In Love"
+},
+"JourneyBegin": {
+  "titleLine1": "Your Journey is",
+  "titleLine2": "About to Begin",
+  "subtitle": "Now it's time to discover meaningful connections with people who truly understand you.",
+  "cta": "Sign Up",
+  "footerPrompt": "Ready to find your perfect match?"
 }
 }
