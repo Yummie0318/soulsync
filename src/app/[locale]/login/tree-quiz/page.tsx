@@ -1,13 +1,16 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
+import { useState } from "react";
 
 export default function TreeQuizPage() {
   const t = useTranslations("TreeQuiz");
   const { locale } = useParams() as { locale: string };
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const trees = [
     { emoji: "🌲", label: t("optionEvergreen"), color: "text-green-800" },
@@ -17,9 +20,9 @@ export default function TreeQuizPage() {
   ];
 
   const handleSelect = (tree: string) => {
-    console.log("Selected tree:", tree);
-    // 👉 redirect to feelings quiz
-    router.push(`/${locale}/login/feelings-quiz`);
+    console.log("Selected tree:", tree, "locale:", locale);
+    setLoading(true);
+    router.push(`/${locale}/login/feelings-quiz`); // instant redirect
   };
 
   return (
@@ -36,8 +39,8 @@ export default function TreeQuizPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-10"
+          transition={{ duration: 0.3 }}
+          className="mb-8"
         >
           <h1 className="text-2xl font-bold text-white drop-shadow-md">
             {t("chooseYourTree")}
@@ -45,26 +48,58 @@ export default function TreeQuizPage() {
           <p className="text-white/70 mt-2">{t("subtitle")}</p>
         </motion.div>
 
+        {/* Image */}
+        <div className="mb-6 flex justify-center">
+          <div className="rounded-xl overflow-hidden border-2 border-pink-400/50 shadow-lg shadow-pink-500/30 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mx-auto">
+            <Image
+              src="/images/tree.png"
+              alt="Tree"
+              width={600}
+              height={300}
+              className="object-cover w-full h-48 sm:h-56 md:h-64 lg:h-72"
+              priority
+            />
+          </div>
+        </div>
+
         {/* Tree Options */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-4">
           {trees.map((tree, idx) => (
             <motion.button
               key={idx}
               onClick={() => handleSelect(tree.label)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.97 }}
-              className="bg-white/10 backdrop-blur-lg rounded-3xl p-4 border border-white/20 transition-all duration-300 shadow-lg group min-h-[140px] flex flex-col items-center justify-center hover:border-pink-400/50 hover:bg-white/20"
+              disabled={loading}
+              className="bg-white/10 backdrop-blur-lg rounded-3xl p-4 border border-white/20 transition-all duration-200 shadow-lg group min-h-[120px] flex flex-col items-center justify-center hover:border-pink-400/50 hover:bg-white/20 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <div className="w-20 h-20 mb-3 flex items-center justify-center rounded-2xl bg-gradient-to-b from-pink-200 to-pink-500 shadow-inner">
-                <div className={`text-4xl ${tree.color}`}>{tree.emoji}</div>
-              </div>
-              <p className="text-white/70 text-sm group-hover:text-white/90">
+              <div className="text-4xl mb-2">{tree.emoji}</div>
+              <p className="text-white/80 text-sm group-hover:text-white">
                 {tree.label}
               </p>
             </motion.button>
           ))}
         </div>
       </div>
+
+      {/* Spinner overlay (same as Feeling Quiz) */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 bg-black/80 flex items-center justify-center z-50"
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
+              className="w-8 h-8 border-4 border-pink-400 border-t-transparent rounded-full"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

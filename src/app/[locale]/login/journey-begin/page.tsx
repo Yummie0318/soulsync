@@ -1,29 +1,36 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
 import { Play } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function JourneyBeginPage() {
   const t = useTranslations("JourneyBegin");
   const { locale } = useParams() as { locale: string };
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const goSignUp = () => {
-    // ⬇️ adjust the path if your signup route is different
-    router.push(`/${locale}/signup`);
+    setLoading(true);
+    router.push(`/${locale}/login/auth`); // 🚀 instant redirect
   };
 
+  // ✅ Prefetch for instant load
+  useEffect(() => {
+    router.prefetch(`/${locale}/login/auth`);
+  }, [locale, router]);
+
   return (
-    <main className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100 px-4 py-10">
+    <main className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100 px-4 py-10 overflow-hidden">
       {/* Background glow */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-pink-600/30 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-purple-600/30 rounded-full blur-3xl animate-pulse delay-300" />
       </div>
 
-      {/* Card with gradient border, glass, and soft glow */}
+      {/* Card */}
       <div className="w-full max-w-xl">
         <div className="relative rounded-3xl p-[1px] bg-gradient-to-br from-white/30 via-white/10 to-white/30 shadow-2xl shadow-black/30">
           <div className="rounded-3xl bg-white/10 backdrop-blur-lg border border-white/20 px-6 py-10 sm:px-10 text-center">
@@ -64,9 +71,10 @@ export default function JourneyBeginPage() {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
               onClick={goSignUp}
-              className="mt-8 w-full sm:w-3/4 mx-auto rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white font-semibold py-3 shadow-xl shadow-pink-500/20 hover:shadow-pink-500/40 focus:outline-none focus:ring-2 focus:ring-pink-300"
+              disabled={loading}
+              className="mt-8 w-full sm:w-3/4 mx-auto rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white font-semibold py-3 shadow-xl shadow-pink-500/20 hover:shadow-pink-500/40 focus:outline-none focus:ring-2 focus:ring-pink-300 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {t("cta")}
+              {loading ? "Redirecting..." : t("cta")}
             </motion.button>
           </div>
         </div>
@@ -76,6 +84,25 @@ export default function JourneyBeginPage() {
           {t("footerPrompt")}
         </p>
       </div>
+
+      {/* Fade overlay with spinner */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 bg-black/80 flex items-center justify-center z-50"
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
+              className="w-8 h-8 border-4 border-pink-400 border-t-transparent rounded-full"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

@@ -54,6 +54,23 @@
   "subtitle": "现在是时候与真正理解你的人建立有意义的连接了。",
   "cta": "注册",
   "footerPrompt": "准备好找到你的理想匹配了吗？"
+},
+"SignUp": {
+  "title": "加入 SoulSync AI",
+  "subtitle": "创建帐户以访问为你个性化的岛屿体验",
+  "usernameLabel": "用户名",
+  "usernamePlaceholder": "johndoe",
+  "emailLabel": "电子邮件",
+  "emailPlaceholder": "your@email.com",
+  "passwordLabel": "密码",
+  "passwordPlaceholder": "创建一个密码",
+  "confirmPasswordLabel": "确认密码",
+  "confirmPasswordPlaceholder": "确认你的密码",
+  "createAccount": "创建帐户",
+  "orContinueWith": "或使用以下方式继续",
+  "alreadyHaveAccount": "已经有账号？",
+  "signIn": "登录",
+  "passwordMismatch": "两次输入的密码不一致"
 }
 
 

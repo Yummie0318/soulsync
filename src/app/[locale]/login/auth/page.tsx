@@ -4,20 +4,19 @@ import { useTranslations } from "next-intl";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import LogoAnimation from "../animation/LogoAnimation"; // ✅ import animation
+import Image from "next/image";
 
-export default function LoginPage() {
-  const t = useTranslations("Login");
+export default function RegisterPage() {
+  const t = useTranslations("SignUp");
   const router = useRouter();
   const pathname = usePathname();
   const [loading, setLoading] = useState(false);
 
-  // Extract locale from pathname
   const locale = pathname.split("/")[1] || "en";
 
-  const handleStartJourney = () => {
+  const handleSignIn = () => {
     setLoading(true);
-    router.push(`/${locale}/login/ai-drawing`); // ✅ redirect with loading
+    router.push(`/${locale}/login`);
   };
 
   return (
@@ -30,80 +29,117 @@ export default function LoginPage() {
 
       {/* Card */}
       <div className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 space-y-6 border border-white/20">
-        {/* Logo + Title */}
+        {/* Title */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex flex-col items-center mb-6"
+          className="flex flex-col items-center mb-6 text-center"
         >
-          <LogoAnimation /> {/* ✅ Reusable animation */}
-          <h1 className="text-3xl font-extrabold text-white">SoulSync AI</h1>
-          <p className="text-pink-400 text-sm mt-1">{t("welcomeBack")}</p>
+          <h1 className="text-3xl font-extrabold text-white">{t("title")}</h1>
+          <p className="text-pink-400 text-sm mt-2 max-w-sm">
+            {t("subtitle")}
+          </p>
         </motion.div>
-
-        {/* Title */}
-        <p className="text-center text-gray-400">{t("signingIn")}</p>
 
         {/* Form */}
         <form className="space-y-4">
+          {/* Username */}
+          <div>
+            <label className="block text-sm mb-1">{t("usernameLabel")}</label>
+            <input
+              type="text"
+              placeholder={t("usernamePlaceholder")}
+              className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+          </div>
+
           {/* Email */}
           <div>
-            <label className="block text-sm mb-1">{t("email")}</label>
+            <label className="block text-sm mb-1">{t("emailLabel")}</label>
             <input
               type="email"
-              placeholder={t("enterEmail")}
+              placeholder={t("emailPlaceholder")}
               className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
             />
           </div>
 
           {/* Password */}
           <div>
-            <label className="block text-sm mb-1">{t("password")}</label>
+            <label className="block text-sm mb-1">{t("passwordLabel")}</label>
             <input
               type="password"
-              placeholder={t("enterPassword")}
+              placeholder={t("passwordPlaceholder")}
               className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
             />
           </div>
 
-          {/* Remember Me + Forgot */}
-          <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                className="w-4 h-4 rounded border-gray-400 bg-white/10"
-              />
-              <span>{t("rememberMe")}</span>
-            </label>
-            <a href="/forgot-password" className="text-pink-400 hover:underline">
-              {t("forgotPassword")}
-            </a>
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-sm mb-1">{t("confirmPasswordLabel")}</label>
+            <input
+              type="password"
+              placeholder={t("confirmPasswordPlaceholder")}
+              className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
           </div>
 
-          {/* Sign In Button */}
+          {/* Sign Up Button */}
           <button
             type="submit"
             className="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-700 text-white font-semibold shadow-lg transition"
           >
-            {t("signIn")}
+            {t("createAccount")}
           </button>
         </form>
 
+        {/* Divider */}
+        <div className="flex items-center gap-2 my-4">
+          <div className="flex-grow h-px bg-white/20" />
+          <span className="text-xs text-gray-400">{t("orContinueWith")}</span>
+          <div className="flex-grow h-px bg-white/20" />
+        </div>
+
+    {/* Social Login */}
+<div className="flex gap-3">
+  {/* Google Button */}
+  <button className="flex-1 py-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center gap-2 transition">
+    <Image
+      src="/images/google.png" // ✅ local path
+      alt="Google"
+      width={24}
+      height={24}
+    />
+    Google
+  </button>
+
+  {/* Apple Button */}
+  <button className="flex-1 py-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center gap-2 transition">
+    <Image
+      src="/images/apple.png" // ✅ local path
+      alt="Apple"
+      width={20}
+      height={20}
+    />
+    Apple
+  </button>
+</div>
+
+
         {/* Footer Links */}
         <div className="text-center text-sm">
-          <span className="text-gray-400">{t("newToSoulSync")} </span>
+          <span className="text-gray-400">{t("alreadyHaveAccount")} </span>
           <button
-            onClick={handleStartJourney}
+            onClick={handleSignIn}
             disabled={loading}
             className="text-pink-400 hover:underline disabled:opacity-50"
           >
-            {t("startNewJourney")}
+            {t("signIn")}
           </button>
         </div>
       </div>
 
-      {/* Spinner overlay (same as feelings quiz) */}
+      {/* Spinner overlay */}
       <AnimatePresence>
         {loading && (
           <motion.div

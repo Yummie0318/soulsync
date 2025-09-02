@@ -54,6 +54,23 @@
   "subtitle": "Jetzt ist es Zeit, bedeutsame Verbindungen mit Menschen zu entdecken, die dich wirklich verstehen.",
   "cta": "Registrieren",
   "footerPrompt": "Bereit, dein perfektes Match zu finden?"
+},
+"SignUp": {
+  "title": "Tritt SoulSync AI bei",
+  "subtitle": "Erstelle dein Konto, um dein personalisiertes Insel-Erlebnis zu nutzen",
+  "usernameLabel": "Benutzername",
+  "usernamePlaceholder": "johndoe",
+  "emailLabel": "E-Mail",
+  "emailPlaceholder": "deine@email.com",
+  "passwordLabel": "Passwort",
+  "passwordPlaceholder": "Erstelle ein Passwort",
+  "confirmPasswordLabel": "Passwort bestätigen",
+  "confirmPasswordPlaceholder": "Bestätige dein Passwort",
+  "createAccount": "Account erstellen",
+  "orContinueWith": "ODER WEITER MIT",
+  "alreadyHaveAccount": "Hast du bereits ein Konto?",
+  "signIn": "Anmelden",
+  "passwordMismatch": "Passwörter stimmen nicht überein"
 }
 
 
