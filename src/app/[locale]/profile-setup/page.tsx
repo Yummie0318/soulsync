@@ -15,7 +15,7 @@ export default function ProfileSetupPage() {
   const { locale } = useParams() as { locale: string };
   const router = useRouter();
 
-  // 🚨 For now, just hardcode or mock a userId so build won’t fail
+  // Mock userId for now
   const userId = 1;
 
   const [interests, setInterests] = useState<Interest[]>([]);
@@ -28,8 +28,8 @@ export default function ProfileSetupPage() {
         const res = await fetch(`/api/interests?locale=${locale}`);
         const data = await res.json();
         if (Array.isArray(data)) setInterests(data);
-      } catch (error) {
-        console.error("Failed to fetch interests:", error);
+      } catch (err: unknown) {
+        console.error("Failed to fetch interests:", err);
       }
     };
     fetchInterests();
@@ -55,8 +55,8 @@ export default function ProfileSetupPage() {
       if (!res.ok) throw new Error("Failed to update interests");
 
       router.push(`/${locale}/profile-setup/age`);
-    } catch (error) {
-      console.error(error);
+    } catch (err: unknown) {
+      console.error(err);
       alert("Failed to save your interests. Please try again.");
     } finally {
       setLoading(false);
