@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model tblcountry {
+  id      Int       @id @default(autoincrement())
+  country String    @db.VarChar(100)
+  tbluser tbluser[]
+}
+
+model tblgender {
+  id      Int       @id @default(autoincrement())
+  gender  String    @db.VarChar(50)
+  tbluser tbluser[]
+}
+
+model tblinterest {
+  id               Int                @id @default(autoincrement())
+  interest         String             @db.VarChar(100)
+  interest_de      String?            @db.VarChar(255)
+  interest_zh      String?            @db.VarChar(255)
+  tblinterest_user tblinterest_user[]
+}
+
+model tblinterest_user {
+  user_id     Int
+  interest_id Int
+  tblinterest tblinterest @relation(fields: [interest_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tbluser     tbluser     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([user_id, interest_id])
+}
+
+model tbllookingfor {
+  id                 Int                  @id @default(autoincrement())
+  items              String               @db.VarChar(50)
+  tbllookingfor_user tbllookingfor_user[]
+}
+
+model tbllookingfor_user {
+  user_id       Int
+  lookingfor_id Int
+  tbllookingfor tbllookingfor @relation(fields: [lookingfor_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tbluser       tbluser       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([user_id, lookingfor_id])
+}
+
+model tbluser {
+  id                 Int                  @id @default(autoincrement())
+  username           String               @db.VarChar(50)
+  email              String               @unique @db.VarChar(100)
+  password           String               @db.VarChar(255)
+  month              Int?
+  day                Int?
+  year               Int?
+  gender_id          Int?
+  zodiac_id          Int?
+  country_id         Int?
+  postal             String?              @db.VarChar(20)
+  city               String?              @db.VarChar(100)
+  quote              String?
+  photo_file_name    String?              @db.VarChar(255)
+  photo_file_path    String?              @db.VarChar(500)
+  tblinterest_user   tblinterest_user[]
+  tbllookingfor_user tbllookingfor_user[]
+  tblcountry         tblcountry?          @relation(fields: [country_id], references: [id], onUpdate: NoAction)
+  tblgender          tblgender?           @relation(fields: [gender_id], references: [id], onUpdate: NoAction)
+  tblzodiac          tblzodiac?           @relation(fields: [zodiac_id], references: [id], onUpdate: NoAction)
+}
+
+model tblzodiac {
+  id      Int       @id @default(autoincrement())
+  zodiac  String    @db.VarChar(100)
+  tbluser tbluser[]
+}
