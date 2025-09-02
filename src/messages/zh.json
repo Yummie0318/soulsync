@@ -71,6 +71,14 @@
   "alreadyHaveAccount": "已经有账号？",
   "signIn": "登录",
   "passwordMismatch": "两次输入的密码不一致"
+},
+"ProfileSetup": {
+  "completeProfile": "完成你的个人资料",
+  "interestsSubtitle": "请选择至少 3 个兴趣以继续",
+  "minimum": "最少",
+  "previous": "上一步",
+  "next": "下一步",
+  "noInterestsFound": "未找到兴趣。"
 }
 
 

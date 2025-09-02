@@ -71,5 +71,13 @@
   "alreadyHaveAccount": "Already have an account?",
   "signIn": "Sign in",
   "passwordMismatch": "Passwords do not match"
-}
+},
+"ProfileSetup": {
+    "completeProfile": "Complete Your Profile",
+    "interestsSubtitle": "Select at least 3 interests to continue",
+    "minimum": "minimum",
+    "previous": "Previous",
+    "next": "Next",
+    "noInterestsFound": "No interests found."
+  }
 }

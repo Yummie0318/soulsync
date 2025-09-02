@@ -71,7 +71,16 @@
   "alreadyHaveAccount": "Hast du bereits ein Konto?",
   "signIn": "Anmelden",
   "passwordMismatch": "Passwörter stimmen nicht überein"
+},
+"ProfileSetup": {
+  "completeProfile": "Vervollständige dein Profil",
+  "interestsSubtitle": "Wähle mindestens 3 Interessen aus, um fortzufahren",
+  "minimum": "Minimum",
+  "previous": "Zurück",
+  "next": "Weiter",
+  "noInterestsFound": "Keine Interessen gefunden."
 }
+
 
 
 }
