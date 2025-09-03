@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Next.js build outputs
+.next/
+out/
+build/
+
+# TypeScript env file
+next-env.d.ts
+
+# Prisma schema + generated client
+prisma/
+src/generated/prisma/
+
+# Optional: ignore Vercel output (if used locally)
+.vercel/

@@ -1,13 +1,14 @@
 // src/lib/db.ts
-import { Pool } from "pg";
+import pkg from "pg";
+import type { Pool as PoolType } from "pg"; // ✅ import only type
+const { Pool } = pkg;
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set in .env");
 }
 
 declare global {
-  // eslint-disable-next-line no-var
-  var __pgPool: Pool | undefined;
+  var __pgPool: PoolType | undefined; // ✅ use type here
 }
 
 const pool =
