@@ -6,8 +6,15 @@ import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 
 export async function POST(req: Request) {
+  if (!pool) {
+    return NextResponse.json(
+      { error: "Database pool not initialized." },
+      { status: 500 }
+    );
+  }
+
   try {
-    const body = await req.json() as {
+    const body = (await req.json()) as {
       username?: string;
       email?: string;
       password?: string;

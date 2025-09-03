@@ -5,6 +5,13 @@ import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 
 export async function GET(req: Request) {
+  if (!pool) {
+    return NextResponse.json(
+      { error: "Database pool not initialized." },
+      { status: 500 }
+    );
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const locale = searchParams.get("locale") || "en";
