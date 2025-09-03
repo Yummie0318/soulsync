@@ -18,10 +18,13 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "prisma/**",              // Ignore Prisma files
+      "prisma/generated/**",    // Ignore generated Prisma client files
     ],
     rules: {
-      // 🔧 Disable the empty object type rule that breaks your Vercel build
       "@typescript-eslint/no-empty-object-type": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
 ];

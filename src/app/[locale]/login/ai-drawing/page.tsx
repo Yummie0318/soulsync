@@ -45,9 +45,11 @@ export default function AiDrawingPage() {
     if (!ctx) return;
     ctx.lineCap = "round";
     ctx.lineWidth = 4;
-    ctx.strokeStyle = color;
+    ctx.strokeStyle = color; // only initial color
     ctxRef.current = ctx;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  
 
   // Update stroke color
   useEffect(() => {
