@@ -1,5 +1,5 @@
-// src/app/api/register/route.ts
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic"; // ensure dynamic runtime
 
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
@@ -7,8 +7,9 @@ import pool from "@/lib/db";
 
 export async function POST(req: Request) {
   if (!pool) {
+    console.error("❌ Database pool not initialized.");
     return NextResponse.json(
-      { error: "Database pool not initialized." },
+      { error: "Database connection not initialized." },
       { status: 500 }
     );
   }
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
+    // Check for existing user
     const { rows: existing } = await pool.query(
       "SELECT id, username, email FROM tbluser WHERE username = $1 OR email = $2",
       [username, email]
@@ -53,6 +55,6 @@ export async function POST(req: Request) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("API /register error:", message);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json({ error: message || "Server error" }, { status: 500 });
   }
 }
