@@ -1,5 +1,6 @@
 // src/app/api/health/route.ts
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic"; // <-- Add this line
 
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
