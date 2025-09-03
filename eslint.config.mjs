@@ -10,8 +10,10 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  // Extend Next.js recommended configs
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
+    // Files/folders to ignore
     ignores: [
       "node_modules/**",
       ".next/**",
@@ -19,9 +21,10 @@ const eslintConfig = [
       "build/**",
       "next-env.d.ts",
       "prisma/**",              // Ignore Prisma files
-      "prisma/generated/**",    // Ignore generated Prisma client files
+      "src/generated/prisma/**", // Ignore generated Prisma client files
     ],
     rules: {
+      // Disable rules that break build due to generated code
       "@typescript-eslint/no-empty-object-type": "off",
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-require-imports": "off",
