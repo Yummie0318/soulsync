@@ -9,14 +9,12 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const locale = searchParams.get("locale") || "en";
 
-    // Map locale to DB column
     const columnMap: Record<string, string> = {
       en: "interest",
       de: "interest_de",
       zh: "interest_zh",
     };
 
-    // fallback to English if locale not in map
     const column = columnMap[locale] || "interest";
 
     console.log("📌 Fetching interests with column:", column);
@@ -28,11 +26,9 @@ export async function GET(req: Request) {
     console.log("✅ Query result:", result.rows);
 
     return NextResponse.json(result.rows);
-  } catch (error: any) {
-    console.error("❌ Error in /api/interests:", error.message);
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ Error in /api/interests:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

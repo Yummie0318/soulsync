@@ -11,7 +11,7 @@ interface Interest {
 }
 
 export default function ProfileSetupPage() {
-  const t = useTranslations("ProfileSetup");
+  // const t = useTranslations("ProfileSetup");
 
   const [interests, setInterests] = useState<Interest[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
@@ -84,7 +84,7 @@ export default function ProfileSetupPage() {
             Complete Your Profile
           </h1>
           <p className="text-white/70 mt-2">
-            Let's set up your profile so you can find amazing matches!
+            Let&apos;s set up your profile...
           </p>
 
           {/* Progress dots */}

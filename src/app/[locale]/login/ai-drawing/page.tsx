@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { Pencil, Eraser, Trash2, Palette } from "lucide-react";
+import { Pencil, Eraser, Trash2 } from "lucide-react"; // removed Palette
 
 export default function AiDrawingPage() {
   const [progress, setProgress] = useState(0);
