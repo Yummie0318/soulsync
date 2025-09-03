@@ -26,4 +26,14 @@ if (process.env.NODE_ENV !== "production") {
   global.__pgPool = pool;
 }
 
+// Log a test query to confirm connection
+(async () => {
+  try {
+    const res = await pool.query("SELECT NOW()");
+    console.log("✅ Successfully connected to DB at:", res.rows[0].now);
+  } catch (err) {
+    console.error("❌ Failed to connect to DB:", err);
+  }
+})();
+
 export default pool;

@@ -7,7 +7,27 @@ import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 
 export async function POST(req: Request) {
+  if (!pool) {
+    console.error("❌ Database pool not initialized.");
+    return NextResponse.json(
+      { error: "Database connection not initialized." },
+      { status: 500 }
+    );
+  }
+
   try {
+    // Test DB connection on each request (optional but helpful for debugging)
+    try {
+      await pool.query("SELECT 1");
+      console.log("✅ DB connection OK for /api/register request");
+    } catch (connErr) {
+      console.error("❌ DB connection failed for /api/register request:", connErr);
+      return NextResponse.json(
+        { error: "Database connection failed" },
+        { status: 500 }
+      );
+    }
+
     const body = (await req.json()) as {
       username?: string;
       email?: string;
@@ -50,13 +70,15 @@ export async function POST(req: Request) {
       [username, email, hashedPassword]
     );
 
+    console.log("✅ New user created:", result[0]);
+
     return NextResponse.json(
       { message: "User created", user: result[0] },
       { status: 201 }
     );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("API /register error:", message);
+    console.error("API /register unexpected error:", message);
     return NextResponse.json(
       { error: message || "Server error" },
       { status: 500 }
