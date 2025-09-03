@@ -1,48 +1,53 @@
-import { hash } from "bcrypt";
-import { NextResponse } from "next/server";
-import postgres from "postgres";
+// C:\Users\Yummie03\Desktop\soulsyncai\src\app\api\register\route.js
+export const runtime = "nodejs";
 
-// Connect to PostgreSQL
-const sql = postgres(process.env.DATABASE_URL);
+import { hash } from "bcryptjs";
+import { NextResponse } from "next/server";
+import pool from "@/lib/db";
 
 export async function POST(req) {
   try {
-    const { username, email, password } = await req.json();
+    const body = await req.json();
+    console.log("Incoming body:", body);
+
+    const username = body.username?.trim();
+    const email = body.email?.trim().toLowerCase();
+    const password = body.password;
 
     if (!username || !email || !password) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    // Check if username or email already exists
-    const existingUsers = await sql`
-      SELECT username, email
-      FROM tbluser
-      WHERE username = ${username} OR email = ${email}
-    `;
+    // Check for duplicates
+    const { rows: existing } = await pool.query(
+      "SELECT id, username, email FROM tbluser WHERE username = $1 OR email = $2",
+      [username, email]
+    );
 
-    if (existingUsers.length > 0) {
-      const duplicate = existingUsers[0];
-      if (duplicate.username === username) {
+    if (existing.length > 0) {
+      if (existing[0].username === username) {
         return NextResponse.json({ error: "Username already exists" }, { status: 400 });
       }
-      if (duplicate.email === email) {
+      if (existing[0].email === email) {
         return NextResponse.json({ error: "Email already exists" }, { status: 400 });
       }
     }
 
-    // Hash the password
+    // Hash password
     const hashedPassword = await hash(password, 10);
 
-    // Insert user
-    const result = await sql`
-      INSERT INTO tbluser (username, email, password)
-      VALUES (${username}, ${email}, ${hashedPassword})
-      RETURNING id, username, email;
-    `;
+    // Insert new user
+    const { rows: result } = await pool.query(
+      "INSERT INTO tbluser (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email",
+      [username, email, hashedPassword]
+    );
 
-    return NextResponse.json({ message: "User created", user: result[0] });
+    return NextResponse.json(
+      { message: "User created", user: result[0] },
+      { status: 201 }
+    );
   } catch (err) {
-    console.error(err);
+    console.error("API /register error:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

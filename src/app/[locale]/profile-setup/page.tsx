@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { Search, User, Heart, MapPin, Quote } from "lucide-react"; // 👈 Added icons
 import { useTranslations } from "next-intl";
-import { useParams, useRouter } from "next/navigation";
 
 interface Interest {
   id: number;
@@ -12,20 +12,21 @@ interface Interest {
 
 export default function ProfileSetupPage() {
   const t = useTranslations("ProfileSetup");
-  const { locale } = useParams() as { locale: string };
-  const router = useRouter();
-
-  // Mock userId for now
-  const userId = 1;
 
   const [interests, setInterests] = useState<Interest[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+
+  // Form state for steps
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
+  const [location, setLocation] = useState("");
+  const [quote, setQuote] = useState("");
 
   useEffect(() => {
     const fetchInterests = async () => {
       try {
-        const res = await fetch(`/api/interests?locale=${locale}`);
+        const res = await fetch(`/api/interests`);
         const data = await res.json();
         if (Array.isArray(data)) setInterests(data);
       } catch (err: unknown) {
@@ -33,7 +34,7 @@ export default function ProfileSetupPage() {
       }
     };
     fetchInterests();
-  }, [locale]);
+  }, []);
 
   const toggleSelect = (id: number) => {
     setSelected((prev) =>
@@ -41,25 +42,24 @@ export default function ProfileSetupPage() {
     );
   };
 
-  const handleNext = async () => {
-    if (selected.length < 3) return;
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/user/interests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, interests: selected }),
+  const handleNext = () => {
+    if (currentStep < 5) {
+      setCurrentStep((prev) => prev + 1);
+    } else {
+      // Final step → save everything
+      console.log("Saving to database...", {
+        interests: selected,
+        age,
+        gender,
+        location,
+        quote,
       });
+    }
+  };
 
-      if (!res.ok) throw new Error("Failed to update interests");
-
-      router.push(`/${locale}/profile-setup/age`);
-    } catch (err: unknown) {
-      console.error(err);
-      alert("Failed to save your interests. Please try again.");
-    } finally {
-      setLoading(false);
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep((prev) => prev - 1);
     }
   };
 
@@ -79,83 +79,165 @@ export default function ProfileSetupPage() {
           transition={{ duration: 0.3 }}
           className="mb-8"
         >
+          {/* Title + Subtitle */}
           <h1 className="text-2xl font-bold text-white drop-shadow-md">
-            {t("completeProfile")} - Step 1 of 5
+            Complete Your Profile
           </h1>
-          <p className="text-white/70 mt-2">{t("interestsSubtitle")}</p>
-          <p className="text-sm text-pink-400 mt-1">
-            {selected.length} / 3 {t("minimum")}
+          <p className="text-white/70 mt-2">
+            Let's set up your profile so you can find amazing matches!
+          </p>
+
+          {/* Progress dots */}
+          <div className="flex justify-center gap-3 mt-4">
+            {[1, 2, 3, 4, 5].map((step) => (
+              <div
+                key={step}
+                className={`w-3 h-3 rounded-full ${
+                  step <= currentStep ? "bg-pink-500" : "bg-gray-400/40"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Step number */}
+          <p className="text-sm text-pink-400 mt-3">
+            Step {currentStep} of 5
           </p>
         </motion.div>
 
-        {/* Interest grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-          {interests.length > 0 ? (
-            interests.map((item) => {
-              const isSelected = selected.includes(item.id);
-              return (
-                <motion.button
-                  key={item.id}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => toggleSelect(item.id)}
-                  className={`px-3 py-2 rounded-xl border transition-all duration-200 shadow-md text-sm font-medium ${
-                    isSelected
-                      ? "bg-pink-500/80 text-white border-pink-400 shadow-pink-500/40"
-                      : "bg-white/10 text-white/80 border-white/20 hover:bg-white/20"
-                  }`}
-                >
-                  {item.interest}
-                </motion.button>
-              );
-            })
-          ) : (
-            <p className="col-span-full text-gray-400 text-sm">
-              {t("noInterestsFound")}
+        {/* Step Content */}
+        {currentStep === 1 && (
+          <>
+            <div className="flex justify-center mb-4">
+              <Search size={40} className="text-pink-400" />
+            </div>
+            <h2 className="text-lg font-semibold mb-2">
+              Select at least 3 interests to help us find great matches
+            </h2>
+            <p className="text-sm text-pink-400 mb-4">
+              {selected.length} / 3 minimum
             </p>
-          )}
-        </div>
+
+            {/* Interest grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+              {interests.length > 0 ? (
+                interests.map((item) => {
+                  const isSelected = selected.includes(item.id);
+                  return (
+                    <motion.button
+                      key={item.id}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => toggleSelect(item.id)}
+                      className={`px-3 py-2 rounded-xl border transition-all duration-200 shadow-md text-sm font-medium ${
+                        isSelected
+                          ? "bg-pink-500/80 text-white border-pink-400 shadow-pink-500/40"
+                          : "bg-white/10 text-white/80 border-white/20 hover:bg-white/20"
+                      }`}
+                    >
+                      {item.interest}
+                    </motion.button>
+                  );
+                })
+              ) : (
+                <p className="col-span-full text-gray-400 text-sm">
+                  🔄 Loading interests, please wait...
+                </p>
+              )}
+            </div>
+          </>
+        )}
+
+        {currentStep === 2 && (
+          <>
+            <div className="flex justify-center mb-4">
+              <User size={40} className="text-pink-400" />
+            </div>
+            <h2 className="text-lg font-semibold mb-2">Enter your age</h2>
+            <input
+              type="number"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              className="w-full px-4 py-2 rounded-xl border border-white/20 bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+              placeholder="Your age"
+            />
+          </>
+        )}
+
+        {currentStep === 3 && (
+          <>
+            <div className="flex justify-center mb-4">
+              <Heart size={40} className="text-pink-400" />
+            </div>
+            <h2 className="text-lg font-semibold mb-2">Enter your gender</h2>
+            <input
+              type="text"
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className="w-full px-4 py-2 rounded-xl border border-white/20 bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+              placeholder="Your gender"
+            />
+          </>
+        )}
+
+        {currentStep === 4 && (
+          <>
+            <div className="flex justify-center mb-4">
+              <MapPin size={40} className="text-pink-400" />
+            </div>
+            <h2 className="text-lg font-semibold mb-2">Enter your location</h2>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className="w-full px-4 py-2 rounded-xl border border-white/20 bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+              placeholder="Your location"
+            />
+          </>
+        )}
+
+        {currentStep === 5 && (
+          <>
+            <div className="flex justify-center mb-4">
+              <Quote size={40} className="text-pink-400" />
+            </div>
+            <h2 className="text-lg font-semibold mb-2">Enter your quote</h2>
+            <input
+              type="text"
+              value={quote}
+              onChange={(e) => setQuote(e.target.value)}
+              className="w-full px-4 py-2 rounded-xl border border-white/20 bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+              placeholder="Your favorite quote"
+            />
+          </>
+        )}
 
         {/* Actions */}
-        <div className="flex justify-between">
+        <div className="flex justify-between mt-6">
           <button
-            className="px-4 py-2 rounded-xl bg-gray-700/50 border border-white/20 text-white/80 hover:bg-gray-600/50 transition"
-            onClick={() => router.back()}
+            onClick={handlePrevious}
+            className={`px-6 py-2 rounded-xl font-semibold transition ${
+              currentStep === 1
+                ? "bg-gray-600 text-white/50 cursor-not-allowed"
+                : "bg-gray-500 hover:bg-gray-600 text-white"
+            }`}
+            disabled={currentStep === 1}
           >
-            {t("previous")}
+            Previous
           </button>
           <button
-            className={`px-6 py-2 rounded-xl font-semibold transition ${
-              selected.length >= 3
-                ? "bg-pink-500 hover:bg-pink-600 text-white"
-                : "bg-gray-600 text-white/50 cursor-not-allowed"
-            }`}
-            disabled={selected.length < 3 || loading}
             onClick={handleNext}
+            className={`px-6 py-2 rounded-xl font-semibold transition ${
+              currentStep === 1 && selected.length < 3
+                ? "bg-gray-600 text-white/50 cursor-not-allowed"
+                : "bg-pink-500 hover:bg-pink-600 text-white"
+            }`}
+            disabled={currentStep === 1 && selected.length < 3}
           >
-            {t("next")}
+            {currentStep < 5 ? "Next" : "Finish"}
           </button>
         </div>
       </div>
-
-      {/* Spinner */}
-      <AnimatePresence>
-        {loading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-black/80 flex items-center justify-center z-50"
-          >
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
-              className="w-8 h-8 border-4 border-pink-400 border-t-transparent rounded-full"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
     </main>
   );
 }

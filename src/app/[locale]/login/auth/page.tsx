@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, FormEvent } from "react";
 import Image from "next/image";
+import { useNotification } from "@/context/NotificationContext";
 
 export default function RegisterPage() {
   const t = useTranslations("SignUp");
@@ -12,19 +13,15 @@ export default function RegisterPage() {
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "en";
 
+  const { showNotification } = useNotification();
+
   const [loading, setLoading] = useState(false);
-  const [accountCreated, setAccountCreated] = useState(false); // new state
-  const [notification, setNotification] = useState<string | null>(null);
+  const [accountCreated, setAccountCreated] = useState(false);
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  const showNotification = (msg: string) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(null), 3000);
-  };
 
   const handleSignIn = () => {
     router.push(`/${locale}/login`);
@@ -56,14 +53,14 @@ export default function RegisterPage() {
 
       if (res.ok) {
         showNotification("Account created successfully!");
-        setAccountCreated(true); // disable the button permanently
+        setAccountCreated(true);
         router.push(`/${locale}/profile-setup`);
       } else {
-        showNotification(data.error || "Something went wrong!");
+        showNotification(data.error || "❌ Something went wrong!");
       }
     } catch (err) {
       console.error(err);
-      showNotification("Server error, try again later.");
+      showNotification("⚠️ Server error, try again later.");
     } finally {
       setLoading(false);
     }
@@ -76,21 +73,6 @@ export default function RegisterPage() {
         <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-pink-600/30 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-purple-600/30 rounded-full blur-3xl animate-pulse delay-300" />
       </div>
-
-      {/* Notification */}
-      <AnimatePresence>
-        {notification && (
-          <motion.div
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -50, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="absolute top-10 left-1/2 -translate-x-1/2 bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 font-medium text-sm tracking-wide"
-          >
-            {notification}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Card */}
       <div className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 space-y-6 border border-white/20">
@@ -157,7 +139,7 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            disabled={loading || accountCreated} // disable after account created
+            disabled={loading || accountCreated}
             className="w-full py-3 rounded-lg bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-semibold shadow-lg transition disabled:opacity-60"
           >
             {loading

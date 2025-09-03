@@ -1,6 +1,8 @@
 // src/app/api/interests/route.ts
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
-import pool from "../../../lib/db";
+import pool from "@/lib/db";
 
 export async function GET(req: Request) {
   try {
