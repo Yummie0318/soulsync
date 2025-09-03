@@ -1,19 +1,12 @@
+// src/app/api/register/route.ts
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic"; // ensure dynamic runtime
+export const dynamic = "force-dynamic";
 
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 
 export async function POST(req: Request) {
-  if (!pool) {
-    console.error("❌ Database pool not initialized.");
-    return NextResponse.json(
-      { error: "Database connection not initialized." },
-      { status: 500 }
-    );
-  }
-
   try {
     const body = (await req.json()) as {
       username?: string;
@@ -37,10 +30,16 @@ export async function POST(req: Request) {
 
     if (existing.length > 0) {
       if (existing[0].username === username) {
-        return NextResponse.json({ error: "Username already exists" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Username already exists" },
+          { status: 400 }
+        );
       }
       if (existing[0].email === email) {
-        return NextResponse.json({ error: "Email already exists" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Email already exists" },
+          { status: 400 }
+        );
       }
     }
 
@@ -51,10 +50,16 @@ export async function POST(req: Request) {
       [username, email, hashedPassword]
     );
 
-    return NextResponse.json({ message: "User created", user: result[0] }, { status: 201 });
+    return NextResponse.json(
+      { message: "User created", user: result[0] },
+      { status: 201 }
+    );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("API /register error:", message);
-    return NextResponse.json({ error: message || "Server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: message || "Server error" },
+      { status: 500 }
+    );
   }
 }

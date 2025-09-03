@@ -4,19 +4,26 @@ import type { Pool as PoolType } from "pg";
 const { Pool } = pkg;
 
 declare global {
+  // allow global caching of the pool
   var __pgPool: PoolType | undefined;
 }
 
-if (!global.__pgPool) {
-  if (!process.env.DATABASE_URL) {
-    // Instead of throwing at build time, we let it fail at runtime
-    console.warn("WARNING: DATABASE_URL is not set. DB will fail at runtime.");
-  }
+if (!process.env.DATABASE_URL) {
+  console.error(
+    "❌ DATABASE_URL is not set. Database connections will fail!"
+  );
+}
 
-  global.__pgPool = new Pool({
+const pool =
+  global.__pgPool ??
+  new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }, // required by Neon
   });
+
+// Cache pool in dev mode to avoid multiple connections
+if (process.env.NODE_ENV !== "production") {
+  global.__pgPool = pool;
 }
 
-export default global.__pgPool;
+export default pool;
