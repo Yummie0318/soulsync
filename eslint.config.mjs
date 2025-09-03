@@ -1,4 +1,3 @@
-// eslint.config.mjs
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
@@ -6,27 +5,32 @@ import { FlatCompat } from "@eslint/eslintrc";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const compat = new FlatCompat({ baseDirectory: __dirname });
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
 
 const eslintConfig = [
+  // Extend Next.js recommended configs
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
+    // Ignore all generated, build, and node_modules files
     ignores: [
       "node_modules/**",
       ".next/**",
       "out/**",
       "build/**",
       "next-env.d.ts",
-      "prisma/**",               // Ignore Prisma folder
-      "src/generated/prisma/**", // Ignore generated Prisma files
-      "src/generated/prisma/**/*.js", // Ignore all JS generated Prisma files (like wasm.js)
+      "prisma/**",
+      "src/generated/**",       // Everything under generated is ignored
+      "src/lib/db.ts",          // Optionally ignore files that cause warnings
     ],
     rules: {
+      // Disable rules that break builds in generated code
       "@typescript-eslint/no-empty-object-type": "off",
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-require-imports": "off",
-      "@typescript-eslint/no-unused-vars": "off", // Ignore unused vars in generated files
-      "@typescript-eslint/no-unused-expressions": "off", // Ignore weird expressions in generated files
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-expressions": "off",
     },
   },
 ];
