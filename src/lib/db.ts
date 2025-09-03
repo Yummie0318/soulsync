@@ -7,23 +7,21 @@ declare global {
   var __pgPool: PoolType | undefined;
 }
 
-const connectionString = process.env.DATABASE_URL;
+// Create pool lazily at runtime
+const getPool = (): PoolType => {
+  if (!global.__pgPool) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error("❌ DATABASE_URL is not set. Cannot connect to DB.");
+    }
 
-if (!connectionString) {
-  console.error("❌ DATABASE_URL is not set. Database connections will fail!");
-} else {
-  console.log("✅ DATABASE_URL detected:", connectionString.slice(0, 30) + "..."); // log first part
-}
+    global.__pgPool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }, // required by Neon
+    });
 
-const pool =
-  global.__pgPool ??
-  new Pool({
-    connectionString,
-    ssl: { rejectUnauthorized: false }, // required by Neon
-  });
+    console.log("✅ Database pool created at runtime");
+  }
+  return global.__pgPool;
+};
 
-if (process.env.NODE_ENV !== "production") {
-  global.__pgPool = pool;
-}
-
-export default pool;
+export default getPool;

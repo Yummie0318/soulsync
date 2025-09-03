@@ -2,17 +2,33 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import pool from "@/lib/db";
+import getPool from "@/lib/db"; // notice it's a function now
 
 export async function GET(req: Request) {
-  if (!pool) {
+  let pool;
+  try {
+    pool = getPool(); // get actual Pool instance
+  } catch (err) {
+    console.error("❌ Failed to get DB pool:", err);
     return NextResponse.json(
-      { error: "Database pool not initialized." },
+      { error: "Database connection not initialized." },
       { status: 500 }
     );
   }
 
   try {
+    // Test DB connection
+    try {
+      await pool.query("SELECT 1");
+      console.log("✅ DB connection OK for /api/interests request");
+    } catch (connErr) {
+      console.error("❌ DB connection failed for /api/interests request:", connErr);
+      return NextResponse.json(
+        { error: "Database connection failed" },
+        { status: 500 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const locale = searchParams.get("locale") || "en";
 
