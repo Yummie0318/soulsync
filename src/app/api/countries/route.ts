@@ -18,8 +18,19 @@ export async function GET(req: Request) {
   try {
     await pool.query("SELECT 1"); // check connection
 
+    const { searchParams } = new URL(req.url);
+    const locale = searchParams.get("locale") || "en";
+
+    // Map locale to database column
+    const columnMap: Record<string, string> = {
+      en: "country",
+      de: "country_de",
+      zh: "country_zh",
+    };
+    const column = columnMap[locale] || "country";
+
     const result = await pool.query(
-      `SELECT id, country FROM tblcountry ORDER BY country ASC`
+      `SELECT id, ${column} AS country FROM tblcountry ORDER BY country ASC`
     );
 
     return NextResponse.json(result.rows);

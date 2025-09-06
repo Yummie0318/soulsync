@@ -70,14 +70,72 @@
   "orContinueWith": "OR CONTINUE WITH",
   "alreadyHaveAccount": "Already have an account?",
   "signIn": "Sign in",
-  "passwordMismatch": "Passwords do not match"
+
+  "fillAllFields": "Please fill in all fields.",
+  "passwordMismatch": "Passwords do not match!",
+  "accountCreated": "Account created successfully!",
+  "somethingWentWrong": "❌ Something went wrong!",
+  "serverError": "⚠️ Server error, try again later.",
+  "emailExists": "Email already exists",
+"usernameExists": "Username already exists"
+
 },
-"ProfileSetup": {
+
+  "ProfileSetup": {
     "completeProfile": "Complete Your Profile",
-    "interestsSubtitle": "Select at least 3 interests to continue",
+    "setupSubtitle": "Let's set up your profile...",
+    "step": "Step {current} of {total}",
+
+    "yourInterests": "Your Interests",
+    "interestsSubtitle": "Select at least 3 interests to help us find great matches",
     "minimum": "minimum",
+    "interestsError": "Failed to load interests. Please try again.",
+    
+    "birthdateTitle": "Your Age",
+    "birthdateSubtitle": "Tell us your birth year (month and day are optional)",
+    "yearPlaceholder": "YYYY",
+    "monthPlaceholder": "MM",
+    "dayPlaceholder": "DD",
+    
+    "aboutTitle": "About You",
+    "aboutSubtitle": "Help us find the right matches for you",
+    "genderLabel": "Gender",
+    "selectGender": "Select your gender",
+    "lookingForLabel": "Looking For",
+    "lookingForSubtitle": "Select all that apply",
+    "starSignLabel": "Star Sign",
+    "selectStarSign": "Select your star sign",
+    "optional": "Optional",
+    "loading": "Loading...",
+    "errorLoading": "Error loading options",
+
+    "locationTitle": "Enter your location",
+    "locationSubtitle": "This helps us provide better date suggestions with real venues",
+    "countryLabel": "Country",
+    "selectCountry": "Select your country",
+    "cityPlaceholder": "City",
+    "postalCodePlaceholder": "Postal Code (required)",
+    "postalCodeError": "Postal Code must be between 3 and 10 characters",
+
+    "title": "Finishing Touches",
+    "subtitle": "Add a profile photo and your favorite quote (optional)",
+    "photoLabel": "Upload Photo",
+    "quoteLabel": "Favorite Quote",
+    "quoteOptional": "(optional)",
+    "quotePlaceholder": "Share a quote that inspires you...",
+    "quoteLimit": "{length}/200",
+
     "previous": "Previous",
     "next": "Next",
-    "noInterestsFound": "No interests found."
+    "finish": "Finish",
+
+    "noUserId": "No user ID found. Please register again.",
+    "profileSetupComplete": "🎉 Profile setup complete!",
+    "profileSetupWelcome": "Welcome to your personal room! You can customize it and start exploring.",
+    "somethingWentWrong": "❌ Something went wrong!",
+    "serverError": "⚠️ Server error, try again later."
   }
+
+
 }
+

@@ -18,19 +18,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    // Check for duplicates
-    const { rows: existing } = await pool.query(
-      "SELECT id, username, email FROM tbluser WHERE username = $1 OR email = $2",
-      [username, email]
-    );
-    if (existing.length > 0) {
-      if (existing[0].username === username) {
-        return NextResponse.json({ error: "Username already exists" }, { status: 400 });
-      }
-      if (existing[0].email === email) {
-        return NextResponse.json({ error: "Email already exists" }, { status: 400 });
-      }
-    }
+// Check for duplicates
+const { rows: existing } = await pool.query(
+  "SELECT id, username, email FROM tbluser WHERE username = $1 OR email = $2",
+  [username, email]
+);
+
+if (existing.length > 0) {
+  if (existing[0].username === username) {
+    return NextResponse.json({ code: "USERNAME_EXISTS" }, { status: 400 });
+  }
+  if (existing[0].email === email) {
+    return NextResponse.json({ code: "EMAIL_EXISTS" }, { status: 400 });
+  }
+}
 
     const hashedPassword = await hash(password, 10);
 

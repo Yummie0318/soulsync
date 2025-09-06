@@ -31,12 +31,12 @@ export default function RegisterPage() {
     e.preventDefault();
   
     if (!username || !email || !password || !confirmPassword) {
-      showNotification("Please fill in all fields.");
+      showNotification(t("fillAllFields"));
       return;
     }
   
     if (password !== confirmPassword) {
-      showNotification("Passwords do not match!");
+      showNotification(t("passwordMismatch"));
       return;
     }
   
@@ -52,28 +52,33 @@ export default function RegisterPage() {
       const data = await res.json();
   
       if (res.ok) {
-        // ✅ Save user_id in localStorage so we can use it later
         if (data.user?.id) {
           localStorage.setItem("user_id", data.user.id);
           console.log("✅ user_id saved to localStorage:", data.user.id);
         }
-      
-        showNotification("Account created successfully!");
+  
+        showNotification(t("accountCreated"));
         setAccountCreated(true);
-      
-        // redirect to profile setup
+  
         router.push(`/${locale}/profile-setup`);
       } else {
-        showNotification(data.error || "❌ Something went wrong!");
+        // Map backend error codes to i18n keys
+        const errorTranslations: Record<string, string> = {
+          EMAIL_EXISTS: t("emailExists"),
+          USERNAME_EXISTS: t("usernameExists"),
+        };
+  
+        showNotification(errorTranslations[data.code] || t("somethingWentWrong"));
       }
-      
     } catch (err) {
       console.error(err);
-      showNotification("⚠️ Server error, try again later.");
+      showNotification(t("serverError"));
     } finally {
       setLoading(false);
     }
   };
+  
+  
   
 
   return (

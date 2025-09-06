@@ -70,16 +70,78 @@
   "orContinueWith": "ODER WEITER MIT",
   "alreadyHaveAccount": "Hast du bereits ein Konto?",
   "signIn": "Anmelden",
-  "passwordMismatch": "Passwörter stimmen nicht überein"
+
+  "fillAllFields": "Bitte alle Felder ausfüllen.",
+  "passwordMismatch": "Passwörter stimmen nicht überein!",
+  "accountCreated": "Konto erfolgreich erstellt!",
+  "somethingWentWrong": "❌ Etwas ist schiefgelaufen!",
+  "serverError": "⚠️ Serverfehler, bitte später erneut versuchen.",
+  "emailExists": "E-Mail existiert bereits",
+"usernameExists": "Benutzername existiert bereits"
+
 },
-"ProfileSetup": {
-  "completeProfile": "Vervollständige dein Profil",
-  "interestsSubtitle": "Wähle mindestens 3 Interessen aus, um fortzufahren",
-  "minimum": "Minimum",
+
+  "ProfileSetup": {
+    "completeProfile": "Vervollständige dein Profil",
+    "setupSubtitle": "Lass uns dein Profil einrichten...",
+    "step": "Schritt {current} von {total}",
+
+    "yourInterests": "Deine Interessen",
+    "interestsSubtitle": "Wähle mindestens 3 Interessen aus, um passende Vorschläge zu erhalten",
+    "minimum": "Minimum",
+    "interestsError": "Fehler beim Laden der Interessen. Bitte versuche es erneut.",
+
+    "birthdateTitle": "Dein Alter",
+    "birthdateSubtitle": "Gib dein Geburtsjahr an (Monat und Tag sind optional)",
+    "yearPlaceholder": "JJJJ",
+    "monthPlaceholder": "MM",
+    "dayPlaceholder": "TT",
+
+    "aboutTitle": "Über dich",
+    "aboutSubtitle": "Hilf uns, die passenden Matches für dich zu finden",
+    "genderLabel": "Geschlecht",
+    "selectGender": "Wähle dein Geschlecht",
+    "lookingForLabel": "Sucht nach",
+    "lookingForSubtitle": "Wähle alles, was zutrifft",
+    "starSignLabel": "Sternzeichen",
+    "selectStarSign": "Wähle dein Sternzeichen",
+    "optional": "Optional",
+    "loading": "Laden...",
+    "errorLoading": "Fehler beim Laden der Optionen",
+
+    "locationTitle": "Gib deinen Standort ein",
+    "locationSubtitle": "Dies hilft uns, bessere Date-Vorschläge mit echten Orten zu machen",
+    "countryLabel": "Land",
+    "selectCountry": "Wähle dein Land",
+    "cityPlaceholder": "Stadt",
+    "postalCodePlaceholder": "Postleitzahl (erforderlich)",
+    "postalCodeError": "Die Postleitzahl muss zwischen 3 und 10 Zeichen lang sein",
+
+  "title": "Letzte Schritte",
+  "subtitle": "Fügen Sie ein Profilfoto und Ihr Lieblingszitat hinzu (optional)",
+  "photoLabel": "Foto hochladen",
+  "quoteLabel": "Lieblingszitat",
+  "quoteOptional": "(optional)",
+  "quotePlaceholder": "Teilen Sie ein Zitat, das Sie inspiriert...",
+  "quoteLimit": "{length}/200",
+
   "previous": "Zurück",
   "next": "Weiter",
-  "noInterestsFound": "Keine Interessen gefunden."
-}
+  "finish": "Fertig",
+
+  "noUserId": "Keine Benutzer-ID gefunden. Bitte erneut registrieren.",
+  "profileSetupComplete": "🎉 Profil erfolgreich eingerichtet!",
+  "profileSetupWelcome": "Willkommen in deinem persönlichen Bereich! Du kannst ihn anpassen und sofort loslegen.",
+
+  "somethingWentWrong": "❌ Etwas ist schiefgelaufen!",
+  "serverError": "⚠️ Serverfehler, bitte versuchen Sie es später erneut."
+   
+  }
+
+
+
+
+
 
 
 

@@ -26,7 +26,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     // ⏳ Auto-remove after 2 seconds
     setTimeout(() => {
       removeNotification(id);
-    }, 2000);
+    }, 5000);
   };
 
   const removeNotification = (id: number) => {

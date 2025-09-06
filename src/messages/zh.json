@@ -59,9 +59,9 @@
   "title": "加入 SoulSync AI",
   "subtitle": "创建帐户以访问为你个性化的岛屿体验",
   "usernameLabel": "用户名",
-  "usernamePlaceholder": "johndoe",
+ "usernamePlaceholder": "请输入用户名",
   "emailLabel": "电子邮件",
-  "emailPlaceholder": "your@email.com",
+  "emailPlaceholder": "你的邮箱@example.com",
   "passwordLabel": "密码",
   "passwordPlaceholder": "创建一个密码",
   "confirmPasswordLabel": "确认密码",
@@ -70,16 +70,79 @@
   "orContinueWith": "或使用以下方式继续",
   "alreadyHaveAccount": "已经有账号？",
   "signIn": "登录",
-  "passwordMismatch": "两次输入的密码不一致"
+
+  "fillAllFields": "请填写所有字段。",
+  "passwordMismatch": "密码不匹配！",
+  "accountCreated": "账户创建成功！",
+  "somethingWentWrong": "❌ 出了点问题！",
+  "serverError": "⚠️ 服务器错误，请稍后再试。",
+  "emailExists": "电子邮件已存在",
+"usernameExists": "用户名已存在"
+
 },
-"ProfileSetup": {
-  "completeProfile": "完成你的个人资料",
-  "interestsSubtitle": "请选择至少 3 个兴趣以继续",
-  "minimum": "最少",
-  "previous": "上一步",
-  "next": "下一步",
-  "noInterestsFound": "未找到兴趣。"
+  "ProfileSetup": {
+    "completeProfile": "完成你的个人资料",
+    "setupSubtitle": "让我们设置你的个人资料...",
+    "step": "第 {current} 步，共 {total} 步",
+
+    "yourInterests": "你的兴趣",
+    "interestsSubtitle": "请选择至少 3 个兴趣，以便我们找到合适的匹配对象",
+    "minimum": "最少",
+    "interestsError": "加载兴趣失败。请再试一次。",
+
+    "birthdateTitle": "你的年龄",
+    "birthdateSubtitle": "请输入你的出生年份（月份和日期可选）",
+    "yearPlaceholder": "年",
+    "monthPlaceholder": "月",
+    "dayPlaceholder": "日",
+
+    "aboutTitle": "关于你",
+    "aboutSubtitle": "帮助我们找到适合你的匹配",
+    "genderLabel": "性别",
+    "selectGender": "请选择你的性别",
+    "lookingForLabel": "寻找对象",
+    "lookingForSubtitle": "选择所有适用项",
+    "starSignLabel": "星座",
+    "selectStarSign": "请选择你的星座",
+    "optional": "可选",
+    "loading": "加载中...",
+    "errorLoading": "加载选项出错",
+
+    "locationTitle": "输入你的所在地",
+    "locationSubtitle": "这可以帮助我们提供更合适的约会场所建议",
+    "countryLabel": "国家",
+    "selectCountry": "选择你的国家",
+    "cityPlaceholder": "城市",
+    "postalCodePlaceholder": "邮政编码（必填）",
+    "postalCodeError": "邮政编码必须在3到10个字符之间",
+
+    "title": "最后步骤",
+    "subtitle": "添加个人照片和您喜欢的名言（可选）",
+    "photoLabel": "上传照片",
+    "quoteLabel": "喜欢的名言",
+    "quoteOptional": "（可选）",
+    "quotePlaceholder": "分享一句激励你的名言...",
+    "quoteLimit": "{length}/200",
+
+    "previous": "上一步",
+    "next": "下一步",
+    "finish": "完成",
+
+    "noUserId": "未找到用户ID，请重新注册。",
+     "profileSetupComplete": "🎉 个人资料设置完成！",
+    "profileSetupWelcome": "欢迎来到你的个人空间！你可以自定义它并开始探索。",
+
+    "somethingWentWrong": "❌ 出错了！",
+    "serverError": "⚠️ 服务器错误，请稍后再试。"
+  }
+
+
+
 }
 
 
-}
+
+
+
+
+

@@ -16,11 +16,20 @@ export async function GET(req: Request) {
   }
 
   try {
-    // Check DB connection
     await pool.query("SELECT 1");
 
+    const { searchParams } = new URL(req.url);
+    const locale = searchParams.get("locale") || "en";
+
+    const columnMap: Record<string, string> = {
+      en: "gender",
+      de: "gender_de",
+      zh: "gender_zh",
+    };
+    const column = columnMap[locale] || "gender";
+
     const result = await pool.query(
-      `SELECT id, gender FROM tblgender ORDER BY id ASC`
+      `SELECT id, ${column} AS gender FROM tblgender ORDER BY id ASC`
     );
 
     return NextResponse.json(result.rows);
