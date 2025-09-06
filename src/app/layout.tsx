@@ -8,13 +8,13 @@ export const metadata: Metadata = {
   title: "SoulSync AI",
   description: "AI-Powered Dating App",
 };
-
+// Test update for deployment
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
         <NotificationProvider>
-          {/* Global Notifications (always visible) */}
+          {/* Global Notifications (always visible) test upload*/}
           <NotificationContainer />
           {children}
         </NotificationProvider>
