@@ -29,35 +29,44 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+  
     if (!username || !email || !password || !confirmPassword) {
       showNotification("Please fill in all fields.");
       return;
     }
-
+  
     if (password !== confirmPassword) {
       showNotification("Passwords do not match!");
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),
       });
-
+  
       const data = await res.json();
-
+  
       if (res.ok) {
+        // ✅ Save user_id in localStorage so we can use it later
+        if (data.user?.id) {
+          localStorage.setItem("user_id", data.user.id);
+          console.log("✅ user_id saved to localStorage:", data.user.id);
+        }
+      
         showNotification("Account created successfully!");
         setAccountCreated(true);
+      
+        // redirect to profile setup
         router.push(`/${locale}/profile-setup`);
       } else {
         showNotification(data.error || "❌ Something went wrong!");
       }
+      
     } catch (err) {
       console.error(err);
       showNotification("⚠️ Server error, try again later.");
@@ -65,6 +74,7 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+  
 
   return (
     <main className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 px-4">

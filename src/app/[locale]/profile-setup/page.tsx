@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import useSWR from "swr";
-import { Search,Calendar, Heart, MapPin, Quote } from "lucide-react";
-
+import { Search, User, Calendar, Heart, MapPin, Quote,Camera } from "lucide-react";
 
 // --- Types for API results ---
 interface Interest {
@@ -45,6 +44,19 @@ export default function ProfileSetupPage() {
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
+  const [photo, setPhoto] = useState<string | null>(null); // ✅ added photo state
+
+  // --- Photo upload handler ---
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // --- Fetch data with loading and error ---
   const {
@@ -96,30 +108,57 @@ export default function ProfileSetupPage() {
     );
   };
 
+
+  
   // --- Navigation ---
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < 5) {
       setCurrentStep((prev) => prev + 1);
     } else {
-      console.log("Saving to database...", {
-        interests: selected,
-        age,
-        about,
-        location,
-        country,
-        city,
-        postalCode,
-        quote,
-        gender,
-        lookingFor,
-        starSign,
-      });
+      // ✅ Final step -> Save to database
+      const userId = localStorage.getItem("user_id");
+  
+      if (!userId) {
+        alert("No user_id found. Please register again.");
+        return;
+      }
+  
+      try {
+        const res = await fetch("/api/interest-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: Number(userId),
+            interests: selected, // array of interest ids
+          }),
+        });
+  
+        const data = await res.json();
+  
+        if (res.ok) {
+          console.log("✅ Interests saved successfully!", data);
+          alert("Profile setup complete!");
+          // redirect to dashboard or home page
+          // router.push("/dashboard");
+        } else {
+          console.error("❌ Failed to save interests:", data.error);
+          alert("Failed to save interests. Please try again.");
+        }
+      } catch (error) {
+        console.error("⚠️ Error saving interests:", error);
+        alert("Something went wrong.");
+      }
     }
   };
+
+  
+
+
 
   const handlePrevious = () => {
     if (currentStep > 1) setCurrentStep((prev) => prev - 1);
   };
+
 
   return (
     <main className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 px-4">
@@ -174,37 +213,38 @@ export default function ProfileSetupPage() {
       {selected.length} / 3 minimum
     </p>
 
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-      {interestsLoading ? (
-        Array.from({ length: 9 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-10 bg-white/20 rounded-xl animate-pulse"
-          />
-        ))
-      ) : interestsError ? (
-        <p className="col-span-full text-red-400 text-sm">
-          Failed to load interests. Please try again.
-        </p>
-      ) : (
-        interests.map((item: Interest) => {
-          const isSelected = selected.includes(item.id);
-          return (
-            <button
-              key={item.id}
-              onClick={() => toggleSelect(item.id)}
-              className={`px-3 py-2 rounded-xl border transition-all duration-150 text-sm font-medium ${
-                isSelected
-                  ? "bg-pink-500/80 text-white border-pink-400"
-                  : "bg-white/10 text-white/80 border-white/20 hover:bg-white/20"
-              }`}
-            >
-              {item.interest}
-            </button>
-          );
-        })
-      )}
-    </div>
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+  {interestsLoading ? (
+    Array.from({ length: 12 }).map((_, i) => (
+      <div
+        key={i}
+        className="h-10 bg-white/20 rounded-xl animate-pulse"
+      />
+    ))
+  ) : interestsError ? (
+    <p className="col-span-full text-red-400 text-sm">
+      Failed to load interests. Please try again.
+    </p>
+  ) : (
+    interests.map((item: Interest) => {
+      const isSelected = selected.includes(item.id);
+      return (
+        <button
+          key={item.id}
+          onClick={() => toggleSelect(item.id)}
+          className={`px-3 py-2 rounded-xl border transition-all duration-150 text-sm font-medium ${
+            isSelected
+              ? "bg-pink-500/80 text-white border-pink-400"
+              : "bg-white/10 text-white/80 border-white/20 hover:bg-white/20"
+          }`}
+        >
+          {item.interest}
+        </button>
+      );
+    })
+  )}
+</div>
+
   </>
 )}
 
@@ -469,22 +509,66 @@ export default function ProfileSetupPage() {
 
 
 
-        {/* Step 5: Quote */}
-        {currentStep === 5 && (
-          <>
-            <div className="flex justify-center mb-4">
-              <Quote size={40} className="text-pink-400" />
-            </div>
-            <h2 className="text-lg font-semibold mb-2">Enter your quote</h2>
-            <input
-              type="text"
-              value={quote}
-              onChange={(e) => setQuote(e.target.value)}
-              className="w-full px-4 py-2 rounded-xl border border-white/20 bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
-              placeholder="Your favorite quote"
-            />
-          </>
+     {/* Step 5: Finishing Touches */}
+{currentStep === 5 && (
+  <>
+    <div className="flex justify-center mb-4">
+      <Camera size={40} className="text-pink-400" />
+    </div>
+
+    <h2 className="text-lg font-semibold mb-1">Finishing Touches</h2>
+    <p className="text-sm text-white/70 mb-4">
+      Add a profile photo and your favorite quote (optional)
+    </p>
+
+    {/* Photo Upload */}
+    <div className="flex flex-col items-center mb-6 relative">
+      <div className="w-32 h-32 rounded-full bg-white/10 flex items-center justify-center border border-white/20 mb-3 overflow-hidden relative">
+        {photo ? (
+          <img
+            src={photo}
+            alt="Profile"
+            className="w-full h-full object-cover rounded-full"
+          />
+        ) : (
+          <User size={50} className="text-white/50" />
         )}
+        {/* Camera overlay */}
+
+      </div>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => handlePhotoUpload(e)}
+        className="hidden"
+        id="photoUpload"
+      />
+      <label
+        htmlFor="photoUpload"
+        className="cursor-pointer px-4 py-2 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-sm font-medium transition"
+      >
+        Upload Photo
+      </label>
+    </div>
+
+    {/* Favorite Quote Input */}
+    <div className="text-left">
+      <label className="block text-sm font-medium text-white mb-1">
+        Favorite Quote <span className="text-white/50">(optional)</span>
+      </label>
+      <textarea
+        value={quote}
+        onChange={(e) => setQuote(e.target.value)}
+        maxLength={200}
+        rows={4}
+        className="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none"
+        placeholder="Share a quote that inspires you..."
+      />
+      <p className="text-xs text-white/50 mt-1">{quote.length}/200</p>
+    </div>
+  </>
+)}
+
 
 {/* Actions */}
 <div className="flex justify-between mt-6">
