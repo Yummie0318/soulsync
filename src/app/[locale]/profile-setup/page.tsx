@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import useSWR from "swr";
 import { Search, User, Calendar, Heart, MapPin, Quote,Camera } from "lucide-react";
 
+
+
 // --- Types for API results ---
 interface Interest {
   id: number;
@@ -32,7 +34,9 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 export default function ProfileSetupPage() {
   const [selected, setSelected] = useState<number[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
-
+   // All your states go here
+   const [photoFile, setPhotoFile] = useState<File | null>(null); // raw file
+   const [photo, setPhoto] = useState<string | null>(null); // preview
   // Form state
   const [age, setAge] = useState({ year: "", month: "", day: "" });
   const [quote, setQuote] = useState("");
@@ -44,19 +48,17 @@ export default function ProfileSetupPage() {
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
-  const [photo, setPhoto] = useState<string | null>(null); // ✅ added photo state
 
-  // --- Photo upload handler ---
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhoto(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+// --- Photo upload handler ---
+const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    setPhotoFile(file);
+    setPhoto(URL.createObjectURL(file)); // ✅ use setPhoto for preview
+    console.log("📸 Selected file:", file.name, file.size, "bytes");
+  }
+};
+
 
   // --- Fetch data with loading and error ---
   const {
@@ -110,48 +112,72 @@ export default function ProfileSetupPage() {
 
 
   
-  // --- Navigation ---
-  const handleNext = async () => {
+// --- Navigation ---
+const handleNext = async () => {
+  const userId = localStorage.getItem("user_id");
+  if (!userId) {
+    alert("No user_id found. Please register again.");
+    return;
+  }
+
+  try {
     if (currentStep < 5) {
       setCurrentStep((prev) => prev + 1);
     } else {
-      // ✅ Final step -> Save to database
-      const userId = localStorage.getItem("user_id");
-  
-      if (!userId) {
-        alert("No user_id found. Please register again.");
+      console.log("➡️ Sending final profile setup (Steps 1–5)");
+
+      // ✅ Always use FormData for final submit
+      const formData = new FormData();
+      formData.append("user_id", userId);
+
+      // Step 2
+      formData.append("year", String(age.year || ""));
+      formData.append("month", String(age.month || ""));
+      formData.append("day", String(age.day || ""));
+
+      // Step 3
+      formData.append("gender_id", String(gender || ""));
+      formData.append("zodiac_id", starSign ? String(starSign) : "");
+
+      lookingFor.forEach((lf) => formData.append("lookingfor[]", String(lf)));
+      selected.forEach((int) => formData.append("interests[]", String(int)));
+
+      // Step 4
+      formData.append("country_id", String(country || ""));
+      formData.append("city", city || "");
+      formData.append("postal", postalCode || "");
+
+      // Step 5
+      if (photoFile) {
+        formData.append("photo", photoFile);
+        console.log("📤 Attaching photo:", photoFile.name);
+      }
+      if (quote) formData.append("quote", quote);
+
+      const res = await fetch("/api/profile-setup", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        console.error("❌ Failed:", data.error);
+        alert("Failed to save profile. Please try again.");
         return;
       }
-  
-      try {
-        const res = await fetch("/api/interest-user", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: Number(userId),
-            interests: selected, // array of interest ids
-          }),
-        });
-  
-        const data = await res.json();
-  
-        if (res.ok) {
-          console.log("✅ Interests saved successfully!", data);
-          alert("Profile setup complete!");
-          // redirect to dashboard or home page
-          // router.push("/dashboard");
-        } else {
-          console.error("❌ Failed to save interests:", data.error);
-          alert("Failed to save interests. Please try again.");
-        }
-      } catch (error) {
-        console.error("⚠️ Error saving interests:", error);
-        alert("Something went wrong.");
-      }
-    }
-  };
 
-  
+      console.log("✅ All steps saved successfully!", data);
+      alert("🎉 Profile setup complete!");
+      // router.push("/dashboard");
+    }
+  } catch (error) {
+    console.error("⚠️ Error saving profile setup:", error);
+    alert("Something went wrong.");
+  }
+};
+
+
+
 
 
 
@@ -539,7 +565,7 @@ export default function ProfileSetupPage() {
       <input
         type="file"
         accept="image/*"
-        onChange={(e) => handlePhotoUpload(e)}
+        onChange={handlePhotoChange}
         className="hidden"
         id="photoUpload"
       />
