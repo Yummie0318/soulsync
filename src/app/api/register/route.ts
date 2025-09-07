@@ -38,7 +38,7 @@ if (existing.length > 0) {
     const { rows } = await pool.query(
       "INSERT INTO tbluser (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email",
       [username, email, hashedPassword]
-    );
+    );    
 
     console.log("✅ New user created:", rows[0]);
     return NextResponse.json({ message: "User created", user: rows[0] }, { status: 201 });

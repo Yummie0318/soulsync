@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import { Dialog } from "@headlessui/react";
+import { X } from "lucide-react";
+
 import {
   User,
   Home,
@@ -24,17 +27,88 @@ import {
   ImagePlus,
 } from "lucide-react";
 
+import EditProfileModal from "@/components/EditProfileModal";
+
+interface UserType {
+  id: number;
+  username: string;
+  month: number;
+  day: number;
+  year: number;
+  photo_file_path: string;
+  city: string;
+  country_id: number;
+  country_name: string;
+  details_id: number | null;
+  currentcountry_id: number | null;
+  current_country_name?: string | null;
+  currentpostal: string | null;
+  currentcity: string | null;
+  postal?: string;
+  gender_id?: number | null;
+  ethnicity_id?: number | null;
+  zodiac_id?: number | null;
+  lookingfor?: number[];
+
+  // ✅ New fields from API
+  posts_count?: number;
+  followers_count?: number;
+  following_count?: number;
+  friends_count?: number;
+}
+
+interface PostType {
+  text: string;
+  comments: string[];
+  showComments?: boolean;
+  showAll?: boolean;
+  image?: string;
+}
+
 export default function MyRoomPage() {
-  // ✅ Unified posts state with optional image
-  const [posts, setPosts] = useState<
-    {
-      text: string;
-      comments: string[];
-      showComments?: boolean;
-      showAll?: boolean;
-      image?: string;
-    }[]
-  >([
+  const [userId, setUserId] = useState<string | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const [countries, setCountries] = useState<any[]>([]);
+  const [genders, setGenders] = useState<any[]>([]);
+  const [ethnicities, setEthnicities] = useState<any[]>([]);
+  const [zodiacs, setZodiacs] = useState<any[]>([]);
+  const [lookingfor, setLookingfor] = useState<any[]>([]);
+
+  useEffect(() => {
+    // For testing: override with fixed user_id = 71
+    const id = "71";
+    localStorage.setItem("user_id", id);
+    setUserId(id);
+
+    fetch(`/api/user?user_id=${id}`)
+      .then((res) => res.json())
+      .then((data) => setUser(data))
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/countries").then((res) => res.json()),
+      fetch("/api/genders").then((res) => res.json()),
+      fetch("/api/ethnicities").then((res) => res.json()),
+      fetch("/api/zodiacs").then((res) => res.json()),
+      fetch("/api/lookingfor").then((res) => res.json()),
+    ])
+      .then(([c, g, e, z, l]) => {
+        setCountries(c);
+        setGenders(g);
+        setEthnicities(e);
+        setZodiacs(z);
+        setLookingfor(l);
+      })
+      .catch(console.error);
+  }, []);
+
+  const getAge = (year: number) => new Date().getFullYear() - year;
+
+  const [posts, setPosts] = useState<PostType[]>([
     {
       text: "Sample post! Welcome to your dating app.",
       comments: ["Nice!", "😍 Love this!", "🔥🔥🔥", "Awesome!"],
@@ -63,6 +137,8 @@ export default function MyRoomPage() {
     setPreviewImage(null);
   };
 
+  
+
   return (
     <main className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 pb-24 px-2 sm:px-4">
       {/* Background Glow */}
@@ -78,74 +154,110 @@ export default function MyRoomPage() {
 
       {/* Profile Section */}
       <section className="max-w-4xl mx-auto py-16 space-y-6">
-        {/* Profile Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="relative bg-gray-800/40 backdrop-blur-md rounded-2xl border border-white/10 p-6 shadow-lg flex flex-col sm:flex-row items-center sm:items-start gap-6 w-full"
-        >
-          {/* Edit Button */}
-          <button className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-xs sm:text-sm text-pink-400 transition">
-            <Edit className="w-4 h-4" /> Edit Profile
-          </button>
 
-          {/* Left: Avatar */}
-          <div className="flex-shrink-0 flex flex-col items-center sm:items-start">
-            <div className="w-32 sm:w-40 aspect-square rounded-full p-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">
-              <div className="w-full h-full rounded-full bg-gray-900 overflow-hidden relative">
-              <Image
-                  src="/images/dogie.jpg"
-                  alt="Profile Avatar"
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
-                  style={{ objectFit: "cover" }}
-                  className="rounded-full"
-                />
+      {!user ? (
+  // Skeleton Loader
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="relative bg-gray-800/40 backdrop-blur-md rounded-2xl border border-white/10 p-6 shadow-lg 
+               flex flex-col items-center sm:flex-row sm:items-start gap-6 w-full animate-pulse"
+  >
+    {/* Avatar Skeleton */}
+    <div className="w-32 sm:w-40 aspect-square rounded-full bg-gray-700" />
 
-              </div>
-            </div>
-          </div>
+    {/* Info Skeleton */}
+    <div className="flex-1 space-y-4 w-full text-center sm:text-left">
+      <div className="h-6 w-1/3 bg-gray-700 rounded mx-auto sm:mx-0" />
+      <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-xs sm:text-sm">
+        <div className="h-4 w-16 bg-gray-700 rounded" />
+        <div className="h-4 w-20 bg-gray-700 rounded" />
+        <div className="h-4 w-24 bg-gray-700 rounded" />
+      </div>
+      <div className="space-y-2">
+        <div className="h-4 w-2/3 bg-gray-700 rounded mx-auto sm:mx-0" />
+        <div className="h-4 w-1/2 bg-gray-700 rounded mx-auto sm:mx-0" />
+        <div className="h-4 w-2/3 bg-gray-700 rounded mx-auto sm:mx-0" />
+      </div>
+    </div>
+  </motion.div>
+) : (
+  // Actual Profile UI
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.2, duration: 0.5 }}
+    className="relative bg-gray-800/40 backdrop-blur-md rounded-2xl border border-white/10 p-6 shadow-lg 
+               flex flex-col items-center sm:flex-row sm:items-start gap-6 w-full"
+  >
+    <button
+      onClick={() => setIsEditOpen(true)}
+      className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-xs sm:text-sm text-pink-400 transition"
+    >
+      <Edit className="w-4 h-4" /> Edit Profile
+    </button>
 
-          {/* Right: Info */}
-          <div className="flex-1 space-y-4 w-full">
-            <h2 className="text-xl sm:text-2xl font-bold break-words">Juan Dela Cruz</h2>
+    {/* Avatar */}
+    <div className="flex-shrink-0 flex flex-col items-center">
+      <div className="w-32 sm:w-40 aspect-square rounded-full p-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">
+        <div className="w-full h-full rounded-full bg-gray-900 overflow-hidden relative">
+          <Image
+            src={user.photo_file_path || "/images/default-avatar.jpg"}
+            alt="Profile Avatar"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+            style={{ objectFit: "cover" }}
+            className="rounded-full"
+          />
+        </div>
+      </div>
+    </div>
 
-            {/* Stats */}
-            <div className="flex flex-wrap gap-4 text-xs sm:text-sm text-gray-400">
-              <span>{posts.length} posts</span>
-              <span>0 followers</span>
-              <span>0 following</span>
-            </div>
+    {/* Info */}
+    <div className="flex-1 space-y-4 w-full text-center sm:text-left">
+      <h2 className="text-xl sm:text-2xl font-bold break-words">{user.username}</h2>
 
-            {/* Details */}
-            <div className="space-y-1 text-sm text-gray-300">
-              <p className="flex items-center gap-2">
-                <User className="w-4 h-4 text-pink-400" /> 1692 years old (Born
-                333/33/333)
-              </p>
-              <p className="flex items-center gap-2">
-                <Home className="w-4 h-4 text-pink-400" /> Home: 33, Algeria (333)
-              </p>
-              <p className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-pink-400" /> Current: Same as home
-              </p>
-            </div>
+      <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-xs sm:text-sm text-gray-400">
+          <span>{user.posts_count ?? 0} posts</span>
+          <span>{user.followers_count ?? 0} followers</span>
+          <span>{user.following_count ?? 0} following</span>
+        </div>
 
-            {/* Actions */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mt-3 w-full">
-              <button className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white text-xs sm:text-sm font-medium transition w-full">
-                <Search className="w-4 h-4" /> Find Matches
-              </button>
-              <button className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white text-xs sm:text-sm font-medium transition w-full">
-                <Settings className="w-4 h-4" /> Settings
-              </button>
-              <button className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-red-500/20 border border-white/10 text-red-400 text-xs sm:text-sm font-medium transition col-span-2 sm:col-span-1 w-full">
-                <LogOut className="w-4 h-4" /> Logout
-              </button>
-            </div>
-          </div>
-        </motion.div>
+
+      <div className="space-y-1 text-sm text-gray-300">
+        <p className="flex justify-center sm:justify-start items-center gap-2">
+          <User className="w-4 h-4 text-pink-400" />{" "}
+          {getAge(user.year)} years old (Born {user.month}/{user.day}/{user.year})
+        </p>
+        <p className="flex justify-center sm:justify-start items-center gap-2">
+          <Home className="w-4 h-4 text-pink-400" /> Home: {user.city}, {user.country_name} ({user.postal})
+        </p>
+        <p className="flex justify-center sm:justify-start items-center gap-2">
+          <MapPin className="w-4 h-4 text-pink-400" /> Current:{" "}
+          {user.currentcity || user.city}, {user.current_country_name || user.country_name} ({user.currentpostal || user.postal})
+        </p>
+      </div>
+    </div>
+  </motion.div>
+)}
+
+
+      {/* ✅ Modal */}
+      {user && (
+        <EditProfileModal
+          isOpen={isEditOpen}
+          onClose={() => setIsEditOpen(false)}
+          user={user}
+          countries={countries}
+          genders={genders}
+          ethnicities={ethnicities}
+          zodiacs={zodiacs}
+          lookingfor={lookingfor}
+          onUpdate={(updatedUser) => setUser(updatedUser)} // ✅ updates local state
+        />
+      )}
+
+
 
         {/* Social Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -266,6 +378,7 @@ export default function MyRoomPage() {
             fill
             style={{ objectFit: "cover" }}
             className="rounded-lg"
+            sizes="(max-width: 768px) 100vw, 50vw" // ✅ add this
           />
         </div>
       )}
@@ -307,6 +420,44 @@ export default function MyRoomPage() {
     </button>
   </nav>
 
+
+{/* ✅ Modal */}
+<AnimatePresence>
+  {user && isEditOpen && (
+    <motion.div
+      key="edit-modal"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }} // faster backdrop
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 10 }} // small subtle slide
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 10 }}
+        transition={{ duration: 0.18, ease: "easeOut" }} // quick & smooth
+        className="relative bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg p-6"
+      >
+        <EditProfileModal
+          isOpen={isEditOpen}
+          onClose={() => setIsEditOpen(false)}
+          user={user}
+          countries={countries}
+          genders={genders}
+          ethnicities={ethnicities}
+          zodiacs={zodiacs}
+          lookingfor={lookingfor}
+          onUpdate={(updatedUser) => setUser(updatedUser)}
+        />
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
+
+
+
     </main>
+    
   );
 }

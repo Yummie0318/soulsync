@@ -10,14 +10,14 @@ type LocaleLayoutProps = {
 
 export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
   const { locale } = await params; // ✅ must await
-  console.log("📂 LocaleLayout -> Params:", { locale });
+  // console.log("📂 LocaleLayout -> Params:", { locale });
 
   let messages: Record<string, string>;
   try {
     messages = (await import(`../../messages/${locale}.json`)).default;
-    console.log("✅ LocaleLayout -> Loaded messages:", messages);
+    // console.log("✅ LocaleLayout -> Loaded messages:", messages);
   } catch (error) {
-    console.error(`❌ No messages file found for locale: ${locale}`, error);
+    // console.error(`❌ No messages file found for locale: ${locale}`, error);
     notFound();
   }
 
