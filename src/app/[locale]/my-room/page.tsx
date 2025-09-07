@@ -77,16 +77,18 @@ export default function MyRoomPage() {
   const [lookingfor, setLookingfor] = useState<any[]>([]);
 
   useEffect(() => {
-    // For testing: override with fixed user_id = 71
-    const id = "71";
-    localStorage.setItem("user_id", id);
+    // Get user_id from localStorage (set during registration/login)
+    const id = localStorage.getItem("user_id");
+    if (!id) return; // no user_id yet
+  
     setUserId(id);
-
+  
     fetch(`/api/user?user_id=${id}`)
       .then((res) => res.json())
       .then((data) => setUser(data))
       .catch(console.error);
   }, []);
+  
 
   useEffect(() => {
     Promise.all([
@@ -218,15 +220,14 @@ export default function MyRoomPage() {
       <h2 className="text-xl sm:text-2xl font-bold break-words">{user.username}</h2>
 
       <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-xs sm:text-sm text-gray-400">
-          <span>{user.posts_count ?? 0} posts</span>
-          <span>{user.followers_count ?? 0} followers</span>
-          <span>{user.following_count ?? 0} following</span>
-        </div>
-
+        <span>{user.posts_count ?? 0} posts</span>
+        <span>{user.followers_count ?? 0} followers</span>
+        <span>{user.following_count ?? 0} following</span>
+      </div>
 
       <div className="space-y-1 text-sm text-gray-300">
         <p className="flex justify-center sm:justify-start items-center gap-2">
-          <User className="w-4 h-4 text-pink-400" />{" "}
+          <User className="w-4 h-4 text-pink-400" />
           {getAge(user.year)} years old (Born {user.month}/{user.day}/{user.year})
         </p>
         <p className="flex justify-center sm:justify-start items-center gap-2">
@@ -234,9 +235,47 @@ export default function MyRoomPage() {
         </p>
         <p className="flex justify-center sm:justify-start items-center gap-2">
           <MapPin className="w-4 h-4 text-pink-400" /> Current:{" "}
-          {user.currentcity || user.city}, {user.current_country_name || user.country_name} ({user.currentpostal || user.postal})
+          {user.currentcity || user.city}, {user.current_country_name || user.country_name} (
+          {user.currentpostal || user.postal})
         </p>
       </div>
+      
+{/* Actions / Buttons */}
+<div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mt-4 w-full">
+  {/* Find Matches with animated gradient */}
+  <motion.button
+  className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-white text-xs sm:text-sm font-medium col-span-2 sm:col-span-1 w-full shadow-md"
+  style={{
+    background: "linear-gradient(45deg, #ec4899, #8b5cf6, #6366f1, #ec4899)",
+    backgroundSize: "300% 300%",
+  }}
+  animate={{
+    backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"], // diagonal gradient shift
+  }}
+  transition={{
+    duration: 4,
+    repeat: Infinity,
+    ease: "linear",
+  }}
+>
+  <Search className="w-4 h-4" /> Find Matches
+</motion.button>
+
+
+
+
+  {/* Settings button */}
+  <button className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white text-xs sm:text-sm font-medium transition w-full">
+    <Settings className="w-4 h-4" /> Settings
+  </button>
+
+  {/* Logout button */}
+  <button className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-red-500/20 border border-white/10 text-red-400 text-xs sm:text-sm font-medium transition w-full">
+    <LogOut className="w-4 h-4" /> Logout
+  </button>
+</div>
+
+
     </div>
   </motion.div>
 )}
