@@ -134,7 +134,60 @@
 
     "somethingWentWrong": "❌ 出错了！",
     "serverError": "⚠️ 服务器错误，请稍后再试。"
-  }
+  },
+
+  "ProfileSection": {
+    "editProfile": "编辑资料",
+    "posts": "帖子",
+    "followers": "关注者",
+    "following": "关注中",
+  "yearsOld": "{age} 岁 (出生于 {year}/{month}/{day})",
+    "home": "家",
+    "current": "当前位置",
+    "findMatches": "寻找匹配",
+    "settings": "设置",
+    "logout": "登出",
+    "myFriends": "我的朋友",
+    "datePlans": "约会计划",
+    "noActiveConversations": "还没有正在进行的对话",
+    "startMatching": "开始匹配来计划约会吧！",
+    "yourDatePlans": "你的约会计划",
+    "noDatePlans": "还没有约会计划",
+    "whatsOnYourMind": "你在想什么？",
+    "preview": "预览",
+    "post": "发布"
+  },
+  "BottomNav": {
+    "search": "搜索",
+    "islands": "岛屿",
+    "myRoom": "我的房间",
+    "journey": "旅程",
+    "messages": "消息"
+  },
+"EditProfileModal": {
+  "title": "编辑资料",
+  "profileInfo": "个人信息",
+  "username": "用户名",
+  "dob": "出生日期",
+  "quote": "个性签名",
+  "locationDetails": "位置信息",
+  "loading": "加载中...",
+  "homeLocation": "家庭所在地",
+  "currentLocation": "当前位置",
+  "optional": "（可选）",
+  "selectCountry": "-- 选择国家 --",
+  "datingPreferences": "交友偏好",
+  "selectEthnicity": "-- 选择种族 --",
+  "selectStarSign": "-- 选择星座 --",
+  "lookingFor": "寻找对象",
+  "loadingOptions": "正在加载选项...",
+  "saveChanges": "保存更改",
+  "selectGender": "-- 选择性别 --",
+  "currentCityPlaceholder": "当前城市",
+  "currentPostalPlaceholder": "当前邮编"
+}
+
+
 
 
 

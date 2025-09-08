@@ -136,7 +136,57 @@
   "somethingWentWrong": "❌ Etwas ist schiefgelaufen!",
   "serverError": "⚠️ Serverfehler, bitte versuchen Sie es später erneut."
    
-  }
+  },
+  "ProfileSection": {
+    "editProfile": "Profil bearbeiten",
+    "posts": "Beiträge",
+    "followers": "Follower",
+    "following": "Folgt",
+  "yearsOld": "{age} Jahre alt (Geboren {day}.{month}.{year})",
+    "home": "Zuhause",
+    "current": "Aktuell",
+    "findMatches": "Matches finden",
+    "settings": "Einstellungen",
+    "logout": "Abmelden",
+    "myFriends": "Meine Freunde",
+    "datePlans": "Dating-Pläne",
+    "noActiveConversations": "Noch keine aktiven Unterhaltungen",
+    "startMatching": "Starte das Matching, um Dates zu planen!",
+    "yourDatePlans": "Deine Dating-Pläne",
+    "noDatePlans": "Noch keine Dating-Pläne",
+    "whatsOnYourMind": "Woran denkst du gerade?",
+    "preview": "Vorschau",
+    "post": "Posten"
+  },
+  "BottomNav": {
+  "search": "Suche",
+  "islands": "Inseln",
+  "myRoom": "Mein Zimmer",
+  "journey": "Reise",
+  "messages": "Nachrichten"
+},
+"EditProfileModal": {
+  "title": "Profil bearbeiten",
+  "profileInfo": "Profilinformationen",
+  "username": "Benutzername",
+  "dob": "Geburtsdatum",
+  "quote": "Zitat",
+  "locationDetails": "Standortdetails",
+  "loading": "Wird geladen...",
+  "homeLocation": "Heimatort",
+  "currentLocation": "Aktueller Standort",
+  "optional": "(Optional)",
+  "selectCountry": "-- Land auswählen --",
+  "datingPreferences": "Dating-Präferenzen",
+  "selectEthnicity": "-- Ethnie auswählen --",
+  "selectStarSign": "-- Sternzeichen auswählen --",
+  "lookingFor": "Suche nach",
+  "loadingOptions": "Optionen werden geladen...",
+  "saveChanges": "Änderungen speichern",
+   "selectGender": "-- Geschlecht auswählen --",
+   "currentCityPlaceholder": "Aktuelle Stadt",
+   "currentPostalPlaceholder": "Aktuelle Postleitzahl"
+}
 
 
 

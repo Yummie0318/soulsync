@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNotification } from "@/context/NotificationContext";
+import { useTranslations } from "next-intl";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -54,6 +55,8 @@ export default function EditProfileModal({
   const [loadingLocation, setLoadingLocation] = useState(true);
 
   const [saving, setSaving] = useState(false); // spinner state
+
+  const t = useTranslations("EditProfileModal"); // spinner state
 
   useEffect(() => {
     if (user) {
@@ -166,7 +169,7 @@ export default function EditProfileModal({
 
           {/* Header */}
           <div className="flex justify-between items-center p-4 border-b border-gray-700">
-            <Dialog.Title className="text-lg font-semibold">Edit Profile</Dialog.Title>
+            <Dialog.Title className="text-lg font-semibold">{t("title")}</Dialog.Title>
             <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-lg">
               <X className="w-5 h-5" />
             </button>
@@ -177,10 +180,13 @@ export default function EditProfileModal({
             
             {/* Profile Info */}
             <section>
-              <h3 className="text-pink-400 text-sm font-semibold mb-2">Profile Info</h3>
+            <h3 className="text-pink-400 text-sm font-semibold mb-2">
+              {t("profileInfo")}
+            </h3>
+
               <div className="space-y-3">
                 <label className="block">
-                  <span className="text-sm text-gray-400">Username</span>
+                <span className="text-sm text-gray-400">{t("username")}</span>
                   <input
                     type="text"
                     value={formData.username}
@@ -190,7 +196,7 @@ export default function EditProfileModal({
                 </label>
 
                 <div>
-                  <span className="text-sm text-gray-400">Date of Birth</span>
+                <span className="text-sm text-gray-400">{t("dob")}</span>
                   <div className="grid grid-cols-3 gap-3 mt-1">
                     <input
                       type="number"
@@ -217,7 +223,7 @@ export default function EditProfileModal({
                 </div>
 
                 <label className="block">
-                  <span className="text-sm text-gray-400">Quote</span>
+                <span className="text-sm text-gray-400">{t("quote")}</span>
                   <textarea
                     value={formData.quote}
                     onChange={(e) => handleChange("quote", e.target.value)}
@@ -232,22 +238,23 @@ export default function EditProfileModal({
 
             {/* Location Details */}
             <section>
-              <h3 className="text-pink-400 text-sm font-semibold mb-2">Location Details</h3>
+            <h3 className="text-pink-400 text-sm font-semibold mb-2">{t("locationDetails")}</h3>
 
               {/* Radio buttons */}
               {loadingLocation ? (
-                <p className="text-sm text-gray-400 mb-3">Loading...</p>
+               <p className="text-sm text-gray-400 mb-3">{t("loading")}</p>
               ) : (
                 <div className="flex gap-4 mb-3">
                   {locationDetails.map((d) => (
                     <label key={d.id} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="details_id"
-                        checked={formData.details_id === d.id}
-                        onChange={() => handleChange("details_id", d.id)}
-                        className="accent-pink-500"
-                      />
+                     <input
+                          type="radio"
+                          name="details_id"
+                          value={d.id}
+                          checked={formData.details_id === d.id}
+                          onChange={(e) => handleChange("details_id", Number(e.target.value))}
+                          className="accent-pink-500"
+                        />
                       <span>{d.details}</span>
                     </label>
                   ))}
@@ -256,7 +263,7 @@ export default function EditProfileModal({
 
               {/* Home Location */}
               <div className="space-y-3 mb-4">
-                <p className="text-sm text-gray-400">Home Location</p>
+              <p className="text-sm text-gray-400">{t("homeLocation")}</p>
                 <select
                   value={formData.country_id ?? ""}
                   onChange={(e) => handleChange("country_id", Number(e.target.value))}
@@ -289,15 +296,16 @@ export default function EditProfileModal({
 
               {/* Current Location */}
               <div className="space-y-3 mb-4">
-                <p className="text-sm text-gray-400">
-                  Current Location <span className="text-gray-500">(Optional)</span>
-                </p>
+              <p className="text-sm text-gray-400">
+                {t("currentLocation")} <span className="text-gray-500">{t("optional")}</span>
+              </p>
+
                 <select
                   value={formData.currentcountry_id ?? ""}
                   onChange={(e) => handleChange("currentcountry_id", Number(e.target.value))}
                   className="w-full p-2 rounded-lg bg-gray-800 border border-gray-700"
                 >
-                  <option value="">-- Select Country --</option>
+                 <option value="">{t("selectCountry")}</option>
                   {countries.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.country}
@@ -307,14 +315,14 @@ export default function EditProfileModal({
                 <div className="grid grid-cols-2 gap-3">
                   <input
                     type="text"
-                    placeholder="Current City"
+                    placeholder={t("currentCityPlaceholder")}
                     value={formData.currentcity}
                     onChange={(e) => handleChange("currentcity", e.target.value)}
                     className="p-2 rounded-lg bg-gray-800 border border-gray-700"
                   />
                   <input
                     type="text"
-                    placeholder="Current Postal"
+                    placeholder={t("currentPostalPlaceholder")}
                     value={formData.currentpostal}
                     onChange={(e) => handleChange("currentpostal", e.target.value)}
                     className="p-2 rounded-lg bg-gray-800 border border-gray-700"
@@ -327,14 +335,15 @@ export default function EditProfileModal({
 
             {/* Dating Preferences */}
             <section>
-              <h3 className="text-pink-400 text-sm font-semibold mb-2">Dating Preferences</h3>
+            
+            <h3 className="text-pink-400 text-sm font-semibold mb-2">{t("datingPreferences")}</h3>
               <div className="space-y-3">
                 <select
                   value={formData.gender_id ?? ""}
                   onChange={(e) => handleChange("gender_id", Number(e.target.value))}
                   className="w-full p-2 rounded-lg bg-gray-800 border border-gray-700"
                 >
-                  <option value="">-- Select Gender --</option>
+                 <option value="">{t("selectGender")}</option>
                   {genders.map((g) => (
                     <option key={g.id} value={g.id}>
                       {g.gender}
@@ -347,7 +356,7 @@ export default function EditProfileModal({
                   onChange={(e) => handleChange("ethnicity_id", Number(e.target.value))}
                   className="w-full p-2 rounded-lg bg-gray-800 border border-gray-700"
                 >
-                  <option value="">-- Select Ethnicity --</option>
+                <option value="">{t("selectEthnicity")}</option>
                   {ethnicities.map((e) => (
                     <option key={e.id} value={e.id}>
                       {e.ethnicity}
@@ -360,7 +369,7 @@ export default function EditProfileModal({
                   onChange={(e) => handleChange("zodiac_id", Number(e.target.value))}
                   className="w-full p-2 rounded-lg bg-gray-800 border border-gray-700"
                 >
-                  <option value="">-- Select Star Sign --</option>
+                  <option value="">{t("selectStarSign")}</option>
                   {zodiacs.map((z) => (
                     <option key={z.id} value={z.id}>
                       {z.zodiac}
@@ -370,13 +379,15 @@ export default function EditProfileModal({
 
                 {/* Looking For */}
                 <div className="mb-6 text-left">
-                  <p className="text-sm font-medium text-gray-400 mb-2">
-                    Looking For <span className="text-pink-400">*</span>
-                  </p>
+                <p className="text-sm font-medium text-gray-400 mb-2">
+                  {t("lookingFor")} <span className="text-pink-400">*</span>
+                </p>
 
                   <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
                     {lookingfor.length === 0 && (
-                      <p className="col-span-full text-sm text-gray-400">Loading options...</p>
+                      
+                  <p className="col-span-full text-sm text-gray-400">{t("loadingOptions")}</p>
+
                     )}
 
                     {lookingfor.map((item) => (
@@ -404,12 +415,12 @@ export default function EditProfileModal({
 
           {/* Footer */}
           <div className="p-4 border-t border-gray-700">
-            <button
-              onClick={handleSave}
-              className="w-full py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 transition"
-            >
-              Save Changes
-            </button>
+          <button
+            onClick={handleSave}
+            className="w-full py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 transition"
+          >
+            {t("saveChanges")}
+          </button>
           </div>
         </Dialog.Panel>
       </div>

@@ -134,7 +134,61 @@
     "profileSetupWelcome": "Welcome to your personal room! You can customize it and start exploring.",
     "somethingWentWrong": "❌ Something went wrong!",
     "serverError": "⚠️ Server error, try again later."
-  }
+  },
+
+  "ProfileSection": {
+    "editProfile": "Edit Profile",
+    "posts": "posts",
+    "followers": "followers",
+    "following": "following",
+"yearsOld": "{age} years old (Born {month}/{day}/{year})",
+    "home": "Home",
+    "current": "Current",
+    "findMatches": "Find Matches",
+    "settings": "Settings",
+    "logout": "Logout",
+    "myFriends": "My Friends",
+    "datePlans": "Date Plans",
+    "noActiveConversations": "No active conversations yet",
+    "startMatching": "Start matching to plan dates!",
+    "yourDatePlans": "Your Date Plans",
+    "noDatePlans": "No date plans yet",
+    "whatsOnYourMind": "What's on your mind?",
+    "preview": "Preview",
+    "post": "Post"
+  },
+  "BottomNav": {
+  "search": "Search",
+  "islands": "Islands",
+  "myRoom": "My Room",
+  "journey": "Journey",
+  "messages": "Messages"
+},
+"EditProfileModal": {
+  "title": "Edit Profile",
+  "profileInfo": "Profile Info",
+  "username": "Username",
+  "dob": "Date of Birth",
+  "quote": "Quote",
+  "locationDetails": "Location Details",
+  "loading": "Loading...",
+  "homeLocation": "Home Location",
+  "currentLocation": "Current Location",
+  "optional": "(Optional)",
+  "selectCountry": "-- Select Country --",
+  "datingPreferences": "Dating Preferences",
+  "selectEthnicity": "-- Select Ethnicity --",
+  "selectStarSign": "-- Select Star Sign --",
+  "lookingFor": "Looking For",
+  "loadingOptions": "Loading options...",
+  "saveChanges": "Save Changes",
+    "selectGender": "-- Select Gender --",
+     "currentCityPlaceholder": "Current City",
+  "currentPostalPlaceholder": "Current Postal"
+}
+
+
+
 
 
 }

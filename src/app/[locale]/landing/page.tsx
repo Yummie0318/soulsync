@@ -11,6 +11,7 @@ import LogoAnimation from "../animation/LogoAnimation";
 export default function LandingPage() {
   const t = useTranslations("LandingPage");
   const { locale } = useParams() as { locale: string };
+  
 
   return (
     <main className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 overflow-hidden px-6">
