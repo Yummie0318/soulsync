@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNotification } from "@/context/NotificationContext";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -16,21 +16,22 @@ interface EditProfileModalProps {
   ethnicities: any[];
   zodiacs: any[];
   lookingfor: any[];
-  onUpdate?: (updatedUser: any) => void; // ✅ already added
+  onUpdate?: (updatedUser: any) => void;
 }
 
 export default function EditProfileModal({
   isOpen,
   onClose,
   user,
-  countries,
   genders,
   ethnicities,
   zodiacs,
   lookingfor,
-  onUpdate, // ✅ FIX: destructure it here
+  onUpdate,
 }: EditProfileModalProps) {
   const { showNotification } = useNotification();
+  const t = useTranslations("EditProfileModal");
+  const locale = useLocale(); // ✅ get current language (en, de, zh)
 
   const [formData, setFormData] = useState({
     username: "",
@@ -51,13 +52,37 @@ export default function EditProfileModal({
     lookingfor: [] as number[],
   });
 
+  const [countries, setCountries] = useState<{ id: number; country: string }[]>([]);
+  const [countriesLoading, setCountriesLoading] = useState(true);
+  const [countriesError, setCountriesError] = useState(false);
+
   const [locationDetails, setLocationDetails] = useState<{ id: number; details: string }[]>([]);
   const [loadingLocation, setLoadingLocation] = useState(true);
+  const [locationError, setLocationError] = useState(false);
 
-  const [saving, setSaving] = useState(false); // spinner state
+  const [lookingForOptions, setLookingForOptions] = useState<{ id: number; items: string }[]>([]);
+  const [lookingForLoading, setLookingForLoading] = useState(true);
+  const [lookingForError, setLookingForError] = useState(false);
 
-  const t = useTranslations("EditProfileModal"); // spinner state
+  const [ethnicitiesData, setEthnicitiesData] = useState<{ id: number; ethnicity: string }[]>([]);
+  const [ethnicitiesLoading, setEthnicitiesLoading] = useState(true);
+  const [ethnicitiesError, setEthnicitiesError] = useState(false);
 
+  const [zodiacsData, setZodiacsData] = useState<{ id: number; zodiac: string }[]>([]);
+  const [zodiacsLoading, setZodiacsLoading] = useState(true);
+  const [zodiacsError, setZodiacsError] = useState(false);
+
+
+
+
+ // ✅ rename state to gendersData
+  const [gendersData, setGendersData] = useState<{ id: number; gender: string }[]>([]); 
+  const [gendersLoading, setGendersLoading] = useState(true);
+  const [gendersError, setGendersError] = useState(false);
+
+  const [saving, setSaving] = useState(false);
+
+  // ✅ populate form with user data
   useEffect(() => {
     if (user) {
       setFormData({
@@ -81,6 +106,110 @@ export default function EditProfileModal({
     }
   }, [user]);
 
+  // ✅ fetch countries with locale
+  useEffect(() => {
+    setCountriesLoading(true);
+    setCountriesError(false);
+    fetch(`/api/countries?locale=${locale}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setCountries(data);
+        setCountriesLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch countries:", err);
+        setCountriesError(true);
+        setCountriesLoading(false);
+      });
+  }, [locale]);
+
+  // ✅ fetch location details with locale
+  useEffect(() => {
+    setLoadingLocation(true);
+    setLocationError(false);
+    fetch(`/api/locationdetails?locale=${locale}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setLocationDetails(data);
+        setLoadingLocation(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch location details:", err);
+        setLocationError(true);
+        setLoadingLocation(false);
+      });
+  }, [locale]);
+
+  // ✅ fetch lookingfor with locale
+  useEffect(() => {
+    setLookingForLoading(true);
+    setLookingForError(false);
+    fetch(`/api/lookingfor?locale=${locale}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setLookingForOptions(data);
+        setLookingForLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch lookingfor:", err);
+        setLookingForError(true);
+        setLookingForLoading(false);
+      });
+  }, [locale]);
+
+// ✅ fetch genders with locale
+useEffect(() => {
+  setGendersLoading(true);
+  setGendersError(false);
+  fetch(`/api/genders?locale=${locale}`)
+    .then((res) => res.json())
+    .then((data) => {
+      setGendersData(data); // ✅ updated
+      setGendersLoading(false);
+    })
+    .catch((err) => {
+      console.error("Failed to fetch genders:", err);
+      setGendersError(true);
+      setGendersLoading(false);
+    });
+}, [locale]);
+
+useEffect(() => {
+  setEthnicitiesLoading(true);
+  setEthnicitiesError(false);
+  fetch(`/api/ethnicities?locale=${locale}`)
+    .then((res) => res.json())
+    .then((data) => {
+      setEthnicitiesData(data);
+      setEthnicitiesLoading(false);
+    })
+    .catch((err) => {
+      console.error("Failed to fetch ethnicities:", err);
+      setEthnicitiesError(true);
+      setEthnicitiesLoading(false);
+    });
+}, [locale]);
+
+useEffect(() => {
+  setZodiacsLoading(true);
+  setZodiacsError(false);
+
+  fetch(`/api/zodiacs?locale=${locale}`)
+    .then((res) => res.json())
+    .then((data) => {
+      setZodiacsData(data);
+      setZodiacsLoading(false);
+    })
+    .catch((err) => {
+      console.error("Failed to fetch zodiacs:", err);
+      setZodiacsError(true);
+      setZodiacsLoading(false);
+    });
+}, [locale]);
+
+
+
+
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -102,19 +231,14 @@ export default function EditProfileModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-  
+
       if (!res.ok) throw new Error("Failed to update profile");
-  
-      const updatedUser = await res.json(); // ✅ get updated user from API
-  
-      // Show notification
+
+      const updatedUser = await res.json();
       showNotification("Profile updated successfully!");
-  
-      // ✅ Update parent component
-      if (onUpdate) {
-        onUpdate(updatedUser);
-      }
-  
+
+      if (onUpdate) onUpdate(updatedUser);
+
       onClose();
     } catch (err) {
       console.error(err);
@@ -123,21 +247,6 @@ export default function EditProfileModal({
       setSaving(false);
     }
   };
-  
-
-  useEffect(() => {
-    fetch("/api/locationdetails")
-      .then((res) => res.json())
-      .then((data) => {
-        setLocationDetails(data);
-        setLoadingLocation(false);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch location details:", err);
-        setLoadingLocation(false);
-      });
-  }, []);
-
 
 
   return (
@@ -197,40 +306,49 @@ export default function EditProfileModal({
 
                 <div>
                 <span className="text-sm text-gray-400">{t("dob")}</span>
-                  <div className="grid grid-cols-3 gap-3 mt-1">
-                    <input
-                      type="number"
-                      placeholder="Year"
-                      value={formData.year}
-                      onChange={(e) => handleChange("year", e.target.value)}
-                      className="p-2 rounded-lg bg-gray-800 border border-gray-700"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Month"
-                      value={formData.month}
-                      onChange={(e) => handleChange("month", e.target.value)}
-                      className="p-2 rounded-lg bg-gray-800 border border-gray-700"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Day"
-                      value={formData.day}
-                      onChange={(e) => handleChange("day", e.target.value)}
-                      className="p-2 rounded-lg bg-gray-800 border border-gray-700"
-                    />
-                  </div>
+                <div className="grid grid-cols-3 gap-3 mt-1">
+                  <input
+                    type="number"
+                    placeholder={t("yearPlaceholder")}
+                    value={formData.year}
+                    onChange={(e) => handleChange("year", e.target.value)}
+                    className="p-2 rounded-lg bg-gray-800 border border-gray-700"
+                  />
+                  <input
+                    type="number"
+                    placeholder={t("monthPlaceholder")}
+                    value={formData.month}
+                    onChange={(e) => handleChange("month", e.target.value)}
+                    className="p-2 rounded-lg bg-gray-800 border border-gray-700"
+                  />
+                  <input
+                    type="number"
+                    placeholder={t("dayPlaceholder")}
+                    value={formData.day}
+                    onChange={(e) => handleChange("day", e.target.value)}
+                    className="p-2 rounded-lg bg-gray-800 border border-gray-700"
+                  />
+                </div>
+
                 </div>
 
                 <label className="block">
-                <span className="text-sm text-gray-400">{t("quote")}</span>
+                  <span className="text-sm text-gray-400">{t("quote")}</span>
                   <textarea
                     value={formData.quote}
-                    onChange={(e) => handleChange("quote", e.target.value)}
+                    onChange={(e) => handleChange("quote", e.target.value.slice(0, 200))}
+                    maxLength={200}
                     rows={2}
                     className="w-full p-2 rounded-lg bg-gray-800 border border-gray-700 mt-1"
+                    placeholder={t("quote")}
                   />
+                  <p className="text-xs text-gray-500 text-right mt-1">
+                    {t("quoteLimit", { length: formData.quote?.length ?? 0 })}
+                  </p>
                 </label>
+
+
+
               </div>
             </section>
 
@@ -264,29 +382,38 @@ export default function EditProfileModal({
               {/* Home Location */}
               <div className="space-y-3 mb-4">
               <p className="text-sm text-gray-400">{t("homeLocation")}</p>
-                <select
+
+
+              <select
                   value={formData.country_id ?? ""}
                   onChange={(e) => handleChange("country_id", Number(e.target.value))}
-                  className="w-full p-2 rounded-lg bg-gray-800 border border-gray-700"
+                  className="w-full px-4 py-2 rounded-xl border border-white/20 bg-white/10 text-white/90 focus:outline-none focus:ring-2 focus:ring-pink-500"
                 >
-                  <option value="">-- Select Country --</option>
+                  <option value="" className="bg-gray-800 text-gray-300">
+                    {t("selectCountry")}
+                  </option>
+                  {countriesLoading && <option>{t("loading")}</option>}
+                  {countriesError && <option>{t("errorLoading")}</option>}
                   {countries.map((c) => (
-                    <option key={c.id} value={c.id}>
+                    <option key={c.id} value={c.id} className="bg-gray-800 text-gray-300">
                       {c.country}
                     </option>
                   ))}
                 </select>
+
+
+
                 <div className="grid grid-cols-2 gap-3">
                   <input
                     type="text"
-                    placeholder="City"
+                    placeholder={t("currentCityPlaceholder")}
                     value={formData.city}
                     onChange={(e) => handleChange("city", e.target.value)}
                     className="p-2 rounded-lg bg-gray-800 border border-gray-700"
                   />
                   <input
                     type="text"
-                    placeholder="Postal"
+                    placeholder={t("currentPostalPlaceholder")}
                     value={formData.postal}
                     onChange={(e) => handleChange("postal", e.target.value)}
                     className="p-2 rounded-lg bg-gray-800 border border-gray-700"
@@ -312,6 +439,8 @@ export default function EditProfileModal({
                     </option>
                   ))}
                 </select>
+
+
                 <div className="grid grid-cols-2 gap-3">
                   <input
                     type="text"
@@ -338,74 +467,84 @@ export default function EditProfileModal({
             
             <h3 className="text-pink-400 text-sm font-semibold mb-2">{t("datingPreferences")}</h3>
               <div className="space-y-3">
-                <select
-                  value={formData.gender_id ?? ""}
-                  onChange={(e) => handleChange("gender_id", Number(e.target.value))}
-                  className="w-full p-2 rounded-lg bg-gray-800 border border-gray-700"
-                >
-                 <option value="">{t("selectGender")}</option>
-                  {genders.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.gender}
-                    </option>
-                  ))}
-                </select>
+              <select
+                value={formData.gender_id ?? ""}
+                onChange={(e) => handleChange("gender_id", Number(e.target.value))}
+                className="w-full p-2 rounded-lg bg-gray-800 border border-gray-700"
+              >
+                <option value="">{t("selectGender")}</option>
+                {gendersData.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.gender} {/* This already comes in the correct language from your API */}
+                  </option>
+                ))}
+              </select>
 
-                <select
-                  value={formData.ethnicity_id ?? ""}
-                  onChange={(e) => handleChange("ethnicity_id", Number(e.target.value))}
-                  className="w-full p-2 rounded-lg bg-gray-800 border border-gray-700"
-                >
+
+
+              <select
+                value={formData.ethnicity_id ?? ""}
+                onChange={(e) => handleChange("ethnicity_id", Number(e.target.value))}
+                className="w-full p-2 rounded-lg bg-gray-800 border border-gray-700"
+              >
                 <option value="">{t("selectEthnicity")}</option>
-                  {ethnicities.map((e) => (
-                    <option key={e.id} value={e.id}>
-                      {e.ethnicity}
-                    </option>
-                  ))}
-                </select>
+                {ethnicitiesData.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.ethnicity} {/* Comes in the correct language from your API */}
+                  </option>
+                ))}
+              </select>
 
-                <select
-                  value={formData.zodiac_id ?? ""}
-                  onChange={(e) => handleChange("zodiac_id", Number(e.target.value))}
-                  className="w-full p-2 rounded-lg bg-gray-800 border border-gray-700"
-                >
-                  <option value="">{t("selectStarSign")}</option>
-                  {zodiacs.map((z) => (
+
+              <select
+                value={formData.zodiac_id ?? ""}
+                onChange={(e) => handleChange("zodiac_id", Number(e.target.value))}
+                className="w-full p-2 rounded-lg bg-gray-800 border border-gray-700"
+              >
+                <option value="">{t("selectStarSign")}</option>
+
+                {zodiacsLoading && <option disabled>{t("loadingOptions")}</option>}
+                {zodiacsError && <option disabled>{t("errorLoading")}</option>}
+
+                {!zodiacsLoading &&
+                  zodiacsData.map((z) => (
                     <option key={z.id} value={z.id}>
-                      {z.zodiac}
+                      {z.zodiac} {/* Already localized from API */}
                     </option>
                   ))}
-                </select>
+              </select>
+
 
                 {/* Looking For */}
-                <div className="mb-6 text-left">
-                <p className="text-sm font-medium text-gray-400 mb-2">
-                  {t("lookingFor")} <span className="text-pink-400">*</span>
-                </p>
+      <div className="mb-6 text-left">
+        <p className="text-sm font-medium text-gray-400 mb-2">
+          {t("lookingFor")} <span className="text-pink-400">*</span>
+        </p>
 
-                  <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
-                    {lookingfor.length === 0 && (
-                      
-                  <p className="col-span-full text-sm text-gray-400">{t("loadingOptions")}</p>
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
+          {lookingForLoading && (
+            <p className="col-span-full text-sm text-gray-400">{t("loadingOptions")}</p>
+          )}
+          {lookingForError && (
+            <p className="col-span-full text-sm text-red-400">{t("errorLoading")}</p>
+          )}
 
-                    )}
-
-                    {lookingfor.map((item) => (
-                      <label
-                        key={item.id}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-600 bg-gray-800 text-white/80 hover:bg-gray-700 cursor-pointer transition"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.lookingfor.includes(item.id)}
-                          onChange={() => toggleLookingFor(item.id)}
-                          className="accent-pink-500 w-4 h-4"
-                        />
-                        <span className="truncate">{item.items}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+          {lookingForOptions.map((item) => (
+            <label
+              key={item.id}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/20 bg-white/10 text-white/80 hover:bg-white/20 cursor-pointer transition"
+            >
+              <input
+                type="checkbox"
+                checked={formData.lookingfor.includes(item.id)}
+                onChange={() => toggleLookingFor(item.id)}
+                className="accent-pink-500 w-4 h-4"
+              />
+              <span className="truncate">{item.items}</span>
+            </label>
+          ))}
+        </div>
+      </div>
 
 
 

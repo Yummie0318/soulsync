@@ -137,7 +137,7 @@
   },
 
   "ProfileSection": {
-    "editProfile": "Edit Profile",
+    "editProfile": "Edit",
     "posts": "posts",
     "followers": "followers",
     "following": "following",
@@ -184,11 +184,23 @@
   "saveChanges": "Save Changes",
     "selectGender": "-- Select Gender --",
      "currentCityPlaceholder": "Current City",
-  "currentPostalPlaceholder": "Current Postal"
+  "currentPostalPlaceholder": "Current Postal",
+     "errorLoading": "Error loading options",
+     "yearPlaceholder": "Year",
+     "monthPlaceholder": "Month",
+     "dayPlaceholder": "Day",
+     "quoteLimit": "{length}/200"
+},
+
+"FollowersPage": {
+  "title": "Followers"
+},
+"FollowingPage": {
+  "title": "Following"
+},
+"MyFriendsPage": {
+  "title": "My Friends"
 }
-
-
-
 
 
 }

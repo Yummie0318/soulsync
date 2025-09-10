@@ -137,7 +137,7 @@
   },
 
   "ProfileSection": {
-    "editProfile": "编辑资料",
+    "editProfile": "编辑",
     "posts": "帖子",
     "followers": "关注者",
     "following": "关注中",
@@ -184,7 +184,18 @@
   "saveChanges": "保存更改",
   "selectGender": "-- 选择性别 --",
   "currentCityPlaceholder": "当前城市",
-  "currentPostalPlaceholder": "当前邮编"
+  "currentPostalPlaceholder": "当前邮编",
+  "errorLoading": "加载选项时出错",
+  "yearPlaceholder": "年",
+  "monthPlaceholder": "月",
+  "dayPlaceholder": "日",
+  "quoteLimit": "{length}/200"
+},
+"FollowersPage": {
+  "title": "Followers"
+},
+"FollowingPage": {
+  "title": "Following"
 }
 
 

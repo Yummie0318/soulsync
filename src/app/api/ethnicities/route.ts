@@ -9,13 +9,19 @@ export async function GET(req: Request) {
     pool = getPool();
   } catch (err) {
     console.error("❌ Failed to get DB pool (ethnicities):", err);
-    return NextResponse.json({ error: "Database connection not initialized." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Database connection not initialized." },
+      { status: 500 }
+    );
   }
 
   try {
+    await pool.query("SELECT 1"); // check connection
+
     const { searchParams } = new URL(req.url);
     const locale = searchParams.get("locale") || "en";
 
+    // Map locale to the correct column
     const columnMap: Record<string, string> = {
       en: "ethnicity",
       de: "ethnicity_de",
@@ -23,13 +29,15 @@ export async function GET(req: Request) {
     };
     const column = columnMap[locale] || "ethnicity";
 
+    // Query the database using the correct column
     const result = await pool.query(
       `SELECT id, ${column} AS ethnicity FROM tblethnicity ORDER BY id ASC`
     );
 
     return NextResponse.json(result.rows);
   } catch (error: unknown) {
-    console.error("❌ Error in /api/ethnicities:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ Error in /api/ethnicities:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

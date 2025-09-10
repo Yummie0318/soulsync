@@ -138,7 +138,7 @@
    
   },
   "ProfileSection": {
-    "editProfile": "Profil bearbeiten",
+    "editProfile": "Profil",
     "posts": "Beiträge",
     "followers": "Follower",
     "following": "Folgt",
@@ -185,7 +185,18 @@
   "saveChanges": "Änderungen speichern",
    "selectGender": "-- Geschlecht auswählen --",
    "currentCityPlaceholder": "Aktuelle Stadt",
-   "currentPostalPlaceholder": "Aktuelle Postleitzahl"
+   "currentPostalPlaceholder": "Aktuelle Postleitzahl",
+  "errorLoading": "Fehler beim Laden der Optionen",
+  "yearPlaceholder": "Jahr",
+  "monthPlaceholder": "Monat",
+  "dayPlaceholder": "Tag",
+  "quoteLimit": "{length}/200"
+},
+"FollowersPage": {
+  "title": "Followers"
+},
+"FollowingPage": {
+  "title": "Following"
 }
 
 

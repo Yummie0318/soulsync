@@ -22,12 +22,20 @@ export async function GET(req: Request) {
         u.quote, u.currentcity, u.currentpostal, u.currentcountry_id,
         cc.country AS current_country_name,
         u.gender_id, u.ethnicity_id, u.zodiac_id,
-
+    
         -- ✅ counts
         0 AS posts_count,
         CAST((SELECT COUNT(*) FROM tbluser_follow f WHERE f.following_id = u.id) AS INTEGER) AS followers_count,
-        CAST((SELECT COUNT(*) FROM tbluser_follow f WHERE f.follower_id = u.id) AS INTEGER) AS following_count
-
+        CAST((SELECT COUNT(*) FROM tbluser_follow f WHERE f.follower_id = u.id) AS INTEGER) AS following_count,
+        CAST((
+          SELECT COUNT(*)
+          FROM tbluser_follow f1
+          JOIN tbluser_follow f2
+            ON f1.follower_id = f2.following_id
+           AND f1.following_id = f2.follower_id
+          WHERE f1.follower_id = u.id
+        ) AS INTEGER) AS friends_count
+    
       FROM tbluser u
       LEFT JOIN tblcountry c ON u.country_id = c.id
       LEFT JOIN tblcountry cc ON u.currentcountry_id = cc.id
@@ -36,6 +44,7 @@ export async function GET(req: Request) {
       `,
       [userId]
     );
+    
 
     if (userResult.rows.length === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
