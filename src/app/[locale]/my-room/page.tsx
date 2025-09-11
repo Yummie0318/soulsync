@@ -173,14 +173,27 @@ export default function MyRoomPage() {
         <div className="absolute top-1/3 left-1/4 w-60 sm:w-72 h-60 sm:h-72 bg-pink-600/20 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/3 right-1/4 w-60 sm:w-72 h-60 sm:h-72 bg-purple-600/20 rounded-full blur-3xl animate-pulse delay-300" />
       </div>
+  
+      {/* Header */}
+      <div className="sticky top-0 bg-gray-900/80 backdrop-blur-md z-20 px-4 py-4 border-b border-white/10 flex items-center justify-center">
+        {/* Back button (left-aligned) */}
+        <button
+          onClick={() => router.back()}
+          className="absolute left-4 p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition"
+        >
+          <ArrowLeft size={20} />
+        </button>
 
-      {/* Back Button */}
-      <button className="absolute top-4 left-4 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition">
-        <ArrowLeft className="w-5 h-5 text-white" />
-      </button>
+{/* Centered Title */}
+<h1 className="text-xl sm:text-2xl font-bold text-center">
+  {t("myRoom")}
+</h1>
 
-      {/* Profile Section */}
-      <section className="max-w-4xl mx-auto py-16 space-y-6">
+      </div>
+
+
+{/* Profile Section */}
+<section className="max-w-4xl mx-auto py-8 space-y-4">
 
       {!user ? (
             // Skeleton Loader

@@ -138,6 +138,7 @@
    
   },
   "ProfileSection": {
+    "myRoom": "Mein Zimmer",
     "editProfile": "Profil",
     "posts": "Beiträge",
     "followers": "Follower",
@@ -193,12 +194,47 @@
   "quoteLimit": "{length}/200"
 },
 "FollowersPage": {
-  "title": "Followers"
+  "title": "Follower",
+   "noFollowers": "Keine Follower gefunden.",
+    "lookingFor": "Sucht nach",
+     "remove": "Entfernen",
+      "searchPlaceholder": "Follower suchen...",
+        "following": "Folgt",
+  "followBack": "Zurückfolgen",
+    "followNotification": "Du folgst jetzt {username}",
+  "unfollowNotification": "Nicht mehr gefolgt {username}",
+  "age": "Alter",
+  "removeTitle": "Follower entfernen",
+  "removeMessage": "Möchten Sie diesen Follower wirklich entfernen?",
+  "cancel": "Abbrechen"
+
 },
 "FollowingPage": {
-  "title": "Following"
+  "title": "Folge ich",
+   "searchPlaceholder": "Folge ich durchsuchen...",
+    "noFollowing": "Keine Gefolgten gefunden.",
+     "lookingFor": "Sucht nach",
+       "unfollow": "Nicht mehr folgen",
+      "age": "Alter",
+       "unfollowNotification": "{username} nicht mehr folgen",
+  "unfollowFailed": "Benutzer konnte nicht entfolgt werden",
+  "unfollowTitle": "Benutzer entfolgen",
+  "unfollowMessage": "Möchten Sie diesem Benutzer wirklich nicht mehr folgen?",
+  "cancel": "Abbrechen"
+},
+"MyFriendsPage": {
+  "title": "Meine Freunde",
+  "searchPlaceholder": "Nach Benutzername suchen...",
+  "searching": "Suche…",
+  "noFriends": "Keine Benutzer gefunden.",
+  "lookingFor": "Sucht nach",
+  "noFriend": "Keine Freunde gefunden.",
+  "unfriend": "Entfernen",
+  "unfriendDialogTitle": "Benutzer entfernen",
+  "unfriendDialogMessage": "Möchten Sie diesen Benutzer wirklich entfernen?",
+  "cancel": "Abbrechen",
+  "age": "Alter"
 }
-
 
 
 

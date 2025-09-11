@@ -137,6 +137,7 @@
   },
 
   "ProfileSection": {
+    "myRoom": "My Room",
     "editProfile": "Edit",
     "posts": "posts",
     "followers": "followers",
@@ -193,13 +194,46 @@
 },
 
 "FollowersPage": {
-  "title": "Followers"
+  "title": "Followers",
+   "noFollowers": "No followers found.",
+     "lookingFor": "Looking for",
+       "remove": "Remove",
+        "searchPlaceholder": "Search followers...",
+          "following": "Following",
+  "followBack": "Follow Back",
+    "followNotification": "You are now following {username}",
+  "unfollowNotification": "Unfollowed {username}",
+  "age": "Age",
+  "removeTitle": "Remove Follower",
+  "removeMessage": "Are you sure you want to remove this follower?",
+  "cancel": "Cancel"
+
 },
 "FollowingPage": {
-  "title": "Following"
+  "title": "Following",
+  "searchPlaceholder": "Search following...",
+    "noFollowing": "No following found.",
+      "lookingFor": "Looking for",
+      "unfollow": "Unfollow",
+       "age": "Age",
+         "unfollowNotification": "Unfollowed {username}",
+  "unfollowFailed": "Failed to unfollow user",
+  "unfollowTitle": "Unfollow User",
+  "unfollowMessage": "Are you sure you want to unfollow this user?",
+  "cancel": "Cancel"
 },
 "MyFriendsPage": {
-  "title": "My Friends"
+  "title": "My Friends",
+  "searchPlaceholder": "Search by username...",
+  "searching": "Searching…",
+  "noFriends": "No users found.",
+  "lookingFor": "Looking for",
+  "noFriend": "No friends found.",
+  "unfriend": "Unfriend",
+  "unfriendDialogTitle": "Unfriend User",
+  "unfriendDialogMessage": "Are you sure you want to unfriend this user?",
+"cancel": "Cancel",
+"age": "Age"
 }
 
 

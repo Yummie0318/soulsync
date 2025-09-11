@@ -137,6 +137,7 @@
   },
 
   "ProfileSection": {
+    "myRoom": "我的房间",
     "editProfile": "编辑",
     "posts": "帖子",
     "followers": "关注者",
@@ -192,12 +193,47 @@
   "quoteLimit": "{length}/200"
 },
 "FollowersPage": {
-  "title": "Followers"
+  "title": "粉丝",
+   "noFollowers": "未找到粉丝。",
+     "lookingFor": "寻找",
+       "remove": "移除",
+         "searchPlaceholder": "搜索粉丝...",
+           "following": "已关注",
+  "followBack": "回关",
+    "followNotification": "你已关注 {username}",
+  "unfollowNotification": "已取消关注 {username}",
+  "age": "年龄",
+  "removeTitle": "移除关注者",
+  "removeMessage": "你确定要移除此关注者吗？",
+  "cancel": "取消"
+
 },
 "FollowingPage": {
-  "title": "Following"
+  "title": "关注中",
+   "searchPlaceholder": "搜索关注...",
+   "noFollowing": "未找到关注的人。",
+   "lookingFor": "寻找",
+   "unfollow": "取消关注",
+   "age": "年龄",
+     "unfollowNotification": "已取消关注 {username}",
+  "unfollowFailed": "取消关注失败",
+  "unfollowTitle": "取消关注用户",
+  "unfollowMessage": "你确定要取消关注此用户吗？",
+  "cancel": "取消"
+},
+"MyFriendsPage": {
+  "title": "我的朋友",
+  "searchPlaceholder": "按用户名搜索",
+    "searching": "搜索中…",
+      "noFriends": "未找到用户。",
+       "lookingFor": "寻找",
+         "noFriend": "未找到好友",
+         "unfriend": "解除好友",
+         "unfriendDialogTitle": "解除好友",
+         "unfriendDialogMessage": "您确定要解除与此用户的好友关系吗？",
+          "cancel": "取消",
+          "age": "年龄"
 }
-
 
 
 

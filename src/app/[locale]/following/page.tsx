@@ -9,17 +9,19 @@ import { useNotification } from "@/context/NotificationContext";
 import { ArrowLeft } from "lucide-react";
 import ConfirmDialog from "@/components/ConfirmDialog"; // ✅ import dialog
 
+// Updated interface for following users
 interface FollowingUser {
   id: number;
   username: string;
   photo_file_path: string | null;
-  year?: number;
+  year?: number | null;
   month?: number;
   day?: number;
   address?: string;
   quote?: string;
   looking_for?: string;
-  isFollowingBack?: boolean;
+  isFollowingBack?: boolean; // reflects if the user also follows back
+  age?: number | null;       // optional server-provided age
 }
 
 export default function FollowingPage() {
@@ -43,13 +45,17 @@ export default function FollowingPage() {
       ? parseInt(localStorage.getItem("user_id") || "0", 10)
       : 0;
 
-  const getAge = (year?: number, month?: number, day?: number) => {
-    if (!year || !month || !day) return null;
-    const birthDate = new Date(year, month - 1, day);
-    const diff = Date.now() - birthDate.getTime();
-    const ageDate = new Date(diff);
-    return Math.abs(ageDate.getUTCFullYear() - 1970);
-  };
+// Get age: prefer server-provided age, otherwise compute from year only
+const getAge = (ageFromServer?: number | null, year?: number | null): number | null => {
+  if (typeof ageFromServer === "number" && !Number.isNaN(ageFromServer)) {
+    return ageFromServer;
+  }
+  if (typeof year === "number" && !Number.isNaN(year)) {
+    const currentYear = new Date().getFullYear();
+    return currentYear - year;
+  }
+  return null;
+};
 
   useEffect(() => {
     if (!userId) {
@@ -95,13 +101,19 @@ export default function FollowingPage() {
       const data = await res.json();
 
       if (data.success) {
+        // Remove the unfollowed user from the list
         setFollowing((prev) => prev.filter((f) => f.id !== selectedUserId));
-        const username =
-          following.find((f) => f.id === selectedUserId)?.username || "";
-        showNotification(`Unfollowed ${username}`);
+    
+        // Get the username of the unfollowed user
+        const username = following.find((f) => f.id === selectedUserId)?.username || "";
+    
+        // Show notification with translations
+        showNotification(
+          t("unfollowNotification", { username })
+        );
       }
     } catch {
-      showNotification("Failed to unfollow user");
+      showNotification(t("unfollowFailed"));
     } finally {
       setConfirmOpen(false);
       setSelectedUserId(null);
@@ -132,7 +144,7 @@ export default function FollowingPage() {
       <div className="max-w-6xl mx-auto px-4 mt-6">
         <input
           type="text"
-          placeholder="Search following..."
+          placeholder={t("searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full px-4 py-2 rounded-xl bg-white/10 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
@@ -142,9 +154,28 @@ export default function FollowingPage() {
       {/* Following grid */}
       <div className="max-w-6xl mx-auto px-4 py-8">
         {loading ? (
-          <p className="text-center text-gray-400">Loading following...</p>
+          // ✅ Skeleton loaders
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white/10 backdrop-blur-md rounded-2xl shadow-lg border border-white/10 overflow-hidden animate-pulse"
+              >
+                <div className="w-full h-48 sm:h-40 bg-gray-700" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-gray-600 rounded w-2/3" />
+                  <div className="h-3 bg-gray-700 rounded w-1/2" />
+                  <div className="h-3 bg-gray-700 rounded w-3/4" />
+                  <div className="h-8 bg-gray-600 rounded mt-4" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : filteredFollowing.length === 0 ? (
-          <p className="text-center text-gray-400">No following found.</p>
+          <p className="text-center text-gray-400">
+            {t("noFollowing")}
+          </p>
+
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredFollowing.map((user) => (
@@ -172,42 +203,57 @@ export default function FollowingPage() {
                   />
                 </div>
 
-                {/* Profile Info */}
-                <div className="p-4 flex-1 flex flex-col">
-                  <p className="text-base sm:text-lg font-semibold text-white truncate">
-                    {user.username}{" "}
-                    {user.year && (
-                      <span className="text-gray-300 text-sm">
-                        · {getAge(user.year, user.month, user.day)}
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-400 truncate">
-                    {user.address}
-                  </p>
+              {/* Profile Info */}
+<div className="p-4 flex-1 flex flex-col">
+  {/* Username */}
+  <p className="text-base sm:text-lg font-semibold text-white truncate">
+    {user.username}
+  </p>
 
-                  {user.looking_for && (
-                    <p className="mt-1 text-xs sm:text-sm text-pink-400 font-medium whitespace-pre-wrap break-words">
-                      Looking for: {user.looking_for}
-                    </p>
-                  )}
+  {/* Age */}
+  {(() => {
+    const age = getAge(user.age ?? null, user.year ?? null);
+    return age !== null ? (
+      <p className="text-xs sm:text-sm text-gray-300">
+        {t("age")}: {age}
+      </p>
+    ) : null;
+  })()}
 
-                  {user.quote && (
-                    <p className="mt-1 text-xs italic text-gray-300 whitespace-pre-wrap break-words">
-                      “{user.quote}”
-                    </p>
-                  )}
+  {/* Address */}
+  {user.address && (
+    <p className="text-xs sm:text-sm text-gray-400 truncate">
+      {user.address}
+    </p>
+  )}
 
-                  {/* Unfollow button */}
-                  <div className="mt-4 flex">
-                    <button
-                      onClick={() => handleUnfollowClick(user.id)}
-                      className="flex-1 px-3 py-2 rounded-xl text-white text-xs sm:text-sm font-medium shadow-md transition bg-red-600 hover:bg-red-700"
-                    >
-                      Unfollow
-                    </button>
-                  </div>
-                </div>
+  {/* Looking For */}
+  {user.looking_for && (
+    <p className="mt-1 text-xs sm:text-sm text-pink-400 font-medium whitespace-pre-wrap break-words">
+      {t("lookingFor")}: {user.looking_for}
+    </p>
+  )}
+
+  {/* Quote */}
+  {user.quote && (
+    <p className="mt-1 text-xs italic text-gray-300 whitespace-pre-wrap break-words">
+      “{user.quote}”
+    </p>
+  )}
+
+  {/* Unfollow button */}
+  <div className="mt-4 flex gap-2">
+    <button
+      onClick={() => handleUnfollowClick(user.id)}
+      className="flex-1 px-3 py-2 rounded-xl text-white text-xs sm:text-sm font-medium shadow-md transition bg-red-600 hover:bg-red-700"
+    >
+      {t("unfollow")}
+    </button>
+  </div>
+</div>
+
+
+
               </motion.div>
             ))}
           </div>
@@ -244,14 +290,15 @@ export default function FollowingPage() {
 
       {/* Confirm Dialog */}
       <ConfirmDialog
-        open={confirmOpen}
-        title="Unfollow User"
-        message="Are you sure you want to unfollow this user?"
-        confirmText="Unfollow"
-        cancelText="Cancel"
-        onConfirm={handleConfirmUnfollow}
-        onCancel={() => setConfirmOpen(false)}
-      />
+          open={confirmOpen}
+          title={t("unfollowTitle")}
+          message={t("unfollowMessage")}
+          confirmText={t("unfollow")}
+          cancelText={t("cancel")}
+          onConfirm={handleConfirmUnfollow}
+          onCancel={() => setConfirmOpen(false)}
+        />
+
     </main>
   );
 }
