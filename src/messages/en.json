@@ -234,6 +234,24 @@
   "unfriendDialogMessage": "Are you sure you want to unfriend this user?",
 "cancel": "Cancel",
 "age": "Age"
+},
+"IslandPicker": {
+  "title": "Pick Your Island",
+      "hint": "🎵 Tap an island to hear a sound",
+          "saving": "Saving...",
+    "choose": "Choose Island",
+    "currency": "$"
+},
+"IslandWelcome": {
+  "header": "Before finding your perfect matches, our AI needs to understand your personality and preferences.",
+  "why": "Why Do We Need This Assessment?",
+  "whyText": "Unlike traditional dating apps that rely on superficial swiping, we use advanced AI to understand who you really are. This creates deeper, more meaningful connections.",
+  "analysis": "AI Personality Analysis",
+  "analysisText": "Advanced AI analyzes your responses to understand your unique personality traits and preferences.",
+  "matches": "Compatible Matches",
+  "matchesText": "Find people who truly complement your personality, values, and lifestyle choices.",
+  "duration": "1-2 minutes • 4 questions minimum",
+  "button": "Start AI Assessment"
 }
 
 

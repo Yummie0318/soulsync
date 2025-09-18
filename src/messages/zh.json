@@ -233,6 +233,24 @@
          "unfriendDialogMessage": "您确定要解除与此用户的好友关系吗？",
           "cancel": "取消",
           "age": "年龄"
+},
+"IslandPicker": {
+  "title": "选择你的岛屿",
+     "hint": "🎵 点击岛屿以听声音",
+        "saving": "保存中...",
+    "choose": "选择岛屿",
+       "currency": "¥"
+},
+"IslandWelcome": {
+  "header": "在找到完美匹配之前，我们的 AI 需要了解您的个性和偏好。",
+  "why": "我们为什么需要此评估？",
+  "whyText": "与依赖表面滑动的传统约会应用不同，我们使用先进的 AI 来了解您真正的个性。这会创造更深、更有意义的联系。",
+  "analysis": "AI 个性分析",
+  "analysisText": "先进的 AI 分析您的回答，以了解您独特的个性特征和偏好。",
+  "matches": "兼容匹配",
+  "matchesText": "找到真正与您的个性、价值观和生活方式互补的人。",
+  "duration": "1-2 分钟 • 最少 4 个问题",
+  "button": "开始 AI 评估"
 }
 
 

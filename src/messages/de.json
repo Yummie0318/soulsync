@@ -234,6 +234,24 @@
   "unfriendDialogMessage": "Möchten Sie diesen Benutzer wirklich entfernen?",
   "cancel": "Abbrechen",
   "age": "Alter"
+},
+"IslandPicker": {
+  "title": "Wähle deine Insel",
+      "hint": "🎵 Tippe auf eine Insel, um einen Klang zu hören",
+          "saving": "Speichern...",
+    "choose": "Insel auswählen",
+        "currency": "€"
+},
+"IslandWelcome": {
+  "header": "Bevor Sie Ihre perfekten Matches finden, muss unsere KI Ihre Persönlichkeit und Vorlieben verstehen.",
+  "why": "Warum brauchen wir diese Bewertung?",
+  "whyText": "Im Gegensatz zu herkömmlichen Dating-Apps, die auf oberflächliches Swipen setzen, verwenden wir fortschrittliche KI, um zu verstehen, wer Sie wirklich sind. Dies schafft tiefere, sinnvollere Verbindungen.",
+  "analysis": "KI-Persönlichkeitsanalyse",
+  "analysisText": "Fortschrittliche KI analysiert Ihre Antworten, um Ihre einzigartigen Persönlichkeitseigenschaften und Vorlieben zu verstehen.",
+  "matches": "Kompatible Matches",
+  "matchesText": "Finden Sie Menschen, die wirklich Ihre Persönlichkeit, Werte und Lebensstilentscheidungen ergänzen.",
+  "duration": "1-2 Minuten • mindestens 4 Fragen",
+  "button": "KI-Bewertung starten"
 }
 
 

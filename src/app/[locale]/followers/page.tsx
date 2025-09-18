@@ -201,7 +201,7 @@ const getAge = (ageFromServer?: number | null, year?: number | null): number | n
           </div>
         ) : filteredFollowers.length === 0 ? (
           <p className="text-center text-gray-400">
-          {t("FollowersPage.noFollowers")}
+          {t("noFollowers")}
         </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
