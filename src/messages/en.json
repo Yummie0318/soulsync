@@ -26,7 +26,14 @@
     "forgotPassword": "Forgot password?",
     "signIn": "Sign In",
     "newToSoulSync": "New to SoulSync?",
-    "startNewJourney": "Start your journey"
+    "startNewJourney": "Start your journey",
+    "pleaseWait": "Please wait...",
+    "invalidCredentials": "The email or password you entered is incorrect.",
+    "loginSuccessful": "You have logged in successfully!",
+    "userNotFound": "No account found with this email address.",
+    "fillAllFields": "Please fill in all required fields.",
+    "serverError": "Something went wrong on our server. Please try again later.",
+      "completeProfileFirst": "Please complete your profile first!"
   },
   "AiDrawing": {
   "title": "Draw a heart or just wait...",
@@ -77,7 +84,14 @@
   "somethingWentWrong": "❌ Something went wrong!",
   "serverError": "⚠️ Server error, try again later.",
   "emailExists": "Email already exists",
-"usernameExists": "Username already exists"
+"usernameExists": "Username already exists",
+
+"emailNotVerified": "Email not verified",
+"verifyEmail": "Verify Email",
+"enterOtp": "Enter OTP",
+"verify": "Verify",
+"cancel": "Cancel",
+"otpSentToEmail": "OTP has been sent to your email"
 
 },
 
@@ -156,7 +170,11 @@
     "noDatePlans": "No date plans yet",
     "whatsOnYourMind": "What's on your mind?",
     "preview": "Preview",
-    "post": "Post"
+    "post": "Post",
+    "noPostsAvailable": "No posts available",
+    "editPost": "Edit Post",
+    "cancel": "Cancel",
+    "save": "Save"
   },
   "BottomNav": {
   "search": "Search",
@@ -253,7 +271,5 @@
   "duration": "1-2 minutes • 4 questions minimum",
   "button": "Start AI Assessment"
 }
-
-
 }
 

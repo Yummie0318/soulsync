@@ -8,7 +8,14 @@
     "login": "登录",
     "feature1": "AI分析",
     "feature2": "真实匹配",
-    "feature3": "真爱"
+    "feature3": "真爱",
+    "pleaseWait": "请稍候...",
+    "invalidCredentials": "您输入的邮箱或密码不正确。",
+    "loginSuccessful": "登录成功！",
+    "userNotFound": "未找到该邮箱对应的账号。",
+    "fillAllFields": "请填写所有必填字段。",
+    "serverError": "服务器出错，请稍后再试。",
+      "completeProfileFirst": "请先完成您的个人资料！"
   },
   "HomePage": {
     "subtitle": "AI驱动的约会",
@@ -77,7 +84,13 @@
   "somethingWentWrong": "❌ 出了点问题！",
   "serverError": "⚠️ 服务器错误，请稍后再试。",
   "emailExists": "电子邮件已存在",
-"usernameExists": "用户名已存在"
+"usernameExists": "用户名已存在",
+"emailNotVerified": "电子邮件未验证",
+"verifyEmail": "验证电子邮件",
+"enterOtp": "输入验证码",
+"verify": "验证",
+"cancel": "取消",
+"otpSentToEmail": "验证码已发送到您的邮箱"
 
 },
   "ProfileSetup": {
@@ -156,7 +169,11 @@
     "noDatePlans": "还没有约会计划",
     "whatsOnYourMind": "你在想什么？",
     "preview": "预览",
-    "post": "发布"
+    "post": "发布",
+     "noPostsAvailable": "暂无帖子",
+     "editPost": "编辑帖子",
+     "cancel": "取消",
+     "save": "保存"
   },
   "BottomNav": {
     "search": "搜索",
@@ -251,6 +268,7 @@
   "matchesText": "找到真正与您的个性、价值观和生活方式互补的人。",
   "duration": "1-2 分钟 • 最少 4 个问题",
   "button": "开始 AI 评估"
+  
 }
 
 

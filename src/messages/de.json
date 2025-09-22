@@ -26,7 +26,15 @@
     "signIn": "Einloggen",
     "forgotPassword": "Passwort vergessen?",
     "newToSoulSync": "Neu bei SoulSync?",
-    "startNewJourney": "Neue Reise beginnen"
+    "startNewJourney": "Neue Reise beginnen",
+    "pleaseWait": "Bitte warten...",
+    "invalidCredentials": "Die eingegebene E-Mail oder das Passwort ist falsch.",
+    "loginSuccessful": "Sie haben sich erfolgreich angemeldet!",
+    "userNotFound": "Kein Konto mit dieser E-Mail-Adresse gefunden.",
+    "fillAllFields": "Bitte füllen Sie alle erforderlichen Felder aus.",
+    "serverError": "Auf unserem Server ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
+     "completeProfileFirst": "Bitte vervollständigen Sie zuerst Ihr Profil!"
+  
   },
   "AiDrawing": {
   "title": "Zeichne ein Herz oder warte einfach...",
@@ -77,7 +85,13 @@
   "somethingWentWrong": "❌ Etwas ist schiefgelaufen!",
   "serverError": "⚠️ Serverfehler, bitte später erneut versuchen.",
   "emailExists": "E-Mail existiert bereits",
-"usernameExists": "Benutzername existiert bereits"
+"usernameExists": "Benutzername existiert bereits",
+"emailNotVerified": "E-Mail nicht verifiziert",
+"verifyEmail": "E-Mail verifizieren",
+"enterOtp": "OTP eingeben",
+"verify": "Verifizieren",
+"cancel": "Abbrechen",
+"otpSentToEmail": "OTP wurde an Ihre E-Mail gesendet"
 
 },
 
@@ -157,7 +171,11 @@
     "noDatePlans": "Noch keine Dating-Pläne",
     "whatsOnYourMind": "Woran denkst du gerade?",
     "preview": "Vorschau",
-    "post": "Posten"
+    "post": "Posten",
+     "noPostsAvailable": "Keine Beiträge verfügbar",
+     "editPost": "Beitrag bearbeiten",
+     "cancel": "Abbrechen",
+     "save": "Speichern"
   },
   "BottomNav": {
   "search": "Suche",

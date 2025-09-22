@@ -23,51 +23,48 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // OTP modal state
+  const [otpModal, setOtpModal] = useState(false);
+  const [otp, setOtp] = useState("");
+
   const handleSignIn = () => {
     router.push(`/${locale}/login`);
   };
 
+  // Step 1: Submit register → sends OTP
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-  
+
     if (!username || !email || !password || !confirmPassword) {
       showNotification(t("fillAllFields"));
       return;
     }
-  
+
     if (password !== confirmPassword) {
       showNotification(t("passwordMismatch"));
       return;
     }
-  
+
     setLoading(true);
-  
+
     try {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),
       });
-  
+
       const data = await res.json();
-  
+
       if (res.ok) {
-        if (data.user?.id) {
-          localStorage.setItem("user_id", data.user.id);
-          console.log("✅ user_id saved to localStorage:", data.user.id);
-        }
-  
-        showNotification(t("accountCreated"));
-        setAccountCreated(true);
-  
-        router.push(`/${locale}/profile-setup`);
+        showNotification(t("otpSentToEmail"));
+        setOtpModal(true); // 🔑 Show OTP modal
       } else {
-        // Map backend error codes to i18n keys
         const errorTranslations: Record<string, string> = {
           EMAIL_EXISTS: t("emailExists"),
           USERNAME_EXISTS: t("usernameExists"),
         };
-  
+
         showNotification(errorTranslations[data.code] || t("somethingWentWrong"));
       }
     } catch (err) {
@@ -77,9 +74,52 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
-  
-  
-  
+
+  // Step 2: Verify OTP → create user
+  const handleVerifyOtp = async () => {
+    if (!otp) {
+      showNotification("Please enter OTP");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp, username, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        if (data.user?.id) {
+          localStorage.setItem("user_id", data.user.id);
+          console.log("✅ user_id saved:", data.user.id);
+        }
+
+        setAccountCreated(true);
+        showNotification(t("accountCreated"));
+
+        setOtpModal(false);
+        router.push(`/${locale}/profile-setup`);
+      } else {
+        const errorTranslations: Record<string, string> = {
+          OTP_NOT_FOUND: "OTP not found",
+          OTP_INVALID: "Invalid OTP",
+          OTP_EXPIRED: "OTP expired",
+        };
+
+        showNotification(errorTranslations[data.error] || t("somethingWentWrong"));
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification(t("serverError"));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 px-4">
@@ -164,38 +204,50 @@ export default function RegisterPage() {
               : t("createAccount")}
           </button>
         </form>
-
-        {/* Divider */}
-        <div className="flex items-center gap-2 my-4">
-          <div className="flex-grow h-px bg-white/20" />
-          <span className="text-xs text-gray-400">{t("orContinueWith")}</span>
-          <div className="flex-grow h-px bg-white/20" />
-        </div>
-
-        {/* Social Login */}
-        <div className="flex gap-3">
-          <button className="flex-1 py-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center gap-2 transition">
-            <Image src="/images/google.png" alt="Google" width={24} height={24} />
-            Google
-          </button>
-          <button className="flex-1 py-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center gap-2 transition">
-            <Image src="/images/apple.png" alt="Apple" width={20} height={20} />
-            Apple
-          </button>
-        </div>
-
-        {/* Footer Links */}
-        <div className="text-center text-sm">
-          <span className="text-gray-400">{t("alreadyHaveAccount")} </span>
-          <button
-            onClick={handleSignIn}
-            disabled={loading}
-            className="text-pink-400 hover:underline disabled:opacity-50"
-          >
-            {t("signIn")}
-          </button>
-        </div>
       </div>
+
+      {/* OTP Modal */}
+      <AnimatePresence>
+        {otpModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+          >
+            <div className="bg-gray-800 rounded-xl p-6 w-full max-w-sm text-center shadow-xl">
+              <h2 className="text-xl font-bold mb-4">Enter OTP</h2>
+              <p className="text-gray-400 text-sm mb-4">
+                We sent a 6-digit code to your email <span className="text-pink-400">{email}</span>.
+              </p>
+
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                maxLength={6}
+                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/20 text-white text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-pink-500"
+              />
+
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => setOtpModal(false)}
+                  className="flex-1 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleVerifyOtp}
+                  disabled={loading}
+                  className="flex-1 py-2 rounded-lg bg-pink-600 hover:bg-pink-700 text-white font-semibold"
+                >
+                  Verify
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Spinner overlay */}
       <AnimatePresence>
@@ -205,13 +257,14 @@ export default function RegisterPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-black/80 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-50"
           >
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
               className="w-8 h-8 border-4 border-pink-400 border-t-transparent rounded-full"
             />
+            <p className="mt-4 text-white text-sm font-medium">Please wait...</p>
           </motion.div>
         )}
       </AnimatePresence>
