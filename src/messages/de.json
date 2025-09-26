@@ -251,7 +251,8 @@
   "unfriendDialogTitle": "Benutzer entfernen",
   "unfriendDialogMessage": "Möchten Sie diesen Benutzer wirklich entfernen?",
   "cancel": "Abbrechen",
-  "age": "Alter"
+  "age": "Alter",
+    "Search": "Benutzer suchen"
 },
 "IslandPicker": {
   "title": "Wähle deine Insel",

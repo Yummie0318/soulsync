@@ -8,6 +8,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useNotification } from "@/context/NotificationContext";
 import { ArrowLeft, Search, X } from "lucide-react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import AuthGuard from "@/components/AuthGuard"; // adjust path if needed
+import Link from "next/link";
+
 
 interface FriendUser {
   id: number;
@@ -243,6 +246,7 @@ const getAge = (ageFromServer?: number | null, year?: number | null): number | n
   };
 
   return (
+    <AuthGuard>
     <main className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100 pb-12">
       {/* Header */}
       <div className="sticky top-0 bg-gray-900/80 backdrop-blur-md z-20 px-4 py-4 border-b border-white/10 relative">
@@ -311,12 +315,12 @@ const getAge = (ageFromServer?: number | null, year?: number | null): number | n
                       >
                         <div className="relative w-12 h-12 rounded-md overflow-hidden bg-white/5">
                         <Image
-                src={u.photo_file_path || "/images/default-avatar.png"}
-                alt={u.username}
-                fill
-                sizes="48px" // this matches w-12 (12 * 4px = 48px)
-                className="object-cover"
-              />
+                            src={u.photo_file_path || "/images/default-avatar.png"}
+                            alt={u.username}
+                            fill
+                            sizes="48px" // this matches w-12 (12 * 4px = 48px)
+                            className="object-cover"
+                          />
                         </div>
   
                         <div className="flex-1 min-w-0">
@@ -412,10 +416,13 @@ const getAge = (ageFromServer?: number | null, year?: number | null): number | n
                 </div>
    {/* info */}
                 <div className="p-4 flex-1 flex flex-col">
-  {/* Username */}
-  <p className="text-base sm:text-lg font-semibold text-white truncate">
-    {user.username}
-  </p>
+{/* Username */}
+<Link
+  href={`/${locale}/view-profile/${user.id}`}
+  className="text-base sm:text-lg font-semibold text-white truncate hover:underline"
+>
+  {user.username}
+</Link>
 
   {/* Age */}
   {(() => {
@@ -505,6 +512,7 @@ const getAge = (ageFromServer?: number | null, year?: number | null): number | n
       />
 
     </main>
+    </AuthGuard>
   );
   
 }

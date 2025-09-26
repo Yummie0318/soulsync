@@ -10,7 +10,7 @@ import BottomNav from "@/components/BottomNav";
 import { useRouter, usePathname } from "next/navigation";
 import {useRef } from "react";
 import { useNotification } from "@/context/NotificationContext";
-
+import AuthGuard from "@/components/AuthGuard"; // adjust path if needed
 
 import {
   User,
@@ -254,6 +254,14 @@ const openEditModal = (post: PostType) => {
     }
   };
 
+  const handleLogout = () => {
+    // 🚨 Clear user session
+    localStorage.removeItem("user_id");
+
+    // Redirect to homepage (page.tsx)
+    router.replace("/");
+  };
+
   // -------------------- Fetch posts with pagination --------------------
   const fetchPosts = async (pageNumber: number) => {
     if (!userId) return;
@@ -421,6 +429,7 @@ const handlePost = async () => {
   
 
   return (
+    <AuthGuard>
     <main className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 pb-24 px-2 sm:px-4">
       {/* Background Glow */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
@@ -476,6 +485,7 @@ const handlePost = async () => {
               </div>
             </motion.div>
           ) : (
+            
             // Actual Profile UI
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -716,7 +726,10 @@ const handlePost = async () => {
                     <Settings className="w-4 h-4" /> {t("settings")}
                   </button>
 
-                  <button className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-red-500/20 border border-white/10 text-red-400 text-xs sm:text-sm font-medium transition w-full">
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-red-500/20 border border-white/10 text-red-400 text-xs sm:text-sm font-medium transition w-full"
+                  >
                     <LogOut className="w-4 h-4" /> {t("logout")}
                   </button>
                 </div>
@@ -1205,6 +1218,6 @@ const handlePost = async () => {
 
 
     </main>
-    
+    </AuthGuard>
   );
 }

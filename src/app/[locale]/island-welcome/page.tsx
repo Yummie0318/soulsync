@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import AuthGuard from "@/components/AuthGuard"; // adjust path if needed
+
 
 interface Island {
   id: number;
@@ -55,6 +57,7 @@ export default function IslandWelcomePage() {
   if (loading || !island) return null; // optionally add a loader
 
   return (
+    <AuthGuard>
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100 flex flex-col">
       {/* Header with back button */}
       <div className="sticky top-0 bg-gray-900/80 backdrop-blur-md z-20 px-4 py-4 border-b border-white/10 flex items-center">
@@ -128,5 +131,6 @@ export default function IslandWelcomePage() {
         </motion.div>
       </section>
     </main>
+    </AuthGuard>
   );
 }

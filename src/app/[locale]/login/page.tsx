@@ -21,39 +21,35 @@ export default function LoginPage() {
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-  
+
     if (!email || !password) {
       showNotification(t("fillAllFields"));
       return;
     }
-  
+
     setLoading(true);
-  
+
     try {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-  
+
       const data = await res.json();
       console.log("📡 Login response:", res.status, data);
-  
+
       if (res.ok && data.success) {
         // Save user ID
         if (data.user?.id) localStorage.setItem("user_id", data.user.id);
-  
+
         showNotification(t("loginSuccessful"));
-  
-        // ✅ Redirect based on profile completeness
-        const { year, gender_id, postal } = data.user;
-  
-        if (!year || !gender_id || !postal) {
-          // Notify user to complete profile
-          showNotification(t("completeProfileFirst"));
-          router.push(`/${locale}/profile-setup`);
+
+        // ✅ Use backend-provided redirect
+        if (data.redirect) {
+          router.push(`/${locale}${data.redirect}`);
         } else {
-          router.push(`/${locale}/my-room`);
+          router.push(`/${locale}/my-room`); // fallback
         }
       } else {
         // Map API error codes to translations
@@ -63,7 +59,11 @@ export default function LoginPage() {
           MISSING_FIELDS: t("fillAllFields"),
           SERVER_ERROR: t("serverError"),
         };
-        showNotification(errorTranslations[data.code] || data.message || t("somethingWentWrong"));
+        showNotification(
+          errorTranslations[data.code] ||
+            data.message ||
+            t("somethingWentWrong")
+        );
       }
     } catch (err) {
       console.error("❌ Frontend login error:", err);
@@ -72,7 +72,7 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-  
+
   const handleStartJourney = () => {
     setLoading(true);
     router.push(`/${locale}/login/ai-drawing`);

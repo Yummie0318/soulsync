@@ -20,7 +20,6 @@ export async function POST(req: Request) {
     const pool = getPool();
     console.log("🔗 Connected to DB, querying user...");
 
-    // Fetch user including the fields we need to check
     const result = await pool.query(
       `SELECT id, email, password, username, year, gender_id, postal
        FROM tbluser
@@ -41,7 +40,7 @@ export async function POST(req: Request) {
 
     const user = result.rows[0];
 
-    // Check password
+    // 🔑 Password check
     const validPassword = await bcrypt.compare(password, user.password);
     console.log("🔑 Password valid?", validPassword);
 
@@ -52,12 +51,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Determine redirect based on year, gender_id, postal
-    let redirectTo = "";
-    if (!user.year && !user.gender_id && !user.postal) {
-      redirectTo = "/profile-setup"; // if none of the fields exist
-    } else {
-      redirectTo = "/my-room"; // if any of the fields exist
+    // ✅ Redirect logic (fixed)
+    let redirectTo = "/profile-setup";
+    if (user.year || user.gender_id || (user.postal && user.postal.trim() !== "")) {
+      redirectTo = "/my-room";
     }
 
     console.log(`➡️ Redirecting user ${user.id} to:`, redirectTo);

@@ -249,7 +249,8 @@
          "unfriendDialogTitle": "解除好友",
          "unfriendDialogMessage": "您确定要解除与此用户的好友关系吗？",
           "cancel": "取消",
-          "age": "年龄"
+          "age": "年龄",
+            "Search": "搜索用户"
 },
 "IslandPicker": {
   "title": "选择你的岛屿",

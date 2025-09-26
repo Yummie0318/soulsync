@@ -8,6 +8,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useNotification } from "@/context/NotificationContext";
 import { ArrowLeft } from "lucide-react";
 import ConfirmDialog from "@/components/ConfirmDialog"; // ✅ import dialog
+import AuthGuard from "@/components/AuthGuard"; // adjust path if needed
+
 
 interface Follower {
   id: number;
@@ -145,6 +147,7 @@ const getAge = (ageFromServer?: number | null, year?: number | null): number | n
   );
 
   return (
+    <AuthGuard>
     <main className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100">
       {/* Header */}
       <div className="sticky top-0 bg-gray-900/80 backdrop-blur-md z-20 px-4 py-4 border-b border-white/10 flex items-center justify-between">
@@ -340,6 +343,7 @@ const getAge = (ageFromServer?: number | null, year?: number | null): number | n
       />
 
     </main>
+    </AuthGuard>
   );
   
 }

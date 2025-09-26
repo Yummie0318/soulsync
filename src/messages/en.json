@@ -251,7 +251,9 @@
   "unfriendDialogTitle": "Unfriend User",
   "unfriendDialogMessage": "Are you sure you want to unfriend this user?",
 "cancel": "Cancel",
-"age": "Age"
+"age": "Age",
+"Search": "Search Users"
+
 },
 "IslandPicker": {
   "title": "Pick Your Island",

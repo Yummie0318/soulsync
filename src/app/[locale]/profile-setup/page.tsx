@@ -7,6 +7,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { useNotification } from "@/context/NotificationContext";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import AuthGuard from "@/components/AuthGuard"; // adjust path if needed
+
 
 // --- Types for API results ---
 interface Interest {
@@ -208,6 +210,7 @@ const handleNext = async () => {
 
 
   return (
+    <AuthGuard>
     <main className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 px-4">
       {/* Background glow */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
@@ -664,5 +667,6 @@ const handleNext = async () => {
     )}
   </AnimatePresence>
     </main>
+    </AuthGuard>
   );
 }

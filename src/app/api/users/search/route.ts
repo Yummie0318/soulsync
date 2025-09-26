@@ -19,12 +19,12 @@ export async function GET(req: Request) {
 
     const pool = getPool();
 
-    // Choose correct looking_for column
+    // ✅ Choose correct looking_for column
     let lookingForColumn = "lf.items";
     if (locale === "de") lookingForColumn = "lf.items_de";
     if (locale === "zh") lookingForColumn = "lf.items_zh";
 
-    // Pick the correct country column based on locale
+    // ✅ Pick the correct country column based on locale
     let currentCountryColumn = "cc.country";
     let permanentCountryColumn = "pc.country";
     if (locale === "de") {
@@ -36,6 +36,7 @@ export async function GET(req: Request) {
       permanentCountryColumn = "pc.country_zh";
     }
 
+    // ✅ Use tbluser_follow to check following status
     const result = await pool.query(
       `
       SELECT 
@@ -46,20 +47,20 @@ export async function GET(req: Request) {
         u.postal,
         COALESCE(${currentCountryColumn}, '') AS current_country,
         COALESCE(${permanentCountryColumn}, '') AS permanent_country,
-        COALESCE(STRING_AGG(DISTINCT ${lookingForColumn}, ', '), '') AS looking_for
+        COALESCE(STRING_AGG(DISTINCT ${lookingForColumn}, ', '), '') AS looking_for,
+        CASE WHEN uf.following_id IS NOT NULL THEN true ELSE false END AS is_following
       FROM tbluser u
       LEFT JOIN tbllookingfor_user lfu ON u.id = lfu.user_id
       LEFT JOIN tbllookingfor lf ON lf.id = lfu.lookingfor_id
       LEFT JOIN tblcountry cc ON u.currentcountry_id = cc.id
       LEFT JOIN tblcountry pc ON u.country_id = pc.id
+      LEFT JOIN tbluser_follow uf
+        ON uf.following_id = u.id AND uf.follower_id = $2
       WHERE u.id != $2
         AND u.username ILIKE $1
-        AND u.id NOT IN (
-          SELECT following_id FROM tbluser_follow WHERE follower_id = $2
-        )
       GROUP BY 
         u.id, u.username, u.photo_file_path, u.city, u.postal,
-        ${currentCountryColumn}, ${permanentCountryColumn}
+        ${currentCountryColumn}, ${permanentCountryColumn}, uf.following_id
       ORDER BY u.username ASC
       LIMIT 20
       `,
@@ -76,6 +77,7 @@ export async function GET(req: Request) {
         photo_file_path: row.photo_file_path,
         address,
         looking_for: row.looking_for,
+        is_following: row.is_following, // 👈 true if already following
       };
     });
 
