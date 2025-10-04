@@ -1,23 +1,18 @@
 // src/app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
-import { NotificationProvider } from "@/context/NotificationContext";
-import NotificationContainer from "@/components/NotificationContainer";
+import RootClient from "./RootClient";
 
 export const metadata: Metadata = {
   title: "SoulSync AI",
   description: "AI-Powered Dating App",
 };
-// Test update for deployment
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
-        <NotificationProvider>
-          {/* Global Notifications (always visible) test upload*/}
-          <NotificationContainer />
-          {children}
-        </NotificationProvider>
+      <body className="bg-gray-900 text-gray-200">
+        <RootClient>{children}</RootClient>
       </body>
     </html>
   );

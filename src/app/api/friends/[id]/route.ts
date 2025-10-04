@@ -1,34 +1,40 @@
-// src/app/api/friends/[id]/route.ts
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import getPool from "@/lib/db";
 
-// ✅ Helper: calculate age from year only
+// Helper: calculate age from year only
 function calculateAge(year?: number) {
   if (!year) return null;
   const currentYear = new Date().getFullYear();
   return currentYear - year;
 }
 
-// ✅ GET: All mutual friends for messaging
+// ✅ Helper: determine online status (30s like conversations)
+function isUserOnline(lastActive: string | null, thresholdMs = 30_000) {
+  if (!lastActive) return false;
+  const last = new Date(lastActive).getTime();
+  return Date.now() - last <= thresholdMs;
+}
+
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const userId = parseInt(params.id, 10);
-  if (isNaN(userId)) return NextResponse.json([], { status: 200 });
-
   try {
+    const { id } = await params;
+    const userId = parseInt(id, 10);
+    if (isNaN(userId)) return NextResponse.json([], { status: 200 });
+
     const pool = getPool();
     const url = new URL(req.url);
     const locale = url.searchParams.get("locale") || "en";
+    const tzOffsetMinutes = parseInt(url.searchParams.get("tz") || "0", 10);
 
     // Pick localized columns
     let lookingForColumn = "lf.items";
     let countryColumnCC = "cc.country";
     let countryColumnPC = "pc.country";
-
     if (locale === "de") {
       lookingForColumn = "lf.items_de";
       countryColumnCC = "cc.country_de";
@@ -49,6 +55,7 @@ export async function GET(
         u.postal,
         u.year,
         u.quote,
+        u.last_active,
         COALESCE(${countryColumnCC}, '') AS current_country,
         COALESCE(${countryColumnPC}, '') AS permanent_country,
         COALESCE(STRING_AGG(DISTINCT ${lookingForColumn}, ', '), '') AS looking_for
@@ -64,7 +71,7 @@ export async function GET(
       WHERE f1.follower_id = $1
       GROUP BY 
         u.id, u.username, u.photo_file_path, u.city, u.postal,
-        u.year, u.quote, ${countryColumnCC}, ${countryColumnPC}
+        u.year, u.quote, u.last_active, ${countryColumnCC}, ${countryColumnPC}
       ORDER BY u.username ASC
       `,
       [userId]
@@ -76,6 +83,14 @@ export async function GET(
       const postal = row.postal || "";
       const address = [country, city, postal].filter(Boolean).join(", ");
 
+      // Convert last_active UTC to client local
+      let last_active_local = row.last_active;
+      if (row.last_active && !isNaN(tzOffsetMinutes)) {
+        const date = new Date(row.last_active);
+        date.setMinutes(date.getMinutes() - tzOffsetMinutes);
+        last_active_local = date.toISOString();
+      }
+
       return {
         id: row.id,
         username: row.username || "",
@@ -84,88 +99,21 @@ export async function GET(
         age: calculateAge(row.year),
         quote: row.quote || "",
         looking_for: row.looking_for || "",
+        last_active: row.last_active,
+        last_active_local,
+        // ✅ Use same 30s threshold online calculation as conversations
+        isOnline: isUserOnline(last_active_local),
       };
     });
 
+    console.log(`📡 /api/friends/${userId} returning ${friends.length} friends`);
+
     return NextResponse.json(friends);
   } catch (err: any) {
+    console.error("❌ GET /api/friends/[id] error:", err);
     return NextResponse.json(
       { error: "Failed to fetch friends for messages", details: err.message },
       { status: 500 }
     );
   }
-}
-
-// ✅ DELETE: Unfriend
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { userId } = await req.json();
-    const friendId = parseInt(params.id, 10);
-
-    if (!userId || !friendId) {
-      return NextResponse.json(
-        { success: false, message: "Invalid data" },
-        { status: 400 }
-      );
-    }
-
-    const pool = getPool();
-    await pool.query(
-      `DELETE FROM tbluser_follow 
-       WHERE (follower_id = $1 AND following_id = $2)
-          OR (follower_id = $2 AND following_id = $1)`,
-      [userId, friendId]
-    );
-
-    return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json(
-      { success: false, message: "Failed to unfriend", error: err.message },
-      { status: 500 }
-    );
-  }
-}
-
-// ✅ PATCH: Toggle follow/unfollow
-export async function PATCH(req: Request) {
-  try {
-    const { userId, friendId } = await req.json();
-    if (!userId || !friendId) {
-      return NextResponse.json(
-        { success: false, error: "Missing userId or friendId" },
-        { status: 400 }
-      );
-    }
-
-    const pool = getPool();
-
-    const existing = await pool.query(
-      `SELECT 1 FROM tbluser_follow WHERE follower_id = $1 AND following_id = $2`,
-      [userId, friendId]
-    );
-
-    const isFollowing = (existing.rowCount ?? 0) > 0;
-
-    if (isFollowing) {
-      await pool.query(
-        `DELETE FROM tbluser_follow WHERE follower_id = $1 AND following_id = $2`,
-        [userId, friendId]
-      );
-      return NextResponse.json({ success: true, following: false });
-    } else {
-      await pool.query(
-        `INSERT INTO tbluser_follow (follower_id, following_id) VALUES ($1, $2)`,
-        [userId, friendId]
-      );
-      return NextResponse.json({ success: true, following: true });
-    }
-  } catch (err: any) {
-    return NextResponse.json(
-      { success: false, error: "Failed to toggle follow", details: err.message },
-      { status: 500 }
-    );
-  }
-}
+};
