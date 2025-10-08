@@ -13,6 +13,12 @@
 # testing
 /coverage
 
+# Playwright test results
+playwright-report/
+playwright-results/
+test-results/
+screenshots/
+
 # next.js
 /.next/
 /out/
@@ -30,8 +36,8 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files (safe to ignore)
+/.env*
 
 # vercel
 .vercel
