@@ -1,3 +1,12 @@
+name: Playwright Tests  # ✅ Workflow name shown in Actions tab
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
   test:
     runs-on: ubuntu-latest
 
@@ -26,7 +35,6 @@
       - name: Wait for app to be ready
         run: npx wait-on http://localhost:3000
 
-      # 🧪 Run Playwright tests (always produce report)
       - name: Run Playwright tests
         run: |
           mkdir -p playwright-report
