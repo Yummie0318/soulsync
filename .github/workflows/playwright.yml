@@ -32,38 +32,53 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      # 5️⃣ Build and start Next.js app
-      - name: Build and Start Next.js
-        run: |
-          npm run build
-          npm run start &
+      # 5️⃣ Build Next.js app
+      - name: Build Next.js
+        run: npm run build
         env:
           NODE_ENV: production
 
-      # 6️⃣ Wait for app to be ready
-      - name: Wait for app to be ready
+      # 6️⃣ Start Next.js in background
+      - name: Start Next.js
+        run: |
+          npm run start &
+          echo $! > .next-server.pid
+        env:
+          NODE_ENV: production
+
+      # 7️⃣ Wait for app to be ready
+      - name: Wait for app
         run: npx wait-on http://localhost:3000
 
-      # 7️⃣ Run Playwright tests with HTML reporter + traces
+      # 8️⃣ Run Playwright tests (consolidated report)
       - name: Run Playwright tests
-        run: npx playwright test --reporter=html --trace retain-on-failure
+        run: npx playwright test --workers=1 --fail-fast=false
 
-      # 8️⃣ Upload HTML report as artifact (for download)
-      - name: Upload Playwright HTML report
+      # 9️⃣ Upload HTML report as artifact
+      - name: Upload HTML report
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: playwright-report
           retention-days: 30
 
-      # 9️⃣ Deploy HTML report to GitHub Pages
+      # 🔟 Deploy report to GitHub Pages
       - name: Deploy report to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: playwright-report
 
-      # 🔟 Print report URL in Actions logs for easy access
+      # 1️⃣1️⃣ Show report URL in logs
       - name: Show HTML report URL
         run: |
-          echo "✅ Playwright HTML report (with traces) is available at:"
+          echo "✅ Playwright HTML report is available at:"
           echo "https://${{ github.repository_owner }}.github.io/${{ github.repository }}/index.html"
+
+      # 1️⃣2️⃣ Stop Next.js server
+      - name: Stop Next.js server
+        if: always()
+        run: |
+          if [ -f .next-server.pid ]; then
+            kill $(cat .next-server.pid) || true
+            rm .next-server.pid
+          fi
