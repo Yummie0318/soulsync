@@ -37,6 +37,7 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       # 6️⃣ Start Next.js in background
       - name: Start Next.js
@@ -45,6 +46,7 @@ jobs:
           echo $! > .next-server.pid
         env:
           NODE_ENV: production
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       # 7️⃣ Wait for app to be ready
       - name: Wait for app
