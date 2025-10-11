@@ -23,17 +23,31 @@ export async function POST(req: Request) {
     const pool = getPool();
 
     if (is_typing) {
-      // Insert or update typing
-      const result = await pool.query(
-        `
-        INSERT INTO tbltyping (sender_id, receiver_id, is_typing, updated_at)
-        VALUES ($1, $2, $3, NOW())
-        ON CONFLICT (sender_id, receiver_id)
-        DO UPDATE SET is_typing = EXCLUDED.is_typing, updated_at = NOW()
-        RETURNING *;
-        `,
-        [sender_id, receiver_id, is_typing]
+      // ✅ Upsert manually (since no unique constraint exists)
+      const existing = await pool.query(
+        `SELECT id FROM tbltyping WHERE sender_id = $1 AND receiver_id = $2`,
+        [sender_id, receiver_id]
       );
+
+      let result;
+      if (existing.rows.length > 0) {
+        // Update existing record
+        result = await pool.query(
+          `UPDATE tbltyping
+           SET is_typing = $3, updated_at = NOW()
+           WHERE sender_id = $1 AND receiver_id = $2
+           RETURNING *;`,
+          [sender_id, receiver_id, is_typing]
+        );
+      } else {
+        // Insert new record
+        result = await pool.query(
+          `INSERT INTO tbltyping (sender_id, receiver_id, is_typing, updated_at)
+           VALUES ($1, $2, $3, NOW())
+           RETURNING *;`,
+          [sender_id, receiver_id, is_typing]
+        );
+      }
 
       return NextResponse.json({ success: true, data: result.rows[0] });
     } else {

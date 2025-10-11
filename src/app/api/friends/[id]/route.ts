@@ -106,7 +106,7 @@ export async function GET(
       };
     });
 
-    console.log(`📡 /api/friends/${userId} returning ${friends.length} friends`);
+    // console.log(`📡 /api/friends/${userId} returning ${friends.length} friends`);
 
     return NextResponse.json(friends);
   } catch (err: any) {
