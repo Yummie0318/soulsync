@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Phone, Video, Paperclip, Smile, Send, X } from "lucide-react";
 import { useEffect, useState, useRef, useLayoutEffect, FormEvent } from "react";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
+import { Picker } from "emoji-mart";
 import data from "@emoji-mart/data";
-import Picker from "emoji-mart"; // ✅ use "emoji-mart", not "@emoji-mart/react"
 import socket from "@/lib/socketClient"; // ✅ works with your current file
 
 
@@ -1050,13 +1050,11 @@ return (
      
       {showEmojiPicker && (
   <div className="absolute bottom-12 left-0 z-50">
-    <Picker
-      data={data}
-      onEmojiSelect={(emoji: any) =>
-        setNewMessage((prev) => prev + emoji.native)
-      }
-      theme="dark"
-    />
+<Picker
+  data={data}
+  onEmojiSelect={(emoji: any) => setNewMessage(prev => prev + emoji.native)}
+  theme="dark"
+/>
   </div>
 )}
 
