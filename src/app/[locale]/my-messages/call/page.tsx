@@ -1,128 +1,183 @@
 "use client";
 
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
-import { pusherClient } from "@/lib/pusher/client";
+import CallUI from "./CallUI";
+import { useCallHandler } from "./useCallHandler";
+import { useSocket } from "@/context/SocketContext";
+
+const log = (...args: any[]) =>
+  console.log(`[${new Date().toISOString()}]`, ...args);
 
 export default function CallPage() {
-  const params = useSearchParams();
   const router = useRouter();
+  const params = useSearchParams();
+  const { socket } = useSocket();
 
-  const callerId = params.get("callerId");
-  const receiverId = params.get("receiverId");
-  const type = params.get("type"); // "audio" or "video"
+  const urlCallerId = Number(params.get("callerId"));
+  const urlReceiverId = Number(params.get("receiverId"));
+  const callType = (params.get("type") as "audio" | "video") || "audio";
+  const callIdParam = params.get("callId");
 
-  const [status, setStatus] = useState("Connecting...");
-  const [callId, setCallId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const hasStarted = useRef(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [callId, setCallId] = useState<string | null>(callIdParam);
+  const [status, setStatus] = useState<
+    "ringing" | "incoming" | "accepted" | "rejected" | "ended"
+  >(callIdParam ? "accepted" : "ringing");
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
+  const hasCreatedCall = useRef(false);
+
+  // 🧠 Load logged-in user once
   useEffect(() => {
-    if (!callerId || !receiverId || !type || hasStarted.current) return;
-    hasStarted.current = true;
+    const id = localStorage.getItem("user_id");
+    if (id) {
+      setCurrentUserId(Number(id));
+      log("👤 Loaded logged-in user:", id);
+    }
+  }, []);
 
-    const startCall = async () => {
+  const isCaller = useMemo(
+    () => currentUserId === urlCallerId,
+    [currentUserId, urlCallerId]
+  );
+
+  const callerId = urlCallerId;
+  const receiverId = urlReceiverId;
+
+  // =====================================================
+  // 📞 CREATE CALL RECORD (Caller only)
+  // =====================================================
+  useEffect(() => {
+    if (!isCaller || hasCreatedCall.current || callId) return;
+    if (!callerId || !receiverId) return;
+    hasCreatedCall.current = true;
+
+    (async () => {
       try {
-        setStatus("Connecting...");
-        setIsLoading(true);
-        const tz = new Date().getTimezoneOffset();
-
-        // 1️⃣ Create call in DB
-        const res = await fetch(`/api/calls/${receiverId}?tz=${tz}`, {
+        log("📤 Creating call record...");
+        const res = await fetch(`/api/calls/${receiverId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ caller_id: Number(callerId), call_type: type }),
+          body: JSON.stringify({ caller_id: callerId, call_type: callType }),
         });
-
         const data = await res.json();
-        if (!res.ok) {
-          console.error("❌ Failed to start call:", data);
-          setStatus("Failed to start call.");
-          setIsLoading(false);
-          return;
-        }
-
-        setCallId(data.id);
-        setStatus("Ringing...");
-        setIsLoading(false);
-
-        // 2️⃣ Listen for receiver response via Pusher
-        const channel = pusherClient(Number(callerId));
-        console.log("📡 Caller subscribed to Pusher channel:", callerId);
-
-        channel.bind("call-response", (payload: any) => {
-          if (payload.callId !== data.id) return;
-
-          console.log("📣 Caller received call-response:", payload);
-
-          if (payload.response === "accepted") {
-            setStatus("Call accepted!");
-            const locale = window.location.pathname.split("/")[1] || "en";
-            window.location.href = `/${locale}/my-messages/webrtc-call?callerId=${callerId}&receiverId=${receiverId}&type=${type}`;
-          } else if (payload.response === "declined") {
-            setStatus("Call was declined by receiver.");
-          }
-
-          // Clear timeout after any response
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-            timeoutRef.current = null;
-          }
-        });
-
-        // 3️⃣ Timeout if no answer after 30s
-        timeoutRef.current = setTimeout(() => {
-          setStatus("No answer. Receiver may be offline.");
-        }, 30000);
-
+        if (data.success && data.call?.id) {
+          setCallId(String(data.call.id));
+          log("✅ Call record created:", data.call.id);
+        } else log("❌ Call creation failed:", data.error);
       } catch (err) {
-        console.error("❌ Error creating call:", err);
-        setStatus("Error starting call.");
-        setIsLoading(false);
+        log("⚠️ Error creating call:", err);
+      }
+    })();
+  }, [isCaller, callerId, receiverId, callId, callType]);
+
+  // =====================================================
+  // 🧩 Initialize WebRTC *AFTER* user + socket ready
+  // =====================================================
+  const shouldInitWebRTC =
+    socket && currentUserId && (isCaller || callId) && callerId && receiverId;
+
+  const { localVideoRef, remoteVideoRef, cleanup } = useCallHandler({
+    callerId,
+    receiverId,
+    callType,
+    socket,
+    onConnected: () => {
+      setStatus("accepted");
+      log("✅ WebRTC connected — status set to accepted");
+    },
+  });
+
+  // =====================================================
+  // 🎧 Socket Call Status Listeners
+  // =====================================================
+  useEffect(() => {
+    if (!socket || !callId) return;
+    log("🔗 Listening for call events", { callId });
+
+    const handleAccepted = (call: any) => {
+      if (call.id?.toString() === callId) setStatus("accepted");
+    };
+
+    const handleRejected = (call: any) => {
+      if (call.id?.toString() === callId) {
+        setStatus("rejected");
+        cleanup();
+        setTimeout(() => router.back(), 1500);
       }
     };
 
-    startCall();
+    const handleEnded = (call: any) => {
+      if (call.id?.toString() === callId) {
+        setStatus("ended");
+        cleanup();
+        setTimeout(() => router.back(), 1500);
+      }
+    };
+
+    socket.on("call:accepted", handleAccepted);
+    socket.on("call:rejected", handleRejected);
+    socket.on("call:ended", handleEnded);
 
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      socket.off("call:accepted", handleAccepted);
+      socket.off("call:rejected", handleRejected);
+      socket.off("call:ended", handleEnded);
     };
-  }, [callerId, receiverId, type]);
+  }, [socket, callId, router, cleanup]);
 
-  const endCall = async () => {
+  // =====================================================
+  // 🔚 End call manually
+  // =====================================================
+  const handleEnd = async () => {
     if (!callId) return;
     try {
-      const tz = new Date().getTimezoneOffset();
-      await fetch(`/api/calls/${receiverId}?tz=${tz}`, {
+      await fetch(`/api/calls/${callId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ call_id: callId, status: "ended" }),
+        body: JSON.stringify({ status: "ended" }),
       });
-
-      setStatus("Call ended");
-      setTimeout(() => {
-        router.push(`/en/my-messages/conversation?receiverId=${receiverId}`);
-      }, 1000);
+      setStatus("ended");
+      cleanup();
+      setTimeout(() => router.back(), 1500);
+      log("✅ Call ended successfully");
     } catch (err) {
-      console.error("❌ Error ending call:", err);
+      log("⚠️ Error ending call:", err);
     }
   };
 
+  // =====================================================
+  // 🧹 Cleanup when page unmounts
+  // =====================================================
+  useEffect(() => {
+    return () => {
+      log("🧹 Page unmount → closing WebRTC");
+      cleanup();
+    };
+  }, [cleanup]);
+
+  // =====================================================
+  // 🕒 Loading UI
+  // =====================================================
+  if (!currentUserId) {
+    return (
+      <div className="flex items-center justify-center h-screen text-gray-500">
+        Loading call...
+      </div>
+    );
+  }
+
+  // =====================================================
+  // 🎥 Render
+  // =====================================================
   return (
-    <main className="h-screen flex flex-col items-center justify-center bg-gray-900 text-white text-center p-6">
-      <h1 className="text-xl font-bold mb-4 whitespace-pre-line">{status}</h1>
-
-      {callId && (
-        <button
-          onClick={endCall}
-          className="px-6 py-3 rounded-full bg-red-600 hover:bg-red-700 transition"
-        >
-          End Call
-        </button>
-      )}
-
-      {isLoading && <div className="animate-pulse text-gray-400">Please wait...</div>}
-    </main>
+    <CallUI
+      status={status}
+      callType={callType}
+      localVideoRef={localVideoRef}
+      remoteVideoRef={remoteVideoRef}
+      onEnd={handleEnd}
+      isCaller={isCaller}
+    />
   );
 }

@@ -2,7 +2,9 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import getPool from "@/lib/db";
-import { triggerIncomingCall } from "@/lib/pusher/server"; // ✅ Add this
+
+const SOCKET_SERVER =
+  process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || "https://soulsync-socket-server.onrender.com";
 
 function toLocalISOString(dateStr: string | null, tzOffsetMinutes: number) {
   if (!dateStr || isNaN(tzOffsetMinutes)) return dateStr;
@@ -11,137 +13,128 @@ function toLocalISOString(dateStr: string | null, tzOffsetMinutes: number) {
   return date.toISOString();
 }
 
-// ✅ GET: Fetch all calls between two users
-export async function GET(
-  req: Request,
-  context: { params: Promise<{ id: string }> }
-) {
+/* --------------------- 🔹 GET (Fetch call history) --------------------- */
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = await context.params;
+    const pool = getPool();
+    const receiverId = parseInt(params.id, 10);
     const url = new URL(req.url);
     const userId = parseInt(url.searchParams.get("user_id") || "0", 10);
-    const otherId = parseInt(id, 10);
     const tzOffsetMinutes = parseInt(url.searchParams.get("tz") || "0", 10);
 
-    if (!userId || !otherId) {
-      return NextResponse.json({ success: false, error: "Missing user_id or other user id" }, { status: 400 });
-    }
-
-    const pool = getPool();
     const result = await pool.query(
-      `SELECT id, caller_id, receiver_id, call_type, status, started_at, ended_at
-       FROM tblcall
+      `SELECT * FROM tblcall
        WHERE (caller_id = $1 AND receiver_id = $2)
           OR (caller_id = $2 AND receiver_id = $1)
-       ORDER BY started_at ASC`,
-      [userId, otherId]
+       ORDER BY created_at DESC`,
+      [userId, receiverId]
     );
 
-    const calls = result.rows.map((call: any) => ({
-      ...call,
-      started_at_local: toLocalISOString(call.started_at, tzOffsetMinutes),
-      ended_at_local: call.ended_at ? toLocalISOString(call.ended_at, tzOffsetMinutes) : null,
+    const calls = result.rows.map((row: any) => ({
+      ...row,
+      started_at_local: row.started_at ? toLocalISOString(row.started_at, tzOffsetMinutes) : null,
+      ended_at_local: row.ended_at ? toLocalISOString(row.ended_at, tzOffsetMinutes) : null,
     }));
 
-    return NextResponse.json({ calls });
+    return NextResponse.json({ success: true, calls });
   } catch (err: any) {
-    console.error("❌ GET Calls Error:", err);
-    return NextResponse.json({ success: false, error: "Failed to fetch calls", details: err.message }, { status: 500 });
+    console.error("❌ [GET /api/calls] Error:", err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
 
-// ✅ POST: Start a new call and notify receiver
-export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
+/* --------------------- 🔹 POST (Create new call) --------------------- */
+export async function POST(req: Request, { params }: { params: { id: string } }) {
+  console.log("🟢 [POST /api/calls] START");
+
   try {
-    const { id } = await context.params;
-    const receiverId = parseInt(id, 10);
-    const url = new URL(req.url);
-    const tzOffsetMinutes = parseInt(url.searchParams.get("tz") || "0", 10);
     const pool = getPool();
+    const receiverId = parseInt(params.id, 10);
+    const { caller_id, call_type } = await req.json();
 
-    const body = await req.json();
-    const { caller_id, call_type } = body;
-
-    console.log("📞 POST /calls called with:", { caller_id, receiverId, call_type });
-
-    if (!caller_id || !receiverId || !call_type) {
-      console.log("❌ Missing params");
-      return NextResponse.json({ success: false, error: "Missing caller_id, receiver_id or call_type" }, { status: 400 });
+    if (!caller_id || !receiverId) {
+      return NextResponse.json(
+        { success: false, error: "Missing caller_id or receiver_id" },
+        { status: 400 }
+      );
     }
 
-    // ✅ Prevent duplicate ongoing call
-    const check = await pool.query(
-      `SELECT id FROM tblcall WHERE caller_id = $1 AND receiver_id = $2 AND status = 'ongoing'`,
-      [caller_id, receiverId]
-    );
-
-    if (check.rows.length > 0) {
-      console.log("⚠️ Duplicate ongoing call detected:", check.rows[0].id);
-      return NextResponse.json({
-        success: false,
-        error: "A call is already ongoing between these users.",
-        existing_call_id: check.rows[0].id,
-      }, { status: 409 });
-    }
-
-    // ✅ Insert new call record with default status 'ringing'
+    // Save call record
     const result = await pool.query(
-      `INSERT INTO tblcall (caller_id, receiver_id, call_type, status)
-       VALUES ($1, $2, $3, 'ringing')
+      `INSERT INTO tblcall (caller_id, receiver_id, call_type, call_status, started_at)
+       VALUES ($1, $2, $3, 'ringing', CURRENT_TIMESTAMP)
        RETURNING *`,
-      [caller_id, receiverId, call_type]
+      [caller_id, receiverId, call_type || "audio"]
     );
 
-    const row = result.rows[0];
-    console.log("✅ Call created in DB:", row);
+    const call = result.rows[0];
+    console.log("✅ Call created:", call);
 
-    // ✅ Trigger Pusher event for receiver
-    console.log(`🔔 Triggering incoming call for receiver ${receiverId}`);
-    await triggerIncomingCall(receiverId, {
-      callerId: caller_id,
-      callType: call_type,
-      callId: row.id,
-    });
-    console.log("✅ Pusher event triggered successfully");
+    // 🔔 Notify socket server for global incoming popup
+    await fetch(`${SOCKET_SERVER}/emit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event: "call:ringing",
+        data: {
+          ...call,
+          message: "Incoming call",
+          receiver_id: receiverId,
+          caller_id: caller_id,
+        },
+      }),
+    }).catch((err) => console.error("⚠️ Socket emit failed:", err));
 
-    return NextResponse.json({
-      ...row,
-      started_at_local: toLocalISOString(row.started_at, tzOffsetMinutes),
-    }, { status: 201 });
+    return NextResponse.json({ success: true, call });
   } catch (err: any) {
-    console.error("❌ POST Call Error:", err);
-    return NextResponse.json({ success: false, error: "Failed to start call", details: err.message }, { status: 500 });
+    console.error("❌ [POST /api/calls] Error:", err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
 
-// ✅ PATCH: Update call status (ongoing, ended, declined)
-export async function PATCH(req: Request) {
+/* --------------------- 🔹 PATCH (Update call status) --------------------- */
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+  console.log("🟠 [PATCH /api/calls] START");
+
   try {
-    const url = new URL(req.url);
-    const tzOffsetMinutes = parseInt(url.searchParams.get("tz") || "0", 10);
-    const { call_id, status } = await req.json();
-
-    if (!call_id || !status) {
-      return NextResponse.json({ success: false, error: "Missing call_id or status" }, { status: 400 });
-    }
-
     const pool = getPool();
-    const result = await pool.query(
-      `UPDATE tblcall 
-       SET status = $1, ended_at = CASE WHEN $1 = 'ended' THEN CURRENT_TIMESTAMP ELSE ended_at END
-       WHERE id = $2 
-       RETURNING *`,
-      [status, call_id]
-    );
+    const callId = parseInt(params.id, 10);
+    const { status } = await req.json();
 
-    const row = result.rows[0];
-    return NextResponse.json({
-      ...row,
-      started_at_local: toLocalISOString(row.started_at, tzOffsetMinutes),
-      ended_at_local: row.ended_at ? toLocalISOString(row.ended_at, tzOffsetMinutes) : null,
-    });
+    if (!callId || !status)
+      return NextResponse.json(
+        { success: false, error: "Missing call ID or status" },
+        { status: 400 }
+      );
+
+    let query = "";
+    if (status === "accepted")
+      query = `UPDATE tblcall SET call_status='accepted', started_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING *`;
+    else if (status === "rejected")
+      query = `UPDATE tblcall SET call_status='rejected', ended_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING *`;
+    else if (status === "ended")
+      query = `UPDATE tblcall SET call_status='ended', ended_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING *`;
+    else
+      return NextResponse.json({ success: false, error: "Invalid status" }, { status: 400 });
+
+    const result = await pool.query(query, [callId]);
+    const call = result.rows[0];
+    if (!call) throw new Error("Call not found");
+
+    // 🔔 Notify socket listeners
+    await fetch(`${SOCKET_SERVER}/emit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event: `call:${status}`,
+        data: call,
+      }),
+    }).catch((err) => console.error("⚠️ Socket emit failed:", err));
+
+    console.log(`✅ Call ${status}:`, call.id);
+    return NextResponse.json({ success: true, call });
   } catch (err: any) {
-    console.error("❌ PATCH Call Error:", err);
-    return NextResponse.json({ success: false, error: "Failed to update call", details: err.message }, { status: 500 });
+    console.error("❌ [PATCH /api/calls] Error:", err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
