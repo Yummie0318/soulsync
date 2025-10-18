@@ -9,7 +9,7 @@ test.describe("Login Page", () => {
       await page.goto(url);
       await page.waitForLoadState("domcontentloaded");
 
-      // Gracefully skip test if 404 or missing page
+      // Gracefully skip test if 404 or missing page test
       const bodyText = await page.locator("body").innerText();
       if (/404|not found/i.test(bodyText)) {
         testInfo.skip(true, `Skipping ${locale.toUpperCase()} — page not found`);
