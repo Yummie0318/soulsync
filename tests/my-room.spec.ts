@@ -25,7 +25,7 @@ test.describe("My Room Page", () => {
       await expect(postInput).toBeVisible();
     });
 
-    test(`should create a new post`, async ({ page }) => {
+    test(`should create a new post for locale: ${locale}`, async ({ page }) => {
       await page.goto(`/${locale}/my-room`);
       await page.evaluate(() => localStorage.setItem("user_id", "1"));
       await page.reload();
@@ -41,7 +41,7 @@ test.describe("My Room Page", () => {
       await expect(newPost).toBeVisible();
     });
 
-    test(`should open avatar upload modal`, async ({ page }) => {
+    test(`should open avatar upload modal for locale: ${locale}`, async ({ page }) => {
       await page.goto(`/${locale}/my-room`);
       await page.evaluate(() => localStorage.setItem("user_id", "1"));
       await page.reload();
