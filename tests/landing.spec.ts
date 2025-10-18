@@ -10,7 +10,7 @@ test.describe("🌍 Landing Page Rendering", () => {
       console.log(`\n🌐 Visiting ${url}...`);
       await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
 
-      // 🚨 Catch page and console errors
+      // 🚨 Catch page and console errors test
       page.on("pageerror", (err) => {
         throw new Error(`❌ Page error detected: ${err.message}`);
       });
