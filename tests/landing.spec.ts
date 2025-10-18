@@ -33,7 +33,7 @@ test.describe("Landing Page Rendering", () => {
       await expect(getStarted).toBeVisible();
       await expect(login).toBeVisible();
 
-      // ✅ Verify <html lang="..."> (allow fallback)
+      // ✅ Verify <html lang="..."> (allow test)
       await expect(page.locator("html")).toHaveAttribute("lang", /en|de|zh/);
 
       // ✅ Ensure page title does not contain 404
