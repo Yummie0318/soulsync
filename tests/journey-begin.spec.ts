@@ -1,31 +1,60 @@
-import { test, expect } from '@playwright/test';
+// C:\Users\Ideapad Gaming 3\Desktop\soulsync\tests\journey-begin.spec.ts
+import { test, expect } from "@playwright/test";
 
-test.describe('SoulSyncAI — Journey Begin Page', () => {
-  test('should display the journey-begin page correctly', async ({ page }) => {
-    test.setTimeout(30000);
+test.describe("Journey Begin Page", () => {
+  const locales = ["en", "de", "zh"]; // Supported locales
 
-    const url = 'https://www.soulsyncai.site/en/login/journey-begin';
-    console.log(`🌐 Navigating to ${url}...`);
-    await page.goto(url, { waitUntil: 'networkidle' });
+  for (const locale of locales) {
+    test(`should render ${locale.toUpperCase()} journey-begin page correctly`, async ({ page }) => {
+      const url = `http://localhost:3000/${locale}/login/journey-begin`;
+      await page.goto(url);
+      await page.waitForLoadState("domcontentloaded");
 
-    // ✅ Wait for a heading or title that indicates the page loaded
-    const header = page.locator('h1, h2').filter({ hasText: /Journey|Your Journey|Begin/i });
-    await expect(header).toBeVisible({ timeout: 10000 });
-    console.log('✅ Header visible:', await header.innerText());
+      // Fail test immediately if console errors occur
+      page.on("pageerror", (err) => {
+        throw new Error(`❌ Page error detected: ${err.message}`);
+      });
 
-    // ✅ Expect a “Sign Up” or “Join” / call-to-action button
-    const signUpBtn = page.getByRole('button', { name: /Sign Up|Join|Get Started|Continue/i });
-    await expect(signUpBtn).toBeVisible({ timeout: 10000 });
-    console.log('✅ Sign Up / CTA button visible');
+      // ✅ Check if the Play icon is visible
+      const playIcon = page.locator("svg");
+      await expect(playIcon.first()).toBeVisible();
 
-    // (Optional) Validate some descriptive text or steps
-    const description = page.locator('text=/journey|begin your journey|next steps/i');
-    await expect(description).toBeVisible({ timeout: 8000 });
-    console.log('✅ Description or instruction text present');
+      // ✅ Title lines should exist and contain text
+      const title = page.locator("h1");
+      await expect(title).toBeVisible();
+      await expect(title).toHaveText(/.+/);
 
-    // (Optional) Click the sign up button and assert next navigation
-    // await signUpBtn.click();
-    // await page.waitForURL('**/some-next-path', { timeout: 10000 });
-    // console.log('✅ Navigated to next path after sign up click');
+      // ✅ Subtitle should be visible and not empty
+      const subtitle = page.locator("p").first();
+      await expect(subtitle).toBeVisible();
+      await expect(subtitle).toHaveText(/.+/);
+
+      // ✅ CTA button should be visible and clickable
+      const ctaButton = page.locator("button");
+      await expect(ctaButton).toBeVisible();
+      await expect(ctaButton).toHaveText(/.+/);
+
+      // ✅ Footer text (footerPrompt)
+      const footer = page.locator("text=/./", { hasText: /.+/ });
+      await expect(footer.last()).toBeVisible();
+
+      // ✅ Language attribute check
+      await expect(page.locator("html")).toHaveAttribute("lang", /en|de|zh/);
+
+      // ✅ Ensure page title does not contain 404
+      const pageTitle = await page.title();
+      expect(pageTitle).not.toContain("404");
+
+      // 🧭 Click test: Should navigate to /login/auth
+      await ctaButton.click();
+      await page.waitForTimeout(1000);
+      await expect(page).toHaveURL(new RegExp(`/${locale}/login/auth`));
+    });
+  }
+
+  // 🧪 Negative test: invalid locale should show 404
+  test("should show 404 for invalid locale", async ({ page }) => {
+    await page.goto("http://localhost:3000/xyz/login/journey-begin");
+    await expect(page.locator("body")).toContainText(/404|not found/i);
   });
 });
