@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { Pencil, Eraser, Trash2, Palette } from "lucide-react";
+import { Pencil, Eraser, Trash2 } from "lucide-react";
 
 export default function AiDrawingPage() {
   const [progress, setProgress] = useState(0);
@@ -13,6 +13,7 @@ export default function AiDrawingPage() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const drawing = useRef(false);
+  const lastPoint = useRef<{ x: number; y: number } | null>(null);
 
   const router = useRouter();
   const { locale } = useParams() as { locale: string };
@@ -44,6 +45,7 @@ export default function AiDrawingPage() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.lineCap = "round";
+    ctx.lineJoin = "round";
     ctx.lineWidth = 4;
     ctx.strokeStyle = color;
     ctxRef.current = ctx;
@@ -52,38 +54,54 @@ export default function AiDrawingPage() {
   // Update stroke color
   useEffect(() => {
     if (ctxRef.current) {
-      ctxRef.current.strokeStyle = isEraser ? "#f3f4f6" : color; // bg-gray-100 as eraser
+      ctxRef.current.strokeStyle = isEraser ? "#f3f4f6" : color; // light gray as eraser
     }
   }, [color, isEraser]);
 
   // Drawing handlers
+  const getPos = (e: React.MouseEvent | React.TouchEvent) => {
+    const rect = canvasRef.current!.getBoundingClientRect();
+    if ("touches" in e) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top,
+      };
+    } else {
+      return {
+        x: e.nativeEvent.offsetX,
+        y: e.nativeEvent.offsetY,
+      };
+    }
+  };
+
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
     drawing.current = true;
-    draw(e);
+    lastPoint.current = getPos(e);
+    if (ctxRef.current) {
+      ctxRef.current.beginPath();
+      ctxRef.current.moveTo(lastPoint.current.x, lastPoint.current.y);
+    }
+  };
+
+  const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!drawing.current || !ctxRef.current) return;
+    const pos = getPos(e);
+
+    if (lastPoint.current) {
+      const { x: lx, y: ly } = lastPoint.current;
+      const midX = (lx + pos.x) / 2;
+      const midY = (ly + pos.y) / 2;
+      ctxRef.current.quadraticCurveTo(lx, ly, midX, midY);
+      ctxRef.current.stroke();
+      lastPoint.current = pos;
+    } else {
+      lastPoint.current = pos;
+    }
   };
 
   const endDrawing = () => {
     drawing.current = false;
-    if (ctxRef.current) ctxRef.current.beginPath();
-  };
-
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!drawing.current || !ctxRef.current || !canvasRef.current) return;
-
-    const rect = canvasRef.current.getBoundingClientRect();
-    let x, y;
-    if ("touches" in e) {
-      x = e.touches[0].clientX - rect.left;
-      y = e.touches[0].clientY - rect.top;
-    } else {
-      x = e.nativeEvent.offsetX;
-      y = e.nativeEvent.offsetY;
-    }
-
-    ctxRef.current.lineTo(x, y);
-    ctxRef.current.stroke();
-    ctxRef.current.beginPath();
-    ctxRef.current.moveTo(x, y);
+    lastPoint.current = null;
   };
 
   const clearCanvas = () => {

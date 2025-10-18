@@ -26,7 +26,15 @@
     "signIn": "Einloggen",
     "forgotPassword": "Passwort vergessen?",
     "newToSoulSync": "Neu bei SoulSync?",
-    "startNewJourney": "Neue Reise beginnen"
+    "startNewJourney": "Neue Reise beginnen",
+    "pleaseWait": "Bitte warten...",
+    "invalidCredentials": "Die eingegebene E-Mail oder das Passwort ist falsch.",
+    "loginSuccessful": "Sie haben sich erfolgreich angemeldet!",
+    "userNotFound": "Kein Konto mit dieser E-Mail-Adresse gefunden.",
+    "fillAllFields": "Bitte füllen Sie alle erforderlichen Felder aus.",
+    "serverError": "Auf unserem Server ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
+     "completeProfileFirst": "Bitte vervollständigen Sie zuerst Ihr Profil!"
+  
   },
   "AiDrawing": {
   "title": "Zeichne ein Herz oder warte einfach...",
@@ -70,16 +78,204 @@
   "orContinueWith": "ODER WEITER MIT",
   "alreadyHaveAccount": "Hast du bereits ein Konto?",
   "signIn": "Anmelden",
-  "passwordMismatch": "Passwörter stimmen nicht überein"
+
+  "fillAllFields": "Bitte alle Felder ausfüllen.",
+  "passwordMismatch": "Passwörter stimmen nicht überein!",
+  "accountCreated": "Konto erfolgreich erstellt!",
+  "somethingWentWrong": "❌ Etwas ist schiefgelaufen!",
+  "serverError": "⚠️ Serverfehler, bitte später erneut versuchen.",
+  "emailExists": "E-Mail existiert bereits",
+"usernameExists": "Benutzername existiert bereits",
+"emailNotVerified": "E-Mail nicht verifiziert",
+"verifyEmail": "E-Mail verifizieren",
+"enterOtp": "OTP eingeben",
+"verify": "Verifizieren",
+"cancel": "Abbrechen",
+"otpSentToEmail": "OTP wurde an Ihre E-Mail gesendet"
+
 },
-"ProfileSetup": {
-  "completeProfile": "Vervollständige dein Profil",
-  "interestsSubtitle": "Wähle mindestens 3 Interessen aus, um fortzufahren",
-  "minimum": "Minimum",
+
+  "ProfileSetup": {
+    "completeProfile": "Vervollständige dein Profil",
+    "setupSubtitle": "Lass uns dein Profil einrichten...",
+    "step": "Schritt {current} von {total}",
+
+    "yourInterests": "Deine Interessen",
+    "interestsSubtitle": "Wähle mindestens 3 Interessen aus, um passende Vorschläge zu erhalten",
+    "minimum": "Minimum",
+    "interestsError": "Fehler beim Laden der Interessen. Bitte versuche es erneut.",
+
+    "birthdateTitle": "Dein Alter",
+    "birthdateSubtitle": "Gib dein Geburtsjahr an (Monat und Tag sind optional)",
+    "yearPlaceholder": "JJJJ",
+    "monthPlaceholder": "MM",
+    "dayPlaceholder": "TT",
+
+    "aboutTitle": "Über dich",
+    "aboutSubtitle": "Hilf uns, die passenden Matches für dich zu finden",
+    "genderLabel": "Geschlecht",
+    "selectGender": "Wähle dein Geschlecht",
+    "lookingForLabel": "Sucht nach",
+    "lookingForSubtitle": "Wähle alles, was zutrifft",
+    "starSignLabel": "Sternzeichen",
+    "selectStarSign": "Wähle dein Sternzeichen",
+    "optional": "Optional",
+    "loading": "Laden...",
+    "errorLoading": "Fehler beim Laden der Optionen",
+
+    "locationTitle": "Gib deinen Standort ein",
+    "locationSubtitle": "Dies hilft uns, bessere Date-Vorschläge mit echten Orten zu machen",
+    "countryLabel": "Land",
+    "selectCountry": "Wähle dein Land",
+    "cityPlaceholder": "Stadt",
+    "postalCodePlaceholder": "Postleitzahl (erforderlich)",
+    "postalCodeError": "Die Postleitzahl muss zwischen 3 und 10 Zeichen lang sein",
+
+  "title": "Letzte Schritte",
+  "subtitle": "Fügen Sie ein Profilfoto und Ihr Lieblingszitat hinzu (optional)",
+  "photoLabel": "Foto hochladen",
+  "quoteLabel": "Lieblingszitat",
+  "quoteOptional": "(optional)",
+  "quotePlaceholder": "Teilen Sie ein Zitat, das Sie inspiriert...",
+  "quoteLimit": "{length}/200",
+
   "previous": "Zurück",
   "next": "Weiter",
-  "noInterestsFound": "Keine Interessen gefunden."
+  "finish": "Fertig",
+
+  "noUserId": "Keine Benutzer-ID gefunden. Bitte erneut registrieren.",
+  "profileSetupComplete": "🎉 Profil erfolgreich eingerichtet!",
+  "profileSetupWelcome": "Willkommen in deinem persönlichen Bereich! Du kannst ihn anpassen und sofort loslegen.",
+
+  "somethingWentWrong": "❌ Etwas ist schiefgelaufen!",
+  "serverError": "⚠️ Serverfehler, bitte versuchen Sie es später erneut."
+   
+  },
+  "ProfileSection": {
+    "myRoom": "Mein Zimmer",
+    "editProfile": "Profil",
+    "posts": "Beiträge",
+    "followers": "Follower",
+    "following": "Folgt",
+  "yearsOld": "{age} Jahre alt (Geboren {day}.{month}.{year})",
+    "home": "Zuhause",
+    "current": "Aktuell",
+    "findMatches": "Matches finden",
+    "settings": "Einstellungen",
+    "logout": "Abmelden",
+    "myFriends": "Meine Freunde",
+    "datePlans": "Dating-Pläne",
+    "noActiveConversations": "Noch keine aktiven Unterhaltungen",
+    "startMatching": "Starte das Matching, um Dates zu planen!",
+    "yourDatePlans": "Deine Dating-Pläne",
+    "noDatePlans": "Noch keine Dating-Pläne",
+    "whatsOnYourMind": "Woran denkst du gerade?",
+    "preview": "Vorschau",
+    "post": "Posten",
+     "noPostsAvailable": "Keine Beiträge verfügbar",
+     "editPost": "Beitrag bearbeiten",
+     "cancel": "Abbrechen",
+     "save": "Speichern"
+  },
+  "BottomNav": {
+  "search": "Suche",
+  "islands": "Inseln",
+  "myRoom": "Mein Zimmer",
+  "journey": "Reise",
+  "messages": "Nachrichten"
+},
+"EditProfileModal": {
+  "title": "Profil bearbeiten",
+  "profileInfo": "Profilinformationen",
+  "username": "Benutzername",
+  "dob": "Geburtsdatum",
+  "quote": "Zitat",
+  "locationDetails": "Standortdetails",
+  "loading": "Wird geladen...",
+  "homeLocation": "Heimatort",
+  "currentLocation": "Aktueller Standort",
+  "optional": "(Optional)",
+  "selectCountry": "-- Land auswählen --",
+  "datingPreferences": "Dating-Präferenzen",
+  "selectEthnicity": "-- Ethnie auswählen --",
+  "selectStarSign": "-- Sternzeichen auswählen --",
+  "lookingFor": "Suche nach",
+  "loadingOptions": "Optionen werden geladen...",
+  "saveChanges": "Änderungen speichern",
+   "selectGender": "-- Geschlecht auswählen --",
+   "currentCityPlaceholder": "Aktuelle Stadt",
+   "currentPostalPlaceholder": "Aktuelle Postleitzahl",
+  "errorLoading": "Fehler beim Laden der Optionen",
+  "yearPlaceholder": "Jahr",
+  "monthPlaceholder": "Monat",
+  "dayPlaceholder": "Tag",
+  "quoteLimit": "{length}/200"
+},
+"FollowersPage": {
+  "title": "Follower",
+   "noFollowers": "Keine Follower gefunden.",
+    "lookingFor": "Sucht nach",
+     "remove": "Entfernen",
+      "searchPlaceholder": "Follower suchen...",
+        "following": "Folgt",
+  "followBack": "Zurückfolgen",
+    "followNotification": "Du folgst jetzt {username}",
+  "unfollowNotification": "Nicht mehr gefolgt {username}",
+  "age": "Alter",
+  "removeTitle": "Follower entfernen",
+  "removeMessage": "Möchten Sie diesen Follower wirklich entfernen?",
+  "cancel": "Abbrechen"
+
+},
+"FollowingPage": {
+  "title": "Folge ich",
+   "searchPlaceholder": "Folge ich durchsuchen...",
+    "noFollowing": "Keine Gefolgten gefunden.",
+     "lookingFor": "Sucht nach",
+       "unfollow": "Nicht mehr folgen",
+      "age": "Alter",
+       "unfollowNotification": "{username} nicht mehr folgen",
+  "unfollowFailed": "Benutzer konnte nicht entfolgt werden",
+  "unfollowTitle": "Benutzer entfolgen",
+  "unfollowMessage": "Möchten Sie diesem Benutzer wirklich nicht mehr folgen?",
+  "cancel": "Abbrechen"
+},
+"MyFriendsPage": {
+  "title": "Meine Freunde",
+  "searchPlaceholder": "Nach Benutzername suchen...",
+  "searching": "Suche…",
+  "noFriends": "Keine Benutzer gefunden.",
+  "lookingFor": "Sucht nach",
+  "noFriend": "Keine Freunde gefunden.",
+  "unfriend": "Entfernen",
+  "unfriendDialogTitle": "Benutzer entfernen",
+  "unfriendDialogMessage": "Möchten Sie diesen Benutzer wirklich entfernen?",
+  "cancel": "Abbrechen",
+  "age": "Alter",
+    "Search": "Benutzer suchen"
+},
+"IslandPicker": {
+  "title": "Wähle deine Insel",
+      "hint": "🎵 Tippe auf eine Insel, um einen Klang zu hören",
+          "saving": "Speichern...",
+    "choose": "Insel auswählen",
+        "currency": "€"
+},
+"IslandWelcome": {
+  "header": "Bevor Sie Ihre perfekten Matches finden, muss unsere KI Ihre Persönlichkeit und Vorlieben verstehen.",
+  "why": "Warum brauchen wir diese Bewertung?",
+  "whyText": "Im Gegensatz zu herkömmlichen Dating-Apps, die auf oberflächliches Swipen setzen, verwenden wir fortschrittliche KI, um zu verstehen, wer Sie wirklich sind. Dies schafft tiefere, sinnvollere Verbindungen.",
+  "analysis": "KI-Persönlichkeitsanalyse",
+  "analysisText": "Fortschrittliche KI analysiert Ihre Antworten, um Ihre einzigartigen Persönlichkeitseigenschaften und Vorlieben zu verstehen.",
+  "matches": "Kompatible Matches",
+  "matchesText": "Finden Sie Menschen, die wirklich Ihre Persönlichkeit, Werte und Lebensstilentscheidungen ergänzen.",
+  "duration": "1-2 Minuten • mindestens 4 Fragen",
+  "button": "KI-Bewertung starten"
 }
+
+
+
+
 
 
 
