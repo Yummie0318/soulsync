@@ -1,47 +1,57 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('SoulSyncAI — Feelings Quiz + Sign Up Flow', () => {
-  test('should select a feeling and successfully reach the signup page', async ({ page }) => {
-    test.setTimeout(40000);
+test.describe("Feelings Quiz Page", () => {
+  const locales = ["en", "de", "zh"]; // Supported locales
 
-    const URL = 'https://www.soulsyncai.site/en/login/feelings-quiz';
-    console.log(`🌐 Navigating to ${URL}...`);
-    await page.goto(URL, { waitUntil: 'domcontentloaded' });
+  for (const locale of locales) {
+    test(`should render ${locale.toUpperCase()} Feelings Quiz correctly`, async ({ page }) => {
+      const url = `http://localhost:3000/${locale}/login/feelings-quiz`;
+      await page.goto(url);
+      await page.waitForLoadState("domcontentloaded");
 
-    // ✅ Wait for quiz question
-    console.log('⏳ Waiting for quiz question "How are you feeling?" to appear...');
-    await expect(page.getByText('How are you feeling', { exact: false })).toBeVisible({ timeout: 10000 });
+      // 🚨 Fail test immediately if console errors occur
+      page.on("pageerror", (err) => {
+        throw new Error(`❌ Page error detected: ${err.message}`);
+      });
 
-    // ✅ Select one of the available feelings
-    const feelings = page.locator(`
-      button:has-text("😊"),
-      button:has-text("😟"),
-      button:has-text("😌"),
-      button:has-text("😍"),
-      button:has-text("😁"),
-      button:has-text("Happy"),
-      button:has-text("Sad"),
-      button:has-text("Calm"),
-      button:has-text("In Love"),
-      button:has-text("Excited"),
-      button:has-text("Anxious")
-    `);
+      // ✅ Verify title and subtitle
+      const title = page.locator("h1");
+      const subtitle = page.locator("p").first();
+      await expect(title).toHaveText(/.+/);
+      await expect(subtitle).toHaveText(/.+/);
 
-    await expect(feelings.first()).toBeVisible({ timeout: 10000 });
-    console.log('💛 Selecting the first available feeling option...');
-    await feelings.first().click();
+      // ✅ Verify feelings buttons (😊 😟 😌 😍)
+      const feelings = ["😊", "😟", "😌", "😍"];
+      for (const emoji of feelings) {
+        await expect(page.getByText(emoji)).toBeVisible();
+      }
 
-    // ✅ Wait for redirect to "Journey Begin" page
-    console.log('⏳ Waiting for redirect to journey-begin page...');
-    await page.waitForURL('**/login/journey-begin', { timeout: 20000 });
+      // ✅ Verify there are 4 feeling option buttons
+      const buttons = page.locator("button");
+      await expect(buttons).toHaveCount(4);
 
-    // ✅ Verify success page elements
-    const journeyHeader = page.getByText('Your Journey', { exact: false });
-    const signUpButton = page.getByRole('button', { name: /Sign Up/i });
+      // ✅ Verify feelings labels have text
+      for (let i = 0; i < 4; i++) {
+        const label = buttons.nth(i).locator("p");
+        await expect(label).toHaveText(/.+/);
+      }
 
-    await expect(journeyHeader).toBeVisible({ timeout: 10000 });
-    await expect(signUpButton).toBeVisible({ timeout: 10000 });
+      // ✅ Check background elements exist (visual sanity)
+      const bgGlows = page.locator("div.bg-pink-600\\/30, div.bg-purple-600\\/30");
+      expect(await bgGlows.count()).toBeGreaterThanOrEqual(1);
 
-    console.log('✅ Successfully reached the Sign-Up page after selecting a feeling.');
+      // ✅ Click one feeling and verify redirect
+      await buttons.nth(0).click(); // click first feeling
+      await page.waitForLoadState("networkidle");
+
+      // Expect redirect to journey-begin
+      expect(page.url()).toContain(`/${locale}/login/journey-begin`);
+    });
+  }
+
+  // 🧪 Negative test: invalid locale
+  test("should show 404 for invalid locale", async ({ page }) => {
+    await page.goto("http://localhost:3000/xyz/login/feelings-quiz");
+    await expect(page.locator("body")).toContainText(/404|not found/i);
   });
 });
