@@ -22,7 +22,7 @@ test.describe("Locale Landing Page Rendering", () => {
       await expect(page.locator("h1")).toHaveText(/.+/);
       await expect(page.locator("p").first()).toHaveText(/.+/);
 
-      // ✅ Verify <html lang="..."> (allow fallback)
+      // ✅ Verify <html lang="..."> (allow test)
       await expect(page.locator("html")).toHaveAttribute("lang", /en|de|zh/);
 
       // ✅ Ensure page title not 404
