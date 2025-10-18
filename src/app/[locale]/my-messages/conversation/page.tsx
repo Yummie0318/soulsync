@@ -122,13 +122,78 @@ export default function ConversationPage() {
     });
   };
 
-  // ------------------------------------------------------
-  // Navigation to call (audio/video)
-  // ------------------------------------------------------
-  const navigateToCall = (type: "audio" | "video") => {
-    if (!userId || !receiverId) return;
-    router.push(`/${locale}/my-messages/call?callerId=${userId}&receiverId=${receiverId}&type=${type}`);
-  };
+// ------------------------------------------------------
+// Navigation to call (audio/video) with DB record creation & pro logs
+// ------------------------------------------------------
+const navigateToCall = async (type: "audio" | "video") => {
+  if (!userId || !receiverId) {
+    console.warn("[🚫 navigateToCall] Missing user or receiver info", { userId, receiverId });
+    return showNotification("User info incomplete");
+  }
+
+  try {
+    setLoading(true);
+    console.log("[📞 navigateToCall] Starting call creation...", {
+      caller_id: userId,
+      receiver_id: receiverId,
+      type,
+    });
+
+    // Create a new call record in the database
+    const res = await fetch("/api/calls", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        caller_id: userId,
+        receiver_id: Number(receiverId),
+        call_type: type, // "audio" | "video"
+      }),
+    });
+
+    const data = await res.json();
+    console.log("[📞 navigateToCall] API response:", data);
+
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.error || "Failed to initiate call");
+    }
+
+    const call = data.data || data.call;
+    const callId = call?.id;
+
+    if (!callId) throw new Error("Invalid call response (missing ID)");
+
+    // ✅ Emit socket event so receiver sees popup
+    console.log("[📡 navigateToCall] Emitting call:incoming", {
+      id: callId,
+      caller_id: userId,
+      receiver_id: Number(receiverId),
+      call_type: type,
+      status: "ringing",
+    });
+
+    socket.emit("call:incoming", {
+      id: callId,
+      caller_id: userId,
+      receiver_id: Number(receiverId),
+      call_type: type,
+      status: "ringing",
+    });
+
+    // ✅ Construct proper URL with full params
+    const callUrl = `/${locale}/my-messages/call?call_id=${callId}&caller_id=${userId}&receiver_id=${receiverId}&type=${type}`;
+    console.log("[🔗 navigateToCall] Redirecting to:", callUrl);
+
+    // ✅ Redirect to the call UI page
+    router.push(callUrl);
+
+  } catch (err: any) {
+    console.error("[❌ navigateToCall] Error:", err);
+    showNotification(err.message || "Unable to start call");
+  } finally {
+    setLoading(false);
+    console.log("[🧭 navigateToCall] Done");
+  }
+};
 
   // ------------------------------------------------------
   // Load logged user
