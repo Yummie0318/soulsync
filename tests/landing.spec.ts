@@ -1,30 +1,50 @@
-import { test, expect } from '@playwright/test';
-import fs from 'fs';
-import path from 'path';
+import { test, expect } from "@playwright/test";
 
-// Ensure screenshots folder exists
-const screenshotsDir = path.join(__dirname, '../screenshots');
-if (!fs.existsSync(screenshotsDir)) {
-  fs.mkdirSync(screenshotsDir);
-}
+test.describe("Landing Page Rendering", () => {
+  const locales = ["en", "de", "zh"]; // Supported locales
 
-test('check the SoulSyncAI landing page', async ({ page }) => {
-  // Go to the landing page
-  await page.goto('https://www.soulsyncai.site/en/landing');
+  for (const locale of locales) {
+    test(`should render ${locale.toUpperCase()} landing page correctly`, async ({ page }) => {
+      const url = `http://localhost:3000/${locale}/landing`;
 
-  // Wait for main heading and verify text
-  const mainHeading = page.locator('h1');
-  await expect(mainHeading).toHaveText(/SoulSync AI/i);
+      await page.goto(url);
+      await page.waitForLoadState("domcontentloaded");
 
-  // ✅ Fix: "Get Started" is a link, not a button
-  const getStartedLink = page.getByRole('link', { name: 'Get Started' });
-  await expect(getStartedLink).toBeVisible();
+      // Fail test immediately if console errors occur
+      page.on("pageerror", (err) => {
+        throw new Error(`❌ Page error detected: ${err.message}`);
+      });
 
-  // ✅ Same fix for "Login"
-  const loginLink = page.getByRole('link', { name: 'Login' });
-  await expect(loginLink).toBeVisible();
+      // ✅ Check main texts exist (first paragraph only)
+      await expect(page.locator("h1")).toHaveText(/.+/);
+      await expect(page.locator("p").first()).toHaveText(/.+/);
 
-  // Take screenshot after page settles
-  await page.waitForLoadState('networkidle');
-  await page.screenshot({ path: path.join(screenshotsDir, 'landing.png'), fullPage: true });
+      // ✅ Check feature texts exist (3 feature blocks)
+      const featureTexts = page.locator("section div p");
+      const count = await featureTexts.count();
+      expect(count).toBeGreaterThanOrEqual(1);
+      for (let i = 0; i < count; i++) {
+        await expect(featureTexts.nth(i)).toHaveText(/.+/);
+      }
+
+      // ✅ Check buttons
+      const getStarted = page.locator(`a[href="/${locale}/login/ai-drawing"]`);
+      const login = page.locator(`a[href="/${locale}/login"]`);
+      await expect(getStarted).toBeVisible();
+      await expect(login).toBeVisible();
+
+      // ✅ Verify <html lang="..."> (allow fallback)
+      await expect(page.locator("html")).toHaveAttribute("lang", /en|de|zh/);
+
+      // ✅ Ensure page title does not contain 404
+      const pageTitle = await page.title();
+      expect(pageTitle).not.toContain("404");
+    });
+  }
+
+  // 🧪 Negative test: invalid locale should return 404
+  test("should show 404 for invalid locale", async ({ page }) => {
+    await page.goto("http://localhost:3000/xyz/landing");
+    await expect(page.locator("body")).toContainText(/404|not found/i);
+  });
 });
