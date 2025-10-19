@@ -30,18 +30,25 @@ const NO_FOLLOWERS_TEXT: Record<string, RegExp> = {
   zh: /未找到粉丝/i,
 };
 
-// --- Programmatic login ---
+// --- Programmatic login (CI-proof) ---
 test.beforeAll(async ({ browser }) => {
+  // Ensure the storage folder exists
+  const dir = path.dirname(STORAGE_PATH);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  // Create storage state if it doesn't exist
   if (!fs.existsSync(STORAGE_PATH)) {
     const page = await browser.newPage();
     await page.goto(`${BASE_URL}/en/login`);
 
-    // Fill in credentials from environment variables
+    // Use environment variables for credentials
     await page.fill('input[type="email"]', process.env.TEST_EMAIL!);
     await page.fill('input[type="password"]', process.env.TEST_PASSWORD!);
     await page.click('button[type="submit"]');
 
-    // Wait until redirected to My Room
+    // Wait for redirect to My Room
     await page.waitForURL(`${BASE_URL}/en/my-room`);
 
     // Save storage state for later tests
