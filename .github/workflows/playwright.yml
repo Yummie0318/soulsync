@@ -37,13 +37,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 🧩 3.5️⃣ Ensure Playwright is installed
+      # 4️⃣ Install Playwright and browsers
       - name: Install Playwright
-        run: npm install --save-dev @playwright/test
-
-      # 4️⃣ Install Playwright browsers
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: |
+          npm install --save-dev @playwright/test
+          npx playwright install --with-deps
 
       # 5️⃣ Build Next.js app
       - name: Build Next.js
@@ -85,24 +83,22 @@ jobs:
       - name: Wait for app
         run: npx wait-on http://localhost:3000
 
-      # 8️⃣ Run Playwright tests
+      # 8️⃣ Run Playwright tests and generate HTML report
       - name: Run Playwright tests
         run: npx playwright test --workers=1 --reporter=html
         env:
           CI: true
 
-      # 9️⃣ Upload Playwright Artifacts
-      - name: Upload Playwright Artifacts
+      # 9️⃣ Upload test artifacts
+      - name: Upload Playwright artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-artifacts
-          path: |
-            playwright-report
-            test-results
+          name: playwright-report
+          path: playwright-report
           retention-days: 30
 
-      # 🔟 Upload report for GitHub Pages
+      # 🔟 Prepare Playwright report for deployment
       - name: Upload Pages artifact
         if: always()
         uses: actions/upload-pages-artifact@v3
@@ -118,7 +114,7 @@ jobs:
             rm .next-server.pid
           fi
 
-  # 1️⃣2️⃣ Deploy report to GitHub Pages
+  # 1️⃣2️⃣ Deploy Playwright report to GitHub Pages
   deploy:
     needs: test
     runs-on: ubuntu-latest
@@ -126,6 +122,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy Playwright HTML report
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
