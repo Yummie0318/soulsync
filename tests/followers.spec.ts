@@ -4,7 +4,7 @@ import path from 'path';
 const BASE_URL = 'http://localhost:3000';
 const STORAGE_PATH = path.join(__dirname, '../storage/logged-in.json');
 
-// Localized button texts
+// Localized button texts test
 const FOLLOW_TEXT: Record<string, RegExp> = { en: /follow/i, de: /zurückfolgen|folgt/i, zh: /回关|已关注/i };
 const FOLLOWING_TEXT: Record<string, RegExp> = { en: /following/i, de: /folgt/i, zh: /已关注/i };
 const REMOVE_TEXT: Record<string, RegExp> = { en: /remove/i, de: /entfernen/i, zh: /移除/i };
