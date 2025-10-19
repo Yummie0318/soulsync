@@ -43,6 +43,19 @@ jobs:
           npm install --save-dev @playwright/test
           npx playwright install --with-deps
 
+      # 4.5️⃣ Generate logged-in storage state
+      - name: Generate logged-in storage state
+        run: |
+          mkdir -p storage
+          npx playwright test tests/Create-storage.spec.ts
+        env:
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+
+      # 🔹 Debug: verify storage was created
+      - name: Verify logged-in storage
+        run: ls -l storage
+
       # 5️⃣ Build Next.js app
       - name: Build Next.js
         run: npm run build
@@ -88,6 +101,8 @@ jobs:
         run: npx playwright test --workers=1 --reporter=html
         env:
           CI: true
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
 
       # 9️⃣ Upload test artifacts
       - name: Upload Playwright artifacts
