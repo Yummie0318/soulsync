@@ -2,11 +2,9 @@ name: Playwright Tests
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
   contents: read
@@ -32,6 +30,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 20
+          cache: 'npm'
 
       # 3️⃣ Install dependencies
       - name: Install dependencies
@@ -39,24 +38,25 @@ jobs:
 
       # 4️⃣ Install Playwright and browsers
       - name: Install Playwright
-        run: |
-          npm install --save-dev @playwright/test
-          npx playwright install --with-deps
+        run: npx playwright install --with-deps
 
-      # 4.5️⃣ Generate logged-in storage state
+      # 5️⃣ Generate logged-in storage state
       - name: Generate logged-in storage state
         run: |
           mkdir -p storage
-          npx playwright test tests/Create-storage.spec.ts
+          npx playwright test tests/Create-storage.spec.ts --workers=1
         env:
+          NODE_ENV: test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 🔹 Debug: verify storage was created
+      # 🔹 Debug: verify storage created
       - name: Verify logged-in storage
         run: ls -l storage
 
-      # 5️⃣ Build Next.js app
+      # 6️⃣ Build Next.js app
       - name: Build Next.js
         run: npm run build
         env:
@@ -73,10 +73,10 @@ jobs:
           NEXT_PUBLIC_PUSHER_CLUSTER: ${{ secrets.NEXT_PUBLIC_PUSHER_CLUSTER }}
           NEXT_PUBLIC_SOCKET_URL: ${{ secrets.NEXT_PUBLIC_SOCKET_URL }}
 
-      # 6️⃣ Start Next.js in background
+      # 7️⃣ Start Next.js server in background
       - name: Start Next.js
         run: |
-          npm run start &
+          nohup npm run start > .next.log 2>&1 &
           echo $! > .next-server.pid
         env:
           NODE_ENV: production
@@ -92,20 +92,23 @@ jobs:
           NEXT_PUBLIC_PUSHER_CLUSTER: ${{ secrets.NEXT_PUBLIC_PUSHER_CLUSTER }}
           NEXT_PUBLIC_SOCKET_URL: ${{ secrets.NEXT_PUBLIC_SOCKET_URL }}
 
-      # 7️⃣ Wait for app to be ready
+      # 8️⃣ Wait for server to be ready
       - name: Wait for app
         run: npx wait-on http://localhost:3000
 
-      # 8️⃣ Run Playwright tests and generate HTML report
+      # 9️⃣ Run Playwright tests
       - name: Run Playwright tests
         run: npx playwright test --workers=1 --reporter=html
         env:
           CI: true
+          NODE_ENV: test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 9️⃣ Upload test artifacts
-      - name: Upload Playwright artifacts
+      # 🔟 Upload Playwright artifacts
+      - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -113,14 +116,14 @@ jobs:
           path: playwright-report
           retention-days: 30
 
-      # 🔟 Prepare Playwright report for deployment
+      # 1️⃣1️⃣ Upload Pages artifact for deployment
       - name: Upload Pages artifact
         if: always()
         uses: actions/upload-pages-artifact@v3
         with:
           path: playwright-report
 
-      # 1️⃣1️⃣ Stop Next.js server
+      # 1️⃣2️⃣ Stop Next.js server
       - name: Stop Next.js server
         if: always()
         run: |
@@ -128,8 +131,9 @@ jobs:
             kill $(cat .next-server.pid) || true
             rm .next-server.pid
           fi
+          cat .next.log || true  # show server logs on failure
 
-  # 1️⃣2️⃣ Deploy Playwright report to GitHub Pages
+  # 1️⃣3️⃣ Deploy Playwright report to GitHub Pages
   deploy:
     needs: test
     runs-on: ubuntu-latest
