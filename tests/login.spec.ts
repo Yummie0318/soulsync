@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("🔐 Login using GitHub Secrets and save session", async ({ page }) => {
-  // Go to login page (adjust locale if needed)
+  // Go to login page (adjust locale if needed joylyn)
   await page.goto("http://localhost:3000/en/login");
 
   const email = process.env.TEST_EMAIL;
