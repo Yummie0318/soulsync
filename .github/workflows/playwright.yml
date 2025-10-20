@@ -40,26 +40,33 @@ jobs:
       - name: Install Playwright
         run: npx playwright install --with-deps
 
-      # 5️⃣ Generate logged-in storage state (with GitHub Secrets)
-      - name: Generate logged-in storage state
+      # 5️⃣ Debug: List all test files
+      - name: List tests
         run: |
+          echo "Listing all spec.ts files in tests folder:"
+          find ./tests -name "*.spec.ts"
+
+      # 6️⃣ Run all Playwright tests (including login to generate storage)
+      - name: Run Playwright tests
+        run: |
+          echo "🎭 Running all Playwright tests..."
           mkdir -p storage
-          echo "🧪 Generating login session..."
-          npx playwright test tests/Create-storage.spec.ts --workers=1
+          npx playwright test --workers=1 --reporter=html
         env:
+          CI: true
           NODE_ENV: test
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 6️⃣ Debug: verify storage file was created
+      # 7️⃣ Verify storage state
       - name: Verify logged-in storage
         run: |
           echo "📁 Checking storage directory contents:"
           ls -l storage || echo "⚠️ No storage directory found!"
 
-      # 7️⃣ Build Next.js app
+      # 8️⃣ Build Next.js app
       - name: Build Next.js
         run: npm run build
         env:
@@ -76,7 +83,7 @@ jobs:
           NEXT_PUBLIC_PUSHER_CLUSTER: ${{ secrets.NEXT_PUBLIC_PUSHER_CLUSTER }}
           NEXT_PUBLIC_SOCKET_URL: ${{ secrets.NEXT_PUBLIC_SOCKET_URL }}
 
-      # 8️⃣ Start Next.js server in background
+      # 9️⃣ Start Next.js server in background
       - name: Start Next.js
         run: |
           nohup npm run start > .next.log 2>&1 &
@@ -95,22 +102,9 @@ jobs:
           NEXT_PUBLIC_PUSHER_CLUSTER: ${{ secrets.NEXT_PUBLIC_PUSHER_CLUSTER }}
           NEXT_PUBLIC_SOCKET_URL: ${{ secrets.NEXT_PUBLIC_SOCKET_URL }}
 
-      # 9️⃣ Wait for app to start
+      # 🔟 Wait for app to start
       - name: Wait for app
         run: npx wait-on http://localhost:3000
-
-      # 🔟 Run Playwright tests
-      - name: Run Playwright tests
-        run: |
-          echo "🎭 Running Playwright tests..."
-          npx playwright test --workers=1 --reporter=html
-        env:
-          CI: true
-          NODE_ENV: test
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
-          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       # 1️⃣1️⃣ Upload Playwright report
       - name: Upload Playwright report
