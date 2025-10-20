@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
+  testMatch: '**/*.spec.ts', // ensures Playwright only looks for .spec.ts files
   timeout: 90_000,
   retries: 0,
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }]],
@@ -40,7 +41,4 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
   ],
-
-  // Only run tests that match *.spec.ts to avoid "No tests found" errors
-  testMatch: '**/*.spec.ts',
 });
