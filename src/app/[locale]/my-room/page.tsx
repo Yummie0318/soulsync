@@ -615,6 +615,7 @@ const handlePost = async () => {
           className="absolute bottom-2 right-5 bg-white bg-opacity-10 rounded-full p-1 hover:bg-opacity-20 transition-opacity duration-200 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
+            
             fileInputRef.current?.click();
           }}
         >
