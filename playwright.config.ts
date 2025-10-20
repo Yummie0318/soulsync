@@ -8,7 +8,7 @@ export default defineConfig({
 
   use: {
     baseURL: 'http://localhost:3000',
-    storageState: 'storage/logged-in.json', // 🟢 Reuse logged-in session
+    storageState: 'storage/logged-in.json', // Reuse logged-in session
     headless: true,
     viewport: { width: 1280, height: 720 },
     ignoreHTTPSErrors: true,
@@ -16,9 +16,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
-  // 🟢 Automatically start Next.js for local runs
+  // Automatically start Next.js for local runs
   webServer: process.env.CI
-    ? undefined // CI already builds & starts the server manually in workflow
+    ? undefined // CI will start manually in workflow
     : {
         command: 'npm run dev',
         url: 'http://localhost:3000',
@@ -40,4 +40,7 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
   ],
+
+  // Only run tests that match *.spec.ts to avoid "No tests found" errors
+  testMatch: '**/*.spec.ts',
 });
