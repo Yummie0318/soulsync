@@ -40,10 +40,11 @@ jobs:
       - name: Install Playwright
         run: npx playwright install --with-deps
 
-      # 5️⃣ Generate logged-in storage state
+      # 5️⃣ Generate logged-in storage state (with GitHub Secrets)
       - name: Generate logged-in storage state
         run: |
           mkdir -p storage
+          echo "🧪 Generating login session..."
           npx playwright test tests/Create-storage.spec.ts --workers=1
         env:
           NODE_ENV: test
@@ -52,11 +53,13 @@ jobs:
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 🔹 Debug: verify storage created
+      # 6️⃣ Debug: verify storage file was created
       - name: Verify logged-in storage
-        run: ls -l storage
+        run: |
+          echo "📁 Checking storage directory contents:"
+          ls -l storage || echo "⚠️ No storage directory found!"
 
-      # 6️⃣ Build Next.js app
+      # 7️⃣ Build Next.js app
       - name: Build Next.js
         run: npm run build
         env:
@@ -73,7 +76,7 @@ jobs:
           NEXT_PUBLIC_PUSHER_CLUSTER: ${{ secrets.NEXT_PUBLIC_PUSHER_CLUSTER }}
           NEXT_PUBLIC_SOCKET_URL: ${{ secrets.NEXT_PUBLIC_SOCKET_URL }}
 
-      # 7️⃣ Start Next.js server in background
+      # 8️⃣ Start Next.js server in background
       - name: Start Next.js
         run: |
           nohup npm run start > .next.log 2>&1 &
@@ -92,13 +95,15 @@ jobs:
           NEXT_PUBLIC_PUSHER_CLUSTER: ${{ secrets.NEXT_PUBLIC_PUSHER_CLUSTER }}
           NEXT_PUBLIC_SOCKET_URL: ${{ secrets.NEXT_PUBLIC_SOCKET_URL }}
 
-      # 8️⃣ Wait for server to be ready
+      # 9️⃣ Wait for app to start
       - name: Wait for app
         run: npx wait-on http://localhost:3000
 
-      # 9️⃣ Run Playwright tests
+      # 🔟 Run Playwright tests
       - name: Run Playwright tests
-        run: npx playwright test --workers=1 --reporter=html
+        run: |
+          echo "🎭 Running Playwright tests..."
+          npx playwright test --workers=1 --reporter=html
         env:
           CI: true
           NODE_ENV: test
@@ -107,7 +112,7 @@ jobs:
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 🔟 Upload Playwright artifacts
+      # 1️⃣1️⃣ Upload Playwright report
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -116,14 +121,14 @@ jobs:
           path: playwright-report
           retention-days: 30
 
-      # 1️⃣1️⃣ Upload Pages artifact for deployment
+      # 1️⃣2️⃣ Upload report to GitHub Pages
       - name: Upload Pages artifact
         if: always()
         uses: actions/upload-pages-artifact@v3
         with:
           path: playwright-report
 
-      # 1️⃣2️⃣ Stop Next.js server
+      # 1️⃣3️⃣ Stop Next.js server
       - name: Stop Next.js server
         if: always()
         run: |
@@ -131,9 +136,10 @@ jobs:
             kill $(cat .next-server.pid) || true
             rm .next-server.pid
           fi
-          cat .next.log || true  # show server logs on failure
+          echo "🧾 Server log:"
+          cat .next.log || true
 
-  # 1️⃣3️⃣ Deploy Playwright report to GitHub Pages
+  # 1️⃣4️⃣ Deploy Playwright report to GitHub Pages
   deploy:
     needs: test
     runs-on: ubuntu-latest

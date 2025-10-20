@@ -5,9 +5,10 @@ export default defineConfig({
   timeout: 90_000,
   retries: 0,
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }]],
+
   use: {
     baseURL: 'http://localhost:3000',
-    storageState: 'storage/logged-in.json',
+    storageState: 'storage/logged-in.json', // 🟢 Reuse logged-in session
     headless: true,
     viewport: { width: 1280, height: 720 },
     ignoreHTTPSErrors: true,
@@ -15,13 +16,15 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
-  // 👇 Automatically start your Next.js dev server
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000, // wait up to 2 minutes for it to be ready
-  },
+  // 🟢 Automatically start Next.js for local runs
+  webServer: process.env.CI
+    ? undefined // CI already builds & starts the server manually in workflow
+    : {
+        command: 'npm run dev',
+        url: 'http://localhost:3000',
+        reuseExistingServer: true,
+        timeout: 120 * 1000,
+      },
 
   projects: [
     {

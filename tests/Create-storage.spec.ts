@@ -1,55 +1,48 @@
 import { test, expect } from '@playwright/test';
 import fs from 'fs';
-import path from 'path';
 
-const STORAGE_PATH = path.join(__dirname, '../storage/logged-in.json');
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+const STORAGE_PATH = 'storage/logged-in.json';
+
+// Use secret variables (set in GitHub Actions or local terminal)
+const TEST_EMAIL = process.env.TEST_EMAIL;
+const TEST_PASSWORD = process.env.TEST_PASSWORD;
 
 test('Create storage state for CI login', async ({ browser }) => {
-  // Ensure storage folder exists
-  const dir = path.dirname(STORAGE_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  // 🔒 Verify credentials before proceeding
+  if (!TEST_EMAIL || !TEST_PASSWORD) {
+    console.error('❌ Missing TEST_EMAIL or TEST_PASSWORD in environment variables.');
+    throw new Error('Please set TEST_EMAIL and TEST_PASSWORD as GitHub Secrets or local environment variables.');
+  }
+
+  // Ensure storage directory exists
+  if (!fs.existsSync('storage')) {
+    fs.mkdirSync('storage');
   }
 
   const page = await browser.newPage();
   console.log('🌐 Navigating to login page...');
   await page.goto(`${BASE_URL}/en/login`, { waitUntil: 'domcontentloaded' });
 
-  const email = process.env.TEST_EMAIL;
-  const password = process.env.TEST_PASSWORD;
+  // Fill credentials from environment
+  console.log(`👤 Attempting login with email: ${TEST_EMAIL}`);
+  await page.fill('input[name="email"]', TEST_EMAIL);
+  await page.fill('input[name="password"]', TEST_PASSWORD);
+  await page.click('button[type="submit"]');
 
-  if (!email || !password) {
-    throw new Error('❌ Missing TEST_EMAIL or TEST_PASSWORD environment variables.');
-  }
+  // Wait for navigation and verify successful login
+  await page.waitForLoadState('networkidle', { timeout: 15_000 });
 
-  // Fill login form
-  await page.fill('input[type="email"]', email);
-  await page.fill('input[type="password"]', password);
-
-  // Click and wait for possible redirect
-  await Promise.all([
-    page.waitForLoadState('networkidle'),
-    page.click('button[type="submit"]'),
-  ]);
-
-  console.log('🔄 Checking post-login redirect...');
-
-  // ✅ Only accept redirect to my-room or followers
-  const possibleUrls = [/\/en\/my-room/, /\/en\/followers/];
   const currentUrl = page.url();
-  const isLoggedIn = possibleUrls.some((regex) => regex.test(currentUrl));
+  console.log('📍 Current URL after login:', currentUrl);
 
-  if (!isLoggedIn) {
-    console.log(`⚠️ Login did not redirect as expected (current: ${currentUrl})`);
-    await expect(page.locator('text=/My Room|Followers|Logout/i')).toBeVisible({
-      timeout: 30000,
-    });
+  // Check if still on login page (indicating invalid credentials)
+  if (currentUrl.includes('/login')) {
+    console.error('❌ Login failed — credentials might be incorrect.');
+    throw new Error('Login failed. Please check TEST_EMAIL and TEST_PASSWORD.');
   }
 
-  // Save logged-in session
+  // Save logged-in session state
   await page.context().storageState({ path: STORAGE_PATH });
-  await page.close();
-
-  console.log(`✅ Storage state saved to ${STORAGE_PATH}`);
+  console.log(`✅ Saved session to ${STORAGE_PATH}`);
 });

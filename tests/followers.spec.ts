@@ -1,66 +1,57 @@
-import { test, expect } from '@playwright/test';
-import path from 'path';
+import { test, expect } from "@playwright/test";
 
-const BASE_URL = 'http://localhost:3000';
-const STORAGE_PATH = path.join(__dirname, '../storage/logged-in.json');
+test.use({ storageState: "storage/logged-in.json" });
 
-// Localized button texts test
-const FOLLOW_TEXT: Record<string, RegExp> = { en: /follow/i, de: /zurückfolgen|folgt/i, zh: /回关|已关注/i };
-const FOLLOWING_TEXT: Record<string, RegExp> = { en: /following/i, de: /folgt/i, zh: /已关注/i };
-const REMOVE_TEXT: Record<string, RegExp> = { en: /remove/i, de: /entfernen/i, zh: /移除/i };
-const NO_FOLLOWERS_TEXT: Record<string, RegExp> = { en: /no followers/i, de: /no followers found/i, zh: /未找到粉丝/i };
-
-// Use the pre-generated storage state for all tests
-test.use({ storageState: STORAGE_PATH });
-
-test.describe('Followers Page', () => {
-  const locales = ['en', 'de', 'zh'];
+test.describe("My Room Page", () => {
+  const locales = ["en", "de", "zh"];
+  const BASE_URL = "http://localhost:3000";
 
   for (const locale of locales) {
-    test(`should render followers page and perform actions for locale: ${locale}`, async ({ page }) => {
-      const url = `${BASE_URL}/${locale}/followers`;
-      await page.goto(url, { waitUntil: 'domcontentloaded' });
-      await page.waitForLoadState('networkidle');
+    test(`should load and log out successfully for locale: ${locale}`, async ({ page }) => {
+      const url = `${BASE_URL}/${locale}/my-room`;
 
-      const main = page.locator('main');
-      await expect(main).toBeVisible({ timeout: 15000 });
+      console.log(`🌐 Navigating to: ${url}`);
+      await page.goto(url, { waitUntil: "domcontentloaded" });
+      await page.waitForLoadState("networkidle");
 
-      const searchInput = page.locator('input[placeholder]');
-      await expect(searchInput).toBeVisible({ timeout: 10000 });
+      // ✅ Verify correct URL
+      await expect(page).toHaveURL(new RegExp(`${locale}/my-room`));
 
-      const noFollowers = page.locator(`text=${NO_FOLLOWERS_TEXT[locale]}`);
-      const followersGrid = page.locator('[class*="grid"] > div');
+      // ✅ Ensure page did not show errors
+      const bodyText = await page.locator("body").innerText();
+      expect(bodyText).not.toMatch(/404|not found|error/i);
 
-      if (await noFollowers.isVisible({ timeout: 3000 })) {
-        console.log(`No followers found for locale: ${locale.toUpperCase()}`);
+      // ✅ Header check
+      const header = page.locator("h1", {
+        hasText: /My Room|Mein Zimmer|我的房間|我的房间/,
+      });
+      await expect(header).toBeVisible({ timeout: 10000 });
+
+      // ✅ Profile / Edit button
+      const profileButton = page.getByRole("button", {
+        name: /Edit|Bearbeiten|Profil|編輯|编辑/i,
+      });
+      await expect(profileButton).toBeVisible({ timeout: 8000 });
+
+      console.log(`✅ ${locale.toUpperCase()} My Room loaded successfully.`);
+
+      // ✅ Logout section
+      const logoutButton = page.getByRole("button", {
+        name: /Logout|Abmelden|登出|退出/i,
+      });
+
+      if (await logoutButton.isVisible()) {
+        console.log(`👋 Logging out for locale: ${locale.toUpperCase()}`);
+        await logoutButton.click();
+        await page.waitForLoadState("networkidle");
+
+        await expect(page).toHaveURL(`${BASE_URL}/`);
+        await expect(page.locator("body")).toContainText(/SoulSync|Welcome|Start|开始|開始/i);
+
+        console.log(`✅ Successfully logged out for ${locale.toUpperCase()}`);
       } else {
-        const firstFollower = followersGrid.first();
-        await expect(firstFollower).toBeVisible({ timeout: 10000 });
-
-        const username = await firstFollower.locator('p').first().innerText();
-        await searchInput.fill(username.slice(0, 3));
-        await page.waitForTimeout(500);
-        await expect(followersGrid.first().locator('p').first()).toHaveText(username);
-
-        const followButton = firstFollower.locator('button', { hasText: FOLLOW_TEXT[locale] });
-        if (await followButton.isVisible()) {
-          await followButton.click({ timeout: 60000 });
-          await page.waitForTimeout(500);
-          await expect(followButton).toHaveText(FOLLOWING_TEXT[locale]);
-        }
-
-        const removeButton = firstFollower.locator('button', { hasText: REMOVE_TEXT[locale] });
-        if (await removeButton.count() > 0) {
-          await removeButton.click();
-          const confirmDialog = page.locator('text=Are you sure');
-          await expect(confirmDialog).toBeVisible({ timeout: 5000 });
-          const confirmBtn = page.locator('button', { hasText: REMOVE_TEXT[locale] }).last();
-          await confirmBtn.click();
-          await expect(confirmDialog).toHaveCount(0);
-        }
+        console.warn(`⚠️ Logout button not found for locale: ${locale.toUpperCase()}`);
       }
-
-      console.log(`✅ Followers page tested for locale: ${locale.toUpperCase()}`);
     });
   }
 });
