@@ -1,9 +1,9 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
 const STORAGE_PATH = path.join(__dirname, '../storage/logged-in.json');
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 test('Create storage state for CI login', async ({ browser }) => {
   // Ensure storage folder exists
@@ -16,23 +16,36 @@ test('Create storage state for CI login', async ({ browser }) => {
   console.log('🌐 Navigating to login page...');
   await page.goto(`${BASE_URL}/en/login`, { waitUntil: 'domcontentloaded' });
 
-  // Use CI environment variables
-  const email = process.env.TEST_EMAIL || 'test@example.com';
-  const password = process.env.TEST_PASSWORD || 'password123';
+  const email = process.env.TEST_EMAIL;
+  const password = process.env.TEST_PASSWORD;
 
+  if (!email || !password) {
+    throw new Error('❌ Missing TEST_EMAIL or TEST_PASSWORD environment variables.');
+  }
+
+  // Fill login form
   await page.fill('input[type="email"]', email);
   await page.fill('input[type="password"]', password);
-  await page.click('button[type="submit"]');
 
-  // ✅ Wait until the network is idle to allow redirects to happen
-  await page.waitForLoadState('networkidle');
+  // Click and wait for possible redirect
+  await Promise.all([
+    page.waitForLoadState('networkidle'),
+    page.click('button[type="submit"]'),
+  ]);
 
-  console.log('🔄 Waiting for post-login redirect...');
-  // ✅ Match ANY of these possible redirect URLs after login
-  await page.waitForURL(
-    new RegExp(`${BASE_URL}/en/(my-room|followers|home|dashboard|profile)`),
-    { timeout: 60000 }
-  );
+  console.log('🔄 Checking post-login redirect...');
+
+  // ✅ Only accept redirect to my-room or followers
+  const possibleUrls = [/\/en\/my-room/, /\/en\/followers/];
+  const currentUrl = page.url();
+  const isLoggedIn = possibleUrls.some((regex) => regex.test(currentUrl));
+
+  if (!isLoggedIn) {
+    console.log(`⚠️ Login did not redirect as expected (current: ${currentUrl})`);
+    await expect(page.locator('text=/My Room|Followers|Logout/i')).toBeVisible({
+      timeout: 30000,
+    });
+  }
 
   // Save logged-in session
   await page.context().storageState({ path: STORAGE_PATH });
