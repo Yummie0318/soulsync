@@ -51,14 +51,24 @@ jobs:
         run: |
           echo "🔑 Generating login session..."
           mkdir -p storage
-          npx playwright test tests/1login.spec.ts --project=chromium --reporter=line || echo "⚠️ Login test failed!"
+          npx playwright test tests/1login.spec.ts --project=chromium --reporter=line
         env:
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 7️⃣ Run all other Playwright tests
+      # 7️⃣ Verify logged-in storage file
+      - name: Verify logged-in storage file
+        run: |
+          echo "📁 Checking storage file after login:"
+          if [ ! -f storage/logged-in.json ]; then
+            echo "❌ storage/logged-in.json was not created!"
+            exit 1
+          fi
+          ls -l storage
+
+      # 8️⃣ Run all other Playwright tests
       - name: Run Playwright tests
         run: |
           echo "🎭 Running main Playwright tests..."
@@ -69,7 +79,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 8️⃣ Upload HTML report
+      # 9️⃣ Upload HTML report
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -78,14 +88,14 @@ jobs:
           path: playwright-report
           retention-days: 30
 
-      # 9️⃣ Upload to GitHub Pages
+      # 🔟 Upload to GitHub Pages
       - name: Upload Pages artifact
         if: always()
         uses: actions/upload-pages-artifact@v3
         with:
           path: playwright-report
 
-  # 🔟 Deploy report to GitHub Pages
+  # 11️⃣ Deploy report to GitHub Pages
   deploy:
     needs: test
     runs-on: ubuntu-latest
