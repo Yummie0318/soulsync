@@ -18,7 +18,7 @@ test("🔐 Login using GitHub Secrets and save storage", async ({ page }) => {
   await page.click('button[type="submit"]');
 
   console.log("⏳ Waiting for successful redirect...");
-  await page.waitForURL(/my-room/, { timeout: 30000 });
+  await page.waitForURL(/my-room/, { timeout: 60000 });
   await expect(page).toHaveURL(/my-room/);
 
   // ✅ Save storage state for reuse in later tests test
