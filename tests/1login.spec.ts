@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+test.use({ storageState: undefined });
 
 test("🔐 Login using GitHub Secrets and save storage", async ({ page }) => {
   const email = process.env.TEST_EMAIL;
