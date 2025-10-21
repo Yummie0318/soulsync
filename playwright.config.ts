@@ -10,7 +10,6 @@ export default defineConfig({
 
   use: {
     baseURL: "http://localhost:3000",
-    // ✅ Prevent ENOENT if file doesn’t exist
     storageState: fs.existsSync("storage/logged-in.json")
       ? "storage/logged-in.json"
       : undefined,
@@ -21,14 +20,12 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
 
-  webServer: process.env.CI
-    ? undefined
-    : {
-        command: "npm run dev",
-        url: "http://localhost:3000",
-        reuseExistingServer: true,
-        timeout: 120_000,
-      },
+  webServer: {
+    command: "npm run dev",
+    url: "http://localhost:3000",
+    reuseExistingServer: true,
+    timeout: 120_000,
+  },
 
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
