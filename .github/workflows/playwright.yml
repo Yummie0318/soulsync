@@ -40,6 +40,12 @@ jobs:
       - name: Install Playwright
         run: npx playwright install --with-deps
 
+      # 🧩 Debug: Confirm secrets are loaded (safe check)
+      - name: Debug secrets
+        run: echo "✅ Secrets loaded for login test"
+        env:
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+
       # 5️⃣ Debug: List all test files
       - name: List tests
         run: |

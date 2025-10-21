@@ -1,8 +1,6 @@
 import { test, expect } from "@playwright/test";
-import fs from "fs";
-import path from "path";
 
-test("🔐 Login using GitHub Secrets and save session", async ({ page }) => {
+test("🔐 Login using GitHub Secrets without saving storage", async ({ page }) => {
   const email = process.env.TEST_EMAIL;
   const password = process.env.TEST_PASSWORD;
 
@@ -24,13 +22,5 @@ test("🔐 Login using GitHub Secrets and save session", async ({ page }) => {
   await page.waitForURL(/my-room/, { timeout: 30000 });
   await expect(page).toHaveURL(/my-room/);
 
-  // Ensure storage folder exists
-  const storageDir = path.join(process.cwd(), "storage");
-  if (!fs.existsSync(storageDir)) {
-    fs.mkdirSync(storageDir);
-  }
-
-  // Save session
-  await page.context().storageState({ path: path.join(storageDir, "logged-in.json") });
-  console.log("✅ Login successful, storage saved at storage/logged-in.json");
+  console.log("✅ Login successful. Continuing without storage state.");
 });
