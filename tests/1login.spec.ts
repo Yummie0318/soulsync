@@ -11,7 +11,7 @@ test("🔐 Login using GitHub Secrets without saving storage", async ({ page }) 
   // Go to login pages
   await page.goto("http://localhost:3000/en/login");
 
-  // Fill login form
+  // Fill login forms
   await page.fill('input[type="email"]', email);
   await page.fill('input[type="password"]', password);
 
