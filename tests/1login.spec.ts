@@ -8,7 +8,7 @@ test("🔐 Login using GitHub Secrets without saving storage", async ({ page }) 
     throw new Error("❌ Missing TEST_EMAIL or TEST_PASSWORD environment variables");
   }
 
-  // Go to login page
+  // Go to login pages
   await page.goto("http://localhost:3000/en/login");
 
   // Fill login form
