@@ -20,40 +20,41 @@ test("🔐 Login using GitHub Secrets and save storage", async ({ page, browserN
 
   console.log("🚀 Submitting login form...");
   await Promise.all([
-    page.waitForLoadState("networkidle"), // wait for requests to finish
+    page.waitForLoadState("networkidle"),
     page.click('button[type="submit"]'),
   ]);
 
-  console.log("⏳ Waiting for redirect or success page...");
-
+  console.log("⏳ Waiting for successful redirect...");
   try {
-    // Wait for known success URLs (my-room, dashboard, home)
+    // wait up to 120 s for known success URLs
     await page.waitForURL(/my-room|dashboard|home/i, { timeout: 120000 });
   } catch (error) {
-    // Log useful info for debugging
     const currentURL = page.url();
-    console.log("⚠️ Timed out waiting for redirect.");
+    console.log("⚠️ Timed out waiting for redirect");
     console.log("🔗 Current URL:", currentURL);
 
-    // Capture screenshot for easier debugging
-    await page.screenshot({ path: `test-results/login-timeout-${browserName}.png`, fullPage: true });
+    // Take screenshot for CI artifacts
+    await page.screenshot({
+      path: `test-results/login-timeout-${browserName}.png`,
+      fullPage: true,
+    });
 
-    // If WebKit is flaky, don’t fail the entire pipeline
+    // If WebKit is flaky, skip instead of failing the whole CI run
     if (browserName === "webkit") {
-      console.warn("⚠️ Skipping failure for WebKit — redirect did not complete.");
-      test.skip(true, "WebKit redirect flaky; skipping failure.");
+      console.warn("⚠️ WebKit redirect did not complete — skipping failure for this browser.");
+      test.skip(true, "WebKit redirect timeout — skipping test.");
       return;
     }
 
-    // Re-throw error for Chromium/Firefox
-    throw error;
+    throw error; // rethrow for other browsers
   }
 
-  // Verify login success
+  // Verify login success (not stuck on login page)
   expect(page.url()).not.toContain("/login");
-  console.log("✅ Redirect successful. Current URL:", page.url());
 
-  // ✅ Save storage state for reuse
+  console.log("✅ Redirect successful:", page.url());
+
+  // ✅ Save storage state for reuse in later tests
   await page.context().storageState({ path: "storage/logged-in.json" });
   console.log("💾 Storage state saved to storage/logged-in.json");
 });
