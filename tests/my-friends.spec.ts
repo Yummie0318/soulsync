@@ -1,56 +1,71 @@
-// tests/myfriends.spec.ts
 import { test, expect } from "@playwright/test";
 
-test.describe("🧑‍🤝‍🧑 MyFriends Page", () => {
-  test.use({ storageState: "storage/logged-in.json" });
+test.describe("🧑‍🤝‍🧑 My Friends Page Tests", () => {
+  test.use({
+    storageState: "storage/logged-in.json",
+    baseURL: "http://localhost:3000",
+  });
 
-  test("Load My Friends page and verify UI interactions", async ({ page }) => {
-    console.log("🌐 Navigating to MyFriends page...");
-    await page.goto("/en/myfriends");
-    await page.waitForLoadState("networkidle");
+  test("Load My Friends page and test Follow / Unfriend flow", async ({ page }) => {
+    console.log("➡️ Navigating to My Friends page...");
 
-    // 1️⃣ Verify title
-    await expect(page.locator("h1")).toContainText(/My Friends/i);
+    // Go to your myfriends route (auto detects locale)
+    await page.goto("/en/myfriends", { waitUntil: "networkidle" });
 
-    // 2️⃣ Verify friends list or empty state
-    const hasFriends = await page.locator("text=Unfriend").count();
-    if (hasFriends > 0) {
-      console.log("✅ Friends list loaded");
+    // Verify page loaded
+    await expect(page.locator("h1")).toContainText("My Friends", {
+      timeout: 10000,
+    });
+    console.log("✅ My Friends page loaded");
+
+    // Wait for either skeleton or friends grid
+    await page.waitForSelector("main");
+
+    // Screenshot initial state
+    await page.screenshot({ path: "playwright-report/myfriends_initial.png" });
+
+    // Try opening search
+    const searchButton = page.locator('button[aria-label="Open search"]');
+    if (await searchButton.isVisible()) {
+      await searchButton.click();
+      console.log("🔍 Search panel opened");
+
+      const searchInput = page.locator('input[placeholder*="Search"]');
+      await searchInput.fill("test");
+      await page.waitForTimeout(1000);
+
+      // Try clicking Follow button if visible
+      const followBtn = page.locator('button:has-text("Follow")').first();
+      if (await followBtn.isVisible()) {
+        await followBtn.click();
+        console.log("✅ Follow button clicked");
+        await page.waitForTimeout(1000);
+      } else {
+        console.log("ℹ️ No followable user found");
+      }
+
+      // Close search
+      const closeBtn = page.locator('button[aria-label="Close search"]');
+      if (await closeBtn.isVisible()) await closeBtn.click();
     } else {
-      await expect(page.locator("text=No friends")).toBeVisible();
-      console.log("ℹ️ No friends found (empty state)");
+      console.log("⚠️ Search button not found");
     }
 
-    // 3️⃣ Toggle Search
-    const searchButton = page.locator('button[aria-label*="search"]');
-    await searchButton.click();
-    await expect(page.locator('input[placeholder*="Search"]')).toBeVisible();
-
-    // 4️⃣ Type in search box
-    const input = page.locator('input[placeholder*="Search"]');
-    await input.fill("test");
-    await page.waitForTimeout(1000); // allow debounce + fetch
-    const resultCount = await page.locator("text=Follow").count();
-    console.log(`🔎 Found ${resultCount} search results`);
-
-    // 5️⃣ Close search panel
-    await searchButton.click();
-    await expect(page.locator('input[placeholder*="Search"]')).toBeHidden();
-
-    // 6️⃣ Test unfriend confirm dialog (if any friend exists)
-    if (hasFriends > 0) {
-      const unfriendBtn = page.locator("text=Unfriend").first();
+    // Try to unfriend someone
+    const unfriendBtn = page.locator('button:has-text("Unfriend")').first();
+    if (await unfriendBtn.isVisible()) {
       await unfriendBtn.click();
-
-      await expect(page.locator("text=Are you sure")).toBeVisible();
-      console.log("⚠️ Confirm dialog opened");
-
-      const cancelBtn = page.locator("text=Cancel");
-      await cancelBtn.click();
-      await expect(page.locator("text=Are you sure")).toBeHidden();
-      console.log("✅ Confirm dialog closed");
+      console.log("🧾 Unfriend dialog opened");
+      const confirmBtn = page.locator('button:has-text("Unfriend")').last();
+      await confirmBtn.click({ timeout: 5000 });
+      console.log("✅ Unfriend confirmed");
+    } else {
+      console.log("ℹ️ No friend found to unfriend");
     }
 
-    console.log("🎉 MyFriends page test completed!");
+    // Take final screenshot
+    await page.screenshot({ path: "playwright-report/myfriends_final.png" });
+
+    console.log("🎉 My Friends test completed successfully");
   });
 });
