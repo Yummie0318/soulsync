@@ -22,7 +22,7 @@ test("🔐 Login using GitHub Secrets and save storage", async ({ page }) => {
   await page.waitForURL(/my-room/, { timeout: 90000 });
   await expect(page).toHaveURL(/my-room/);
 
-  // ✅ Save storage state for reuse in later tests test
+  // ✅ Save storage state for reuse in later tests tests
   await page.context().storageState({ path: "storage/logged-in.json" });
 
   console.log("✅ Login successful. Storage state saved to storage/logged-in.json");
