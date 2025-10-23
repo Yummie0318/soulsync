@@ -34,7 +34,7 @@ test.describe("🧑‍🤝‍🧑 My Friends Page Tests", () => {
       await searchInput.fill("test");
       await page.waitForTimeout(1000);
 
-      // Try clicking Follow button if visible
+      // Try clicking Follow button if visibles
       const followBtn = page.locator('button:has-text("Follow")').first();
       if (await followBtn.isVisible()) {
         await followBtn.click();
