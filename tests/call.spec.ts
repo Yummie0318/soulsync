@@ -1,50 +1,99 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * 🎥 Call Page UI Test
- * - Loads the call page with mock params
- * - Verifies that the correct UI (audio/video) renders
- * - Confirms connection state indicator and End Call button
+ * 📲 Incoming Call Popup Test
+ * - Opens page with mock socket provider
+ * - Simulates "call:ringing" event
+ * - Verifies ringtone popup appears and can be accepted/rejected
  */
 
-test("🎧 Verify CallPage renders and displays call info", async ({ page }) => {
-  // Use stored login session
-  await page.goto("/en/my-messages");
+test.describe("📞 Incoming Call Popup", () => {
+  test("should display popup when call:ringing event received", async ({ page }) => {
+    // Load the app
+    await page.goto("/en/my-messages");
 
-  // Mock query params for the call
-  const callParams = "?call_id=999&caller_id=1&receiver_id=2&type=audio";
+    // Inject mock socket
+    await page.addInitScript(() => {
+      window.__mockSocket__ = {
+        emit: (event, data) => console.log("MOCK EMIT", event, data),
+        on: (event, cb) => {
+          if (event === "call:ringing") {
+            // Trigger popup shortly after page loads
+            setTimeout(() => {
+              cb({
+                id: 101,
+                caller_id: 1,
+                receiver_id: Number(localStorage.getItem("user_id")) || 999,
+                call_type: "video",
+              });
+            }, 1000);
+          }
+        },
+        off: () => {},
+        id: "mock-socket-1",
+      };
+    });
 
-  // Navigate to CallPage
-  await page.goto(`/en/call${callParams}`);
+    // Replace real socket provider with mock
+    await page.evaluate(() => {
+      const socketProvider = window.__mockSocket__;
+      window.useSocket = () => ({
+        socket: socketProvider,
+        isConnected: true,
+      });
+    });
 
-  // Wait for the title to appear
-  await expect(page.locator("h2")).toContainText("Audio Call");
+    // Wait for popup
+    await expect(page.locator("text=Incoming video call")).toBeVisible({ timeout: 8000 });
 
-  // Verify text changes depending on connection state
-  await expect(page.locator("text=Connecting")).toBeVisible();
+    // Check buttons
+    await expect(page.getByTitle("Accept")).toBeVisible();
+    await expect(page.getByTitle("Reject")).toBeVisible();
 
-  // Verify the connection state indicator exists
-  await expect(page.locator("text=Connection:")).toBeVisible();
+    // Screenshot proof
+    await page.screenshot({ path: "playwright-report/incoming-call-popup.png" });
+  });
 
-  // Verify End Call button exists
-  await expect(page.getByRole("button", { name: /End Call/i })).toBeVisible();
+  test("should close popup on reject", async ({ page }) => {
+    await page.goto("/en/my-messages");
 
-  // Take a screenshot for report
-  await page.screenshot({ path: "playwright-report/callpage.png" });
-});
+    // Inject fake incoming call and auto-reject
+    await page.addInitScript(() => {
+      window.__mockSocket__ = {
+        emit: (event, data) => console.log("MOCK EMIT", event, data),
+        on: (event, cb) => {
+          if (event === "call:ringing") {
+            setTimeout(() => {
+              cb({
+                id: 102,
+                caller_id: 1,
+                receiver_id: Number(localStorage.getItem("user_id")) || 999,
+                call_type: "audio",
+              });
+            }, 1000);
+          }
+        },
+        off: () => {},
+        id: "mock-socket-2",
+      };
+    });
 
-test("🎥 Verify CallPage video layout loads", async ({ page }) => {
-  const callParams = "?call_id=1000&caller_id=1&receiver_id=2&type=video";
-  await page.goto(`/en/call${callParams}`);
+    await page.evaluate(() => {
+      const socketProvider = window.__mockSocket__;
+      window.useSocket = () => ({
+        socket: socketProvider,
+        isConnected: true,
+      });
+    });
 
-  // Ensure video call title shows
-  await expect(page.locator("h2")).toContainText("Video Call");
+    await expect(page.locator("text=Incoming audio call")).toBeVisible({ timeout: 8000 });
 
-  // Verify video elements exist (local + remote)
-  await expect(page.locator("video")).toHaveCount(2);
+    // Click Reject
+    await page.getByTitle("Reject").click();
 
-  // Confirm End Call button visible
-  await expect(page.getByRole("button", { name: /End Call/i })).toBeVisible();
+    // Popup should disappear
+    await expect(page.locator("text=Incoming audio call")).toHaveCount(0, { timeout: 5000 });
 
-  await page.screenshot({ path: "playwright-report/callpage-video.png" });
+    await page.screenshot({ path: "playwright-report/incoming-call-reject.png" });
+  });
 });
