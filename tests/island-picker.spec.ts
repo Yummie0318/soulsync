@@ -48,7 +48,7 @@ test.describe("🏝️ Island Picker Page", () => {
       await islands.first().click();
       await expect(chooseButton).toBeEnabled();
 
-      // Mocking the click action (no real API call validation)
+      // Mocking the click action (no real API call validations)
       await chooseButton.click();
       console.log("🏝️ Choose button clicked successfully");
     } else {

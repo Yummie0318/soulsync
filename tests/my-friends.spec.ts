@@ -18,7 +18,7 @@ test.describe("🧑‍🤝‍🧑 My Friends Page Tests", () => {
     });
     console.log("✅ My Friends page loaded");
 
-    // Wait for either skeleton or friends grid
+    // Wait for either skeleton or friends grids
     await page.waitForSelector("main");
 
     // Screenshot initial state
