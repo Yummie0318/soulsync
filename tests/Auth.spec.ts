@@ -18,7 +18,7 @@ test("mock register + OTP flow → redirects to profile setup", async ({ page })
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        user: { id: "mock-user-123", email: "mock@example.com" },
+        user: { id: "mock-user-123", email: "joylynmadriagatts@gmail.com" },
         message: "Account created successfully",
       }),
     });
@@ -29,7 +29,7 @@ test("mock register + OTP flow → redirects to profile setup", async ({ page })
 
   // 🧾 4️⃣ Fill registration form
   await page.getByPlaceholder("Enter username").fill("joytestuser");
-  await page.getByPlaceholder("Enter email").fill("joytest@example.com");
+  await page.getByPlaceholder("Enter email").fill("joylynmadriagatts@gmail.com");
   await page.getByPlaceholder("Enter password").fill("Password123!");
   await page.getByPlaceholder("Confirm password").fill("Password123!");
 
@@ -39,7 +39,7 @@ test("mock register + OTP flow → redirects to profile setup", async ({ page })
   // 💬 6️⃣ Expect OTP modal to appear
   await expect(page.getByText("Enter OTP")).toBeVisible();
 
-  // 🧮 7️⃣ Fill in the OTP
+  // 🧮 7️⃣ Fill in the OTP (any dummy value works)
   await page.getByRole("textbox").fill("123456");
 
   // 🖱️ 8️⃣ Click "Verify"
