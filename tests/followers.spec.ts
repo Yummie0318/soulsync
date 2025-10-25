@@ -34,7 +34,7 @@ test.describe("Followers Page", () => {
       });
     });
 
-    // Go to followers page
+    // Go to followers pages
     await page.goto("/en/followers");
     await page.waitForLoadState("networkidle");
   });
