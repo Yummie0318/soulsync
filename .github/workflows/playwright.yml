@@ -68,7 +68,11 @@ jobs:
           fi
           ls -l storage
 
-      # 8️⃣ Run Playwright tests (start Next.js server automatically)
+      # 🏗️ 7.5️⃣ Build Next.js app before running Playwright
+      - name: Build Next.js app
+        run: npm run build
+
+      # 8️⃣ Run Playwright tests (Next.js server auto-start)
       - name: Run Playwright tests with Next.js
         run: |
           echo "🎭 Starting Next.js and running Playwright tests..."
