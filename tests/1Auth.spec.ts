@@ -47,6 +47,7 @@ test("mock register + OTP flow (English locale) → redirects to profile setup",
   // 🖱️ 8️⃣ Click “Verify”
   await page.getByRole("button", { name: /verify/i }).click();
 
+  // ⏳ 9️⃣ Wait for navigation → /en/profile-setup
   // ⏳ 9️⃣ Wait for navigation → /en/profile-setups
   await page.waitForURL("**/en/profile-setup");
 
