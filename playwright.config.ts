@@ -21,11 +21,10 @@ export default defineConfig({
   },
 
   webServer: {
-    command: "npm run start",
+    command: "npm run dev",
     url: "http://localhost:3000",
-    // Always reuse the server in CI to avoid "port in use" errors
     reuseExistingServer: true,
-    timeout: 120 * 1000, // wait up to 2 minutes for server to be ready
+    timeout: 120_000,
   },
 
   projects: [
