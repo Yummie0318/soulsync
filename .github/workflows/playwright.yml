@@ -68,18 +68,12 @@ jobs:
           fi
           ls -l storage
 
-      # 🏗️ 7.5️⃣ Build Next.js app before running Playwright
-      - name: Build Next.js app
-        run: npm run build
-
-      # 8️⃣ Run Playwright tests (Next.js server auto-start)
-      - name: Run Playwright tests with Next.js
+      # 8️⃣ Run all other Playwright tests
+      - name: Run Playwright tests
         run: |
-          echo "🎭 Starting Next.js and running Playwright tests..."
+          echo "🎭 Running main Playwright tests..."
           npx playwright test --workers=1 --reporter=html
         env:
-          NODE_ENV: test
-          NEXT_TELEMETRY_DISABLED: 1
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
