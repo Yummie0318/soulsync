@@ -51,14 +51,12 @@ jobs:
         run: |
           echo "🔑 Generating login session..."
           mkdir -p storage
-          npx playwright test tests/1login.spec.ts --project=chromium --reporter=line --headed=false
+          npx playwright test tests/1login.spec.ts --project=chromium --reporter=line
         env:
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          PWDEBUG: 0
-          HEADLESS: 1
 
       # 7️⃣ Verify logged-in storage file
       - name: Verify logged-in storage file
@@ -74,7 +72,7 @@ jobs:
       - name: Run Playwright tests with Next.js
         run: |
           echo "🎭 Starting Next.js and running Playwright tests..."
-          npx playwright test --workers=1 --reporter=html --headed=false
+          npx playwright test --workers=1 --reporter=html
         env:
           NODE_ENV: test
           NEXT_TELEMETRY_DISABLED: 1
@@ -82,8 +80,7 @@ jobs:
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          PWDEBUG: 0
-          HEADLESS: 1
+
 
       # 9️⃣ Upload HTML report
       - name: Upload Playwright report

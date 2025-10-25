@@ -55,7 +55,7 @@ test.describe("Profile Setup Page", () => {
       });
     });
 
-    // --- 2️⃣ Navigate to Profile Setup ---
+    // --- 2️⃣ Navigate to Profile Setups ---
     await page.goto("/en/profile-setup");
 
     // --- Helper for safe button clicks ---
