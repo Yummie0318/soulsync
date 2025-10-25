@@ -40,14 +40,22 @@ jobs:
       - name: Install Playwright
         run: npx playwright install --with-deps
 
-      # 5️⃣ List test files for debugging
-      - name: List all tests
-        run: |
-          echo "📜 Listing all test files in ./tests/"
-          find ./tests -name "*.spec.ts"
+      # 5️⃣ Build Next.js app (✅ required before starting server)
+      - name: Build Next.js app
+        run: npm run build
 
-      # 6️⃣ Run login test to generate storage
-      - name: Generate storage state (login)
+      # 6️⃣ Start Next.js in background
+      - name: Start Next.js server
+        run: |
+          echo "🚀 Starting Next.js server in background..."
+          nohup npx next start -p 3000 &>/dev/null &
+          sleep 10
+          echo "✅ Next.js server is ready!"
+        env:
+          NODE_ENV: production
+
+      # 7️⃣ Run login test (mocked or real login)
+      - name: Generate login session
         run: |
           echo "🔑 Generating login session..."
           mkdir -p storage
@@ -58,20 +66,20 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 7️⃣ Verify logged-in storage file
-      - name: Verify logged-in storage file
+      # 8️⃣ Verify that the storage file was generated
+      - name: Verify storage file
         run: |
-          echo "📁 Checking storage file after login:"
+          echo "📁 Checking storage file..."
           if [ ! -f storage/logged-in.json ]; then
-            echo "❌ storage/logged-in.json was not created!"
+            echo "❌ storage/logged-in.json not found!"
             exit 1
           fi
           ls -l storage
 
-      # 8️⃣ Run all other Playwright tests
+      # 9️⃣ Run all Playwright tests (using the running Next.js server)
       - name: Run Playwright tests
         run: |
-          echo "🎭 Running main Playwright tests..."
+          echo "🎭 Running Playwright tests..."
           npx playwright test --workers=1 --reporter=html
         env:
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
@@ -79,7 +87,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 9️⃣ Upload HTML report
+      # 🔟 Upload Playwright HTML report
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -88,14 +96,14 @@ jobs:
           path: playwright-report
           retention-days: 30
 
-      # 🔟 Upload to GitHub Pages
+      # 11️⃣ Upload report to GitHub Pages
       - name: Upload Pages artifact
         if: always()
         uses: actions/upload-pages-artifact@v3
         with:
           path: playwright-report
 
-  # 11️⃣ Deploy report to GitHub Pages
+  # 12️⃣ Deploy report to GitHub Pages
   deploy:
     needs: test
     runs-on: ubuntu-latest
