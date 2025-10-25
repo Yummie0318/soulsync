@@ -50,6 +50,7 @@ jobs:
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
 
       # 6️⃣ Start Next.js in background
       - name: Start Next.js server
@@ -65,9 +66,10 @@ jobs:
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
 
-      # 7️⃣ Run Auth test (this will now run first)
-      - name: Run Auth test to generate session
+      # 7️⃣ Run Auth test to generate session
+      - name: Run Auth test to generate login session
         run: |
           echo "🔑 Running Auth test to generate login session..."
           mkdir -p storage
@@ -79,6 +81,7 @@ jobs:
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
 
       # 8️⃣ Verify that the storage file was generated
       - name: Verify storage file
@@ -102,6 +105,7 @@ jobs:
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
 
       # 🔟 Upload Playwright HTML report
       - name: Upload Playwright report
