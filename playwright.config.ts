@@ -20,12 +20,12 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
 
-  webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3000",
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+webServer: {
+  command: "npm run start",
+  url: "http://localhost:3000",
+  reuseExistingServer: !process.env.CI, // reuse local server in dev
+  timeout: 120 * 1000, // give time to build
+},
 
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },

@@ -68,12 +68,14 @@ jobs:
           fi
           ls -l storage
 
-      # 8️⃣ Run all other Playwright tests
-      - name: Run Playwright tests
+      # 8️⃣ Run Playwright tests (start Next.js server automatically)
+      - name: Run Playwright tests with Next.js
         run: |
-          echo "🎭 Running main Playwright tests..."
+          echo "🎭 Starting Next.js and running Playwright tests..."
           npx playwright test --workers=1 --reporter=html
         env:
+          NODE_ENV: test
+          NEXT_TELEMETRY_DISABLED: 1
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
