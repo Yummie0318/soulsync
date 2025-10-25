@@ -39,8 +39,10 @@ test("mock register + OTP flow (English locale) → redirects to profile setup",
   // 💬 6️⃣ Expect OTP modal to appear
   await expect(page.getByText("Enter OTP")).toBeVisible();
 
-  // 🧮 7️⃣ Fill OTP
-  await page.getByRole("textbox").fill("123456");
+  // 🧮 7️⃣ Fill OTP (target the 6-digit input specifically)
+  const otpInput = page.locator('input[maxlength="6"]');
+  await otpInput.waitFor({ state: "visible" });
+  await otpInput.fill("123456");
 
   // 🖱️ 8️⃣ Click “Verify”
   await page.getByRole("button", { name: /verify/i }).click();
