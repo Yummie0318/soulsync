@@ -1,8 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import fs from "fs";
 
-const isCI = !!process.env.CI;
-
 export default defineConfig({
   testDir: "./tests",
   testMatch: "**/*.spec.ts",
@@ -22,13 +20,12 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
 
-  webServer: {
-    // 🧩 Use dev server locally, production server in CI
-    command: isCI ? "npm run start" : "npm run dev",
-    url: "http://localhost:3000",
-    reuseExistingServer: !isCI,
-    timeout: 120 * 1000, // give Next.js time to boot
-  },
+webServer: {
+  command: "npm run start",
+  url: "http://localhost:3000",
+  reuseExistingServer: !process.env.CI, // reuse local server in dev
+  timeout: 120 * 1000, // give time to build b
+},
 
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
