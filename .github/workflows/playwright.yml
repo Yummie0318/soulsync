@@ -40,9 +40,16 @@ jobs:
       - name: Install Playwright
         run: npx playwright install --with-deps
 
-      # 5️⃣ Build Next.js app (✅ required before starting server)
+      # 5️⃣ Build Next.js app (✅ now includes secrets for build)
       - name: Build Next.js app
         run: npm run build
+        env:
+          NODE_ENV: production
+          NEXT_TELEMETRY_DISABLED: 1
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       # 6️⃣ Start Next.js in background
       - name: Start Next.js server
@@ -53,14 +60,21 @@ jobs:
           echo "✅ Next.js server is ready!"
         env:
           NODE_ENV: production
+          NEXT_TELEMETRY_DISABLED: 1
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      # 7️⃣ Run login test (mocked or real login)
-      - name: Generate login session
+      # 7️⃣ Run Auth test (this will now run first)
+      - name: Run Auth test to generate session
         run: |
-          echo "🔑 Generating login session..."
+          echo "🔑 Running Auth test to generate login session..."
           mkdir -p storage
-          npx playwright test tests/1login.spec.ts --project=chromium --reporter=line
+          npx playwright test tests/1Auth.spec.ts --project=chromium --reporter=line
         env:
+          NODE_ENV: test
+          NEXT_TELEMETRY_DISABLED: 1
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -76,12 +90,14 @@ jobs:
           fi
           ls -l storage
 
-      # 9️⃣ Run all Playwright tests (using the running Next.js server)
-      - name: Run Playwright tests
+      # 9️⃣ Run all Playwright tests (using running Next.js server)
+      - name: Run all Playwright tests
         run: |
-          echo "🎭 Running Playwright tests..."
+          echo "🎭 Running all Playwright tests..."
           npx playwright test --workers=1 --reporter=html
         env:
+          NODE_ENV: test
+          NEXT_TELEMETRY_DISABLED: 1
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
