@@ -92,24 +92,24 @@ test.describe("Profile Setup Page", () => {
     await interestButtons.nth(1).click();
     await interestButtons.nth(2).click();
 
-    await page.getByRole("button", { name: /Next/i }).click();
+    await page.locator("form button:has-text('Next')").first().click();
 
     // --- 4️⃣ Step 2: Birthdate ---
     await page.getByPlaceholder("YYYY").fill("1995");
     await page.getByPlaceholder("MM").fill("5");
     await page.getByPlaceholder("DD").fill("20");
-    await page.getByRole("button", { name: /Next/i }).click();
+    await page.locator("form button:has-text('Next')").first().click();
 
     // --- 5️⃣ Step 3: About You ---
     await page.getByRole("combobox").selectOption("1"); // Select Male
     await page.getByLabel(/Friendship/i).check();
-    await page.getByRole("button", { name: /Next/i }).click();
+    await page.locator("form button:has-text('Next')").first().click();
 
     // --- 6️⃣ Step 4: Location ---
     await page.getByRole("combobox").selectOption("1"); // Select Philippines
     await page.getByPlaceholder(/City/i).fill("Manila");
     await page.getByPlaceholder(/Postal Code/i).fill("1234");
-    await page.getByRole("button", { name: /Next/i }).click();
+    await page.locator("form button:has-text('Next')").first().click();
 
     // --- 7️⃣ Step 5: Finishing Touches ---
     await page.setInputFiles('input[type="file"]', {
@@ -120,7 +120,7 @@ test.describe("Profile Setup Page", () => {
     await page.getByPlaceholder(/Write something/i).fill(
       "Keep smiling every day!"
     );
-    await page.getByRole("button", { name: /Finish/i }).click();
+    await page.locator("form button:has-text('Finish')").click();
 
     // --- 8️⃣ Verify redirect + completion ---
     await expect(page).toHaveURL(/\/my-room/);
