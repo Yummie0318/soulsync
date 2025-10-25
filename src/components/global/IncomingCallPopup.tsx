@@ -15,34 +15,32 @@ interface IncomingCallData {
 }
 
 export default function IncomingCallPopup() {
-  const socket = useSocket();
+  // ✅ Now destructure both socket and isConnected safely
+  const { socket, isConnected } = useSocket();
   const router = useRouter();
   const { locale } = useParams();
+
   const [call, setCall] = useState<IncomingCallData | null>(null);
   const [visible, setVisible] = useState(false);
   const [ringtone, setRingtone] = useState<HTMLAudioElement | null>(null);
+  const [activeCallId, setActiveCallId] = useState<number | null>(null);
 
   // ======================================================
-  // 🎨 Professional Logger
+  // 🎨 Logger
   // ======================================================
-  const log = useCallback((label: string, data?: any, color = "cyan") => {
-    const ts = new Date().toLocaleTimeString();
-    console.log(
-      `%c[📞 IncomingCallPopup ${ts}] ${label}`,
-      `color:${color};font-weight:bold;`,
-      data ?? ""
-    );
+  const log = useCallback((msg: string, data?: any, color = "cyan") => {
+    console.log(`%c[📲 IncomingCallPopup] ${msg}`, `color:${color};font-weight:bold;`, data ?? "");
   }, []);
 
   // ======================================================
-  // 🔊 Play / Stop Ringtone
+  // 🔊 Ringtone Controls
   // ======================================================
   const playRingtone = useCallback(() => {
     try {
       const audio = new Audio("/sounds/ringtone.mp3");
       audio.loop = true;
-      audio.volume = 0.5;
-      audio.play().catch(() => log("🎵 User interaction required to autoplay", null, "orange"));
+      audio.volume = 0.6;
+      audio.play().catch(() => log("🎵 Autoplay blocked — user interaction required", null, "orange"));
       setRingtone(audio);
     } catch (err) {
       log("❌ Failed to play ringtone", err, "red");
@@ -53,67 +51,83 @@ export default function IncomingCallPopup() {
     if (ringtone) {
       ringtone.pause();
       ringtone.currentTime = 0;
+      setRingtone(null);
     }
   }, [ringtone]);
 
   // ======================================================
-  // 📡 Handle Incoming Call
+  // 📞 Incoming Call Handler
   // ======================================================
   const handleIncomingCall = useCallback(
     (data: IncomingCallData) => {
       log("📩 Incoming call received", data, "yellow");
 
-      if (!data || !data.receiver_id || !data.caller_id) {
-        log("⚠️ Invalid call payload — missing IDs", data, "orange");
+      if (!data?.receiver_id || !data?.caller_id || !data?.id) {
+        log("⚠️ Invalid call payload", data, "orange");
         return;
       }
 
       const currentUserId = Number(localStorage.getItem("user_id"));
-      if (!currentUserId) {
-        log("⚠️ No user_id in localStorage", null, "orange");
+      if (!currentUserId || data.receiver_id !== currentUserId) {
+        log("🚫 Call not for this user, ignoring", null, "gray");
         return;
       }
 
-      if (data.receiver_id !== currentUserId) {
-        log("🚫 Call not for this user, ignoring", { target: data.receiver_id }, "gray");
+      if (activeCallId === data.id) {
+        log("⚠️ Popup already active for this call", data.id, "gray");
         return;
       }
 
-      // Only show popup if not already visible
-      if (!visible) {
-        setCall(data);
-        setVisible(true);
-        playRingtone();
-        log("✅ Showing call popup for receiver", data, "lightgreen");
-      }
+      setCall(data);
+      setActiveCallId(data.id);
+      setVisible(true);
+      playRingtone();
+      log("✅ Showing call popup", data, "lightgreen");
     },
-    [log, playRingtone, visible]
+    [activeCallId, log, playRingtone]
   );
 
   // ======================================================
-  // 🔌 Attach Socket Listeners
+  // 🔌 Socket Listeners
   // ======================================================
   useEffect(() => {
-    if (!socket) {
-      log("⚠️ Socket not ready yet", null, "orange");
+    if (!socket || !isConnected) {
+      log("⚠️ Socket not ready or disconnected", null, "orange");
       return;
     }
 
-    log("🔗 Attaching socket listeners", { socketId: socket.id }, "deepskyblue");
+    log("🔗 Attaching socket listeners", { id: socket.id }, "deepskyblue");
 
-    socket.on("call:ringing", handleIncomingCall);
-    socket.on("call:incoming", handleIncomingCall);
+    socket.off("call:ringing").on("call:ringing", handleIncomingCall);
 
-    socket.on("disconnect", (reason) => log("⚪ Socket disconnected", { reason }, "gray"));
-    socket.on("connect", () => log("🟢 Socket connected", { socketId: socket.id }, "lightgreen"));
-    socket.onAny((event, ...args) => log(`📡 Socket → ${event}`, args, "violet"));
+    socket.off("call:cancelled").on("call:cancelled", (data) => {
+      log("🚫 Caller cancelled call", data, "orange");
+      stopRingtone();
+      setVisible(false);
+      setActiveCallId(null);
+    });
+
+    socket.off("call:end").on("call:end", (data) => {
+      log("🔚 Call ended", data, "gray");
+      stopRingtone();
+      setVisible(false);
+      setActiveCallId(null);
+    });
+
+    socket.on("disconnect", (reason) => {
+      log("⚪ Socket disconnected", reason, "gray");
+      stopRingtone();
+      setVisible(false);
+    });
 
     return () => {
       log("🧹 Cleaning up listeners", null, "gray");
-      socket.off("call:ringing", handleIncomingCall);
-      socket.off("call:incoming", handleIncomingCall);
+      socket.off("call:ringing");
+      socket.off("call:cancelled");
+      socket.off("call:end");
+      socket.off("disconnect");
     };
-  }, [socket, handleIncomingCall, log]);
+  }, [socket, isConnected, handleIncomingCall, stopRingtone, log]);
 
   // ======================================================
   // ✅ Accept Call
@@ -122,10 +136,8 @@ export default function IncomingCallPopup() {
     if (!socket || !call) return;
     stopRingtone();
     setVisible(false);
-
     log("✅ Accepting call", call, "lightgreen");
 
-    // ✅ Update call status on backend
     try {
       await fetch("/api/calls", {
         method: "PATCH",
@@ -137,7 +149,6 @@ export default function IncomingCallPopup() {
       log("❌ Failed to update call status", err, "red");
     }
 
-    // ✅ Notify caller via socket
     socket.emit("call:accept", {
       call_id: call.id,
       caller_id: call.caller_id,
@@ -145,7 +156,6 @@ export default function IncomingCallPopup() {
       status: "accepted",
     });
 
-    // ✅ Redirect to call page
     const url = `/${locale}/my-messages/call?call_id=${call.id}&caller_id=${call.caller_id}&receiver_id=${call.receiver_id}&type=${call.call_type}`;
     log("🌐 Redirecting to call page", url, "deepskyblue");
     router.push(url);
@@ -158,7 +168,6 @@ export default function IncomingCallPopup() {
     if (!socket || !call) return;
     stopRingtone();
     setVisible(false);
-
     log("🚫 Rejecting call", call, "orange");
 
     socket.emit("call:reject", {
@@ -181,17 +190,17 @@ export default function IncomingCallPopup() {
   };
 
   // ======================================================
-  // 🧱 Render Popup
+  // 🧱 UI
   // ======================================================
   if (!visible || !call) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-[9999] animate-fade-in">
-      <div className="bg-white text-gray-900 rounded-2xl shadow-lg p-8 w-80 flex flex-col items-center gap-4">
+      <div className="bg-white text-gray-900 rounded-2xl shadow-xl p-8 w-80 flex flex-col items-center gap-4 border border-gray-200">
         {call.call_type === "video" ? (
-          <Video size={40} className="text-blue-600" />
+          <Video size={44} className="text-blue-600" />
         ) : (
-          <Phone size={40} className="text-green-600" />
+          <Phone size={44} className="text-green-600" />
         )}
 
         <div className="text-lg font-semibold">
@@ -204,13 +213,15 @@ export default function IncomingCallPopup() {
         <div className="flex gap-6 mt-4">
           <button
             onClick={acceptCall}
-            className="p-4 bg-green-600 rounded-full hover:bg-green-700 transition text-white"
+            className="p-4 bg-green-600 rounded-full hover:bg-green-700 transition text-white shadow-md"
+            title="Accept"
           >
             <Phone size={22} />
           </button>
           <button
             onClick={rejectCall}
-            className="p-4 bg-red-600 rounded-full hover:bg-red-700 transition text-white"
+            className="p-4 bg-red-600 rounded-full hover:bg-red-700 transition text-white shadow-md"
+            title="Reject"
           >
             <PhoneOff size={22} />
           </button>

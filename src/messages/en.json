@@ -77,6 +77,8 @@
   "orContinueWith": "OR CONTINUE WITH",
   "alreadyHaveAccount": "Already have an account?",
   "signIn": "Sign in",
+  "pleaseEnterOtp": "Please enter OTP",
+
 
   "fillAllFields": "Please fill in all fields.",
   "passwordMismatch": "Passwords do not match!",

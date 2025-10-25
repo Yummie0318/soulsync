@@ -6,8 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Phone, Video, Paperclip, Smile, Send, X } from "lucide-react";
 import { useEffect, useState, useRef, useLayoutEffect, FormEvent } from "react";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
-import Picker from "@emoji-mart/react";
-import data from "@emoji-mart/data";
+import data from '@emoji-mart/data';
+import { Picker } from 'emoji-mart';
+
 import socket from "@/lib/socketClient"; // ✅ works with your current file
 
 
@@ -84,6 +85,26 @@ export default function ConversationPage() {
   const [previewPostImage, setPreviewPostImage] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const [showAIMenu, setShowAIMenu] = useState(false);
+
+  const openAIIcebreaker = () => {
+    // TODO: open icebreaker modal (next step)
+    console.log("Open AI Icebreaker modal");
+  };
+  
+  const openAIDateScheduler = () => {
+    // TODO: open dating scheduler modal
+    console.log("Open AI Dating Scheduler");
+  };
+  
+  const openCustomOption = () => {
+    // TODO: open custom AI tool modal
+    console.log("Open Custom AI Assistant");
+  };
+  
+
+
 
   // 🔹 Action menu (long press / right click)
   const [actionMenu, setActionMenu] = useState<{
@@ -273,7 +294,12 @@ const navigateToCall = async (type: "audio" | "video") => {
       const tz = new Date().getTimezoneOffset();
       const res = await fetch(`/api/messages/${receiverId}?sender_id=${userId}&tz=${tz}`);
       const data = await res.json();
-      setMessages(Array.isArray(data.messages) ? data.messages : []);
+      const normalized = data.messages.map((msg: Message) => ({
+        ...msg,
+        created_at_local: msg.created_at_local || msg.created_at,
+        edited_at_local: msg.edited_at_local || msg.edited_at,
+      }));
+      setMessages(normalized);      
       setReceiver(data.receiver || null);
       scrollToBottom(false);
     } catch (err) {
@@ -712,20 +738,39 @@ return (
         )}
       </div>
 
+
+
+
+
       <div className="flex items-center gap-3">
-        <button
-          onClick={() => navigateToCall("audio")}
-          className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 transition"
-        >
-          <Phone size={20} />
-        </button>
-        <button
-          onClick={() => navigateToCall("video")}
-          className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 transition"
-        >
-          <Video size={20} />
-        </button>
-      </div>
+  {/* 📞 Call Buttons */}
+  <button
+    onClick={() => navigateToCall("audio")}
+    className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 transition"
+  >
+    <Phone size={20} />
+  </button>
+  <button
+    onClick={() => navigateToCall("video")}
+    className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 transition"
+  >
+    <Video size={20} />
+  </button>
+
+  {/* ⋮ Vertical Three Dots */}
+  <button
+    onClick={() => setShowAIMenu(true)}
+    className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 transition flex flex-col justify-center items-center space-y-1"
+    title="AI Tools"
+  >
+    <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+    <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+    <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+  </button>
+</div>
+
+
+
 
 
     </header>
@@ -1114,15 +1159,17 @@ return (
       </button>
       {showEmojiPicker && (
         <div className="absolute bottom-12 left-0 z-50">
+          {/* @ts-expect-error Picker is valid JSX, TypeScript just lacks types */}
           <Picker
             data={data}
-            onEmojiSelect={(emoji: { native: string }) =>
+            onEmojiSelect={(emoji: any) =>
               setNewMessage((prev) => prev + emoji.native)
             }
             theme="dark"
           />
         </div>
       )}
+
     </div>
 
     {/* File upload */}
@@ -1171,6 +1218,89 @@ return (
     </button>
   </div>
 </form>
+
+
+{/* 🌟 AI Tools Floating Menu */}
+<AnimatePresence>
+  {showAIMenu && (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className="absolute top-16 right-4 bg-gray-800 border border-gray-700 rounded-xl shadow-lg p-3 z-30 w-52"
+    >
+   <button
+  onClick={async () => {
+    setShowAIMenu(false);
+
+    // ✅ Validate we have both sender & receiver
+    if (!userId || !receiver) return showNotification("Missing user info");
+
+    try {
+      console.log("🧊 Sending AI Icebreaker request:", {
+        sender_id: userId,
+        receiver_id: receiver.id,
+      });
+
+      const res = await fetch("/api/ai/icebreaker", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender_id: userId, // ✅ logged-in user
+          receiver_id: receiver.id, // ✅ target user
+        }),
+      });
+
+      const data = await res.json();
+      console.log("🧊 Icebreaker API response:", data);
+
+      if (res.ok && data?.success && data.message) {
+        setNewMessage(data.message); // auto-fill input box
+        showNotification("💡 AI Ice Breaker ready!");
+      } else {
+        showNotification(data?.error || "Failed to generate ice breaker");
+      }
+    } catch (err) {
+      console.error("❌ AI Icebreaker error:", err);
+      showNotification("Server error while generating ice breaker");
+    }
+  }}
+  className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-700 transition text-sm"
+>
+  🤖 Generate Ice Breaker
+</button>
+
+
+      <button
+        onClick={() => {
+          setShowAIMenu(false);
+          openAIDateScheduler();
+        }}
+        className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-700 transition text-sm"
+      >
+        💌 AI Date Scheduler
+      </button>
+
+      <button
+        onClick={() => {
+          setShowAIMenu(false);
+          openCustomOption();
+        }}
+        className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-700 transition text-sm"
+      >
+        🧠 Custom AI Assistant
+      </button>
+
+      <button
+        onClick={() => setShowAIMenu(false)}
+        className="w-full text-left px-3 py-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition text-sm"
+      >
+        ✖ Close
+      </button>
+    </motion.div>
+  )}
+</AnimatePresence>
+
 
 
     {/* Image Preview */}
