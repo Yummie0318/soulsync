@@ -56,20 +56,20 @@ test.describe("Profile Setup Page", () => {
 
     // --- Step 3: About You ---
     console.log("❤️ Waiting for About You section...");
-    const aboutYouHeader = page.getByText(/about you/i);
-    await expect(aboutYouHeader).toBeVisible({ timeout: 20000 });
+    const aboutYouSection = page.getByText(/about you/i).locator('..'); // parent container
+    await expect(aboutYouSection).toBeVisible({ timeout: 30000 });
 
-    const genderSelect = page.getByLabel("Gender");
-    await expect(genderSelect).toBeVisible({ timeout: 20000 });
+    const genderSelect = aboutYouSection.locator('select[name*="gender"]');
+    await expect(genderSelect).toBeVisible({ timeout: 30000 });
     await genderSelect.selectOption({ label: "Male" });
 
-    const starSignSelect = page.getByLabel("Star Sign");
-    await expect(starSignSelect).toBeVisible({ timeout: 20000 });
+    const starSignSelect = aboutYouSection.locator('select[name*="star"]');
+    await expect(starSignSelect).toBeVisible({ timeout: 30000 });
     await starSignSelect.selectOption({ label: "♈ Aries (Mar 21 - Apr 19)" });
 
     // "Looking For" checkboxes
-    await page.getByText("Female").click();
-    await page.getByText("Friendship").click();
+    await aboutYouSection.locator('text=Female').click();
+    await aboutYouSection.locator('text=Friendship').click();
 
     await page.waitForTimeout(500);
     await clickButton(page, "Next");
