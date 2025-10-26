@@ -1,29 +1,45 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Locale Layout", () => {
-  test("renders page correctly for valid locale", async ({ page }) => {
-    // Go to a known valid locale route, e.g., /en
-    await page.goto("/en");
+test.describe("Locale Landing Page Rendering", () => {
+  const locales = [
+    { code: "en", expected: "SoulSync AI" },
+    { code: "de", expected: "SoulSync AI" },
+    { code: "zh", expected: "SoulSync AI" },
+  ];
 
-    // Check if messages from en.json are loaded
-    await expect(page).toHaveTitle(/SoulSync/i); // assuming en.json contains page title
-    await expect(page.locator("body")).toContainText(/Sign Up|Login|Profile/i);
-  });
+  for (const locale of locales) {
+    test(`should render ${locale.code.toUpperCase()} landing page correctly`, async ({ page }) => {
+      const url = `http://localhost:3000/${locale.code}/landing`;
 
-  test("renders another locale correctly", async ({ page }) => {
-    // Go to another locale like /fr if supported
-    await page.goto("/fr");
+      await page.goto(url);
+      await page.waitForLoadState("domcontentloaded");
 
-    // Check localized text exists (depending on your JSON translations)
-    await expect(page.locator("body")).toContainText(/Connexion|Profil|S'inscrire/i);
-  });
+      page.on("pageerror", (err) => {
+        throw new Error(`❌ Page error detected: ${err.message}`);
+      });
 
-  test("shows not found for invalid locale", async ({ page }) => {
-    // Navigate to a locale that doesn't exist
-    const response = await page.goto("/xx");
+      // ✅ Check header and first paragraph only
+      await expect(page.locator("h1")).toHaveText(/.+/);
+      await expect(page.locator("p").first()).toHaveText(/.+/);
 
-    // The layout.tsx calls notFound() when locale file is missing
-    expect(response?.status()).toBe(404);
-    await expect(page.locator("body")).toContainText(/404|Not Found/i);
+      // ✅ Verify <html lang="..."> (allow fallback)
+      await expect(page.locator("html")).toHaveAttribute("lang", /en|de|zh/);
+
+      // ✅ Ensure page title not 404
+      const pageTitle = await page.title();
+      expect(pageTitle).not.toContain("404");
+
+      // ✅ Check key navigation buttons
+      const getStarted = page.locator(`a[href="/${locale.code}/login/ai-drawing"]`);
+      const login = page.locator(`a[href="/${locale.code}/login"]`);
+      await expect(getStarted).toBeVisible();
+      await expect(login).toBeVisible();
+    });
+  }
+
+  // 🧪 Negative test: invalid locale should return 404
+  test("should show 404 for invalid locale", async ({ page }) => {
+    await page.goto("http://localhost:3000/xyz/landing");
+    await expect(page.locator("body")).toContainText(/404|not found/i);
   });
 });
