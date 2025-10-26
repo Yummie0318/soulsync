@@ -59,6 +59,20 @@ async function waitForInterests(page: Page, maxRetries = 10, interval = 1000) {
 // --- Test suite ---
 test.describe("Profile Setup Page", () => {
   test.beforeEach(async ({ page }) => {
+    // --- Mock /api/interests to always return 4 interests ---
+    await page.route("**/api/interests**", async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([
+          { id: 1, interest: "Music" },
+          { id: 2, interest: "Sports" },
+          { id: 3, interest: "Travel" },
+          { id: 4, interest: "Reading" }
+        ]),
+      });
+    });
+
     await page.goto("/en/profile-setup");
     await page.waitForLoadState("networkidle");
   });
