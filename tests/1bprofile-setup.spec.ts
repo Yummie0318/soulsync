@@ -109,7 +109,7 @@ test.describe("Profile Setup Page", () => {
     await waitForSelectOptions(page, genderSelect);
     await genderSelect.selectOption({ label: "Male" });
 
-    // Star Sign
+    // Star Signs
     const starSignSelect = page.getByLabel("Star Sign");
     await waitForSelectOptions(page, starSignSelect);
     await starSignSelect.selectOption({ label: "♈ Aries (Mar 21 - Apr 19)" });
