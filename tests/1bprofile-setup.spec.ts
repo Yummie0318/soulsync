@@ -1,28 +1,25 @@
 import { test, expect, Page, Locator } from "@playwright/test";
 
 // --- Helper functions ---
-async function clickNext(page: Page) {
-  // Select only your app’s Next button (ignore Next.js DevTools)
-  const button = page.locator('button:has-text("Next")').first();
+async function waitForButtonEnabled(page: Page, name: string, timeout = 15000) {
+  const button = page.getByRole("button", { name: new RegExp(name, "i") }).first();
+  await button.waitFor({ state: "visible" });
 
-  // Wait for it to be visible and enabled
-  await expect(button).toBeVisible({ timeout: 10000 });
-  await expect(button).toBeEnabled({ timeout: 10000 });
+  await expect
+    .poll(async () => await button.isEnabled(), {
+      message: `Waiting for "${name}" button to be enabled`,
+      timeout,
+      intervals: [500],
+    })
+    .toBe(true);
 
-  // Click and wait for the next question/step to appear
-  await Promise.all([
-    page.waitForLoadState("domcontentloaded"),
-    page.waitForTimeout(500), // slight delay to allow transition
-    button.click(),
-  ]);
+  return button;
 }
 
-async function clickFinish(page: Page) {
-  const button = page.locator('button:has-text("Finish")').first();
-  await expect(button).toBeVisible();
-  await expect(button).toBeEnabled();
+async function clickButton(page: Page, name: string) {
+  const button = await waitForButtonEnabled(page, name);
   await Promise.all([
-    page.waitForLoadState("domcontentloaded"),
+    page.waitForLoadState("networkidle"),
     button.click(),
   ]);
 }
@@ -44,35 +41,40 @@ test.describe("Profile Setup Page", () => {
     // --- Step 1: Select interests ---
     const interests = page.locator('input[type="checkbox"]');
     await selectCheckboxes(interests, 3);
-    await clickNext(page);
+    await clickButton(page, "Next");
 
     // --- Step 2: Enter birthdate ---
     await page.getByPlaceholder("YYYY").fill("1995");
     await page.getByPlaceholder("MM").fill("06");
     await page.getByPlaceholder("DD").fill("15");
-    await clickNext(page);
+    await clickButton(page, "Next");
 
     // --- Step 3: About You ---
     await page.getByLabel("Gender").selectOption({ index: 1 });
+
     const lookingFor = page.getByLabel(/Looking For/i).locator('input[type="checkbox"]');
     await selectCheckboxes(lookingFor, 2);
+
     await page.getByLabel("Star Sign").selectOption({ label: "Aries" });
-    await clickNext(page);
+
+    // Give the page time to update validation states before enabling
+    await page.waitForTimeout(1000);
+    await clickButton(page, "Next");
 
     // --- Step 4: Location ---
     await page.getByLabel("Country").selectOption({ index: 1 });
     await page.getByPlaceholder("City").fill("Manila");
     await page.getByPlaceholder("Postal Code (required)").fill("1000");
-    await clickNext(page);
+    await clickButton(page, "Next");
 
     // --- Step 5: Finishing Touches ---
     const photoPath = "tests/fixtures/photo.png";
     await page.getByLabel("Upload Photo").setInputFiles(photoPath);
     await page.getByLabel("Favorite Quote").fill("Keep learning every day!");
-    await clickFinish(page);
+    await clickButton(page, "Finish");
 
     // --- Assert final success message ---
-    await expect(page.getByText("Profile setup complete!")).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText("Welcome to your personal room!")).toBeVisible();
+    await expect(page.locator('text=Profile setup complete!')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Welcome to your personal room!')).toBeVisible();
   });
 });
