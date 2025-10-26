@@ -21,6 +21,28 @@ async function clickButton(page: Page, name: string) {
   await Promise.all([page.waitForLoadState("networkidle"), button.click()]);
 }
 
+// --- Polling helper for selects ---
+async function waitForSelectOptions(page: Page, selectLocator: ReturnType<Page['getByLabel']>, timeout = 20000) {
+  await expect(selectLocator).toBeVisible({ timeout });
+  await expect
+    .poll(async () => {
+      const options = await selectLocator.locator('option').count();
+      return options > 1;
+    }, { timeout, intervals: [500] })
+    .toBe(true);
+}
+
+// --- Polling helper for file inputs ---
+async function waitForFileInput(page: Page, fileInputLocator: ReturnType<Page['getByLabel']>, timeout = 20000) {
+  await expect(fileInputLocator).toBeVisible({ timeout });
+  await expect
+    .poll(async () => {
+      const disabled = await fileInputLocator.isDisabled();
+      return !disabled;
+    }, { timeout, intervals: [500] })
+    .toBe(true);
+}
+
 // --- Test suite ---
 test.describe("Profile Setup Page", () => {
   test.beforeEach(async ({ page }) => {
@@ -32,15 +54,20 @@ test.describe("Profile Setup Page", () => {
     // --- Step 1: Select Interests ---
     console.log("🔍 Selecting interests...");
     const interestCheckboxes = page.getByRole("checkbox");
+    await expect(interestCheckboxes.first()).toBeVisible({ timeout: 20000 });
+
     const count = await interestCheckboxes.count();
     console.log(`✅ Found ${count} interest checkboxes`);
-    if (count === 0) throw new Error("No interest elements found on Step 1!");
 
-    for (let i = 0; i < Math.min(3, count); i++) {
-      const interest = interestCheckboxes.nth(i);
-      await interest.scrollIntoViewIfNeeded();
-      await interest.check({ force: true });
-      await page.waitForTimeout(300);
+    if (count === 0) {
+      console.warn("⚠️ No interest elements found. Skipping Step 1.");
+    } else {
+      for (let i = 0; i < Math.min(3, count); i++) {
+        const interest = interestCheckboxes.nth(i);
+        await interest.scrollIntoViewIfNeeded();
+        await interest.check({ force: true });
+        await page.waitForTimeout(300);
+      }
     }
 
     await clickButton(page, "Next");
@@ -57,12 +84,14 @@ test.describe("Profile Setup Page", () => {
     const aboutYouHeader = page.getByText(/about you/i);
     await expect(aboutYouHeader).toBeVisible({ timeout: 30000 });
 
+    // Gender
     const genderSelect = page.getByLabel("Gender");
-    await expect(genderSelect).toBeVisible({ timeout: 30000 });
+    await waitForSelectOptions(page, genderSelect);
     await genderSelect.selectOption({ label: "Male" });
 
+    // Star Sign
     const starSignSelect = page.getByLabel("Star Sign");
-    await expect(starSignSelect).toBeVisible({ timeout: 30000 });
+    await waitForSelectOptions(page, starSignSelect);
     await starSignSelect.selectOption({ label: "♈ Aries (Mar 21 - Apr 19)" });
 
     // "Looking For" checkboxes
@@ -75,7 +104,7 @@ test.describe("Profile Setup Page", () => {
     // --- Step 4: Location ---
     console.log("📍 Filling location...");
     const countrySelect = page.getByLabel("Country");
-    await expect(countrySelect).toBeVisible({ timeout: 20000 });
+    await waitForSelectOptions(page, countrySelect);
     await countrySelect.selectOption({ index: 1 });
 
     await page.getByLabel("City").fill("Manila");
@@ -84,9 +113,15 @@ test.describe("Profile Setup Page", () => {
 
     // --- Step 5: Finishing Touches ---
     console.log("🎨 Uploading photo & quote...");
+    const photoInput = page.getByLabel(/upload photo/i);
+    await waitForFileInput(page, photoInput);
     const photoPath = "tests/fixtures/photo.png";
-    await page.getByLabel(/upload photo/i).setInputFiles(photoPath);
-    await page.getByLabel(/Favorite Quote/i).fill("Keep learning every day!");
+    await photoInput.setInputFiles(photoPath);
+
+    const quoteInput = page.getByLabel(/Favorite Quote/i);
+    await expect(quoteInput).toBeVisible({ timeout: 10000 });
+    await quoteInput.fill("Keep learning every day!");
+
     await clickButton(page, "Finish");
 
     // --- Verify success ---
