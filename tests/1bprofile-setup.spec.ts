@@ -35,13 +35,11 @@ test.describe("Profile Setup Page", () => {
     // --- Step 1: Select Interests ---
     console.log("🔍 Waiting for interest elements...");
 
-    // Try multiple patterns: button, checkbox, or selectable div
-    let interests = page.locator('button, input[type="checkbox"], [role="button"]');
-
+    const interests = page.locator('button, input[type="checkbox"], [role="button"]');
     await expect(interests.first()).toBeVisible({ timeout: 20000 });
+
     const count = await interests.count();
     console.log(`✅ Found ${count} possible interest elements`);
-
     if (count === 0) throw new Error("No interest elements found on Step 1!");
 
     for (let i = 0; i < Math.min(3, count); i++) {
@@ -62,7 +60,11 @@ test.describe("Profile Setup Page", () => {
     await clickButton(page, "Next");
 
     // --- Step 3: About You ---
-    await page.getByLabel(/gender/i).selectOption({ index: 1 });
+    console.log("🧍 Selecting gender...");
+    const genderSelect = page.locator('select[name*="gender"], select').first();
+    await expect(genderSelect).toBeVisible({ timeout: 15000 });
+    await genderSelect.selectOption({ index: 1 });
+    await page.waitForTimeout(300);
 
     // "Looking For" — toggle buttons or checkboxes
     const lookingFor = page.locator('input[type="checkbox"], [role="button"]');
