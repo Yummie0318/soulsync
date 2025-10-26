@@ -55,16 +55,21 @@ test.describe("Profile Setup Page", () => {
     await clickButton(page, "Next");
 
     // --- Step 3: About You ---
-    console.log("❤️ Filling About You...");
-    await page.getByLabel("Gender").selectOption({ label: "Male" });
-    await page.getByLabel("Star Sign").selectOption({
-      label: "♈ Aries (Mar 21 - Apr 19)",
-    });
+    console.log("❤️ Waiting for About You section...");
 
-    // Select “Looking For” checkboxes
+    const genderSelect = page.locator('select[name*="gender"]');
+    await expect(genderSelect).toBeVisible({ timeout: 20000 });
+    await genderSelect.selectOption({ label: "Male" });
+
+    const starSignSelect = page.locator('select[name*="star"]');
+    await expect(starSignSelect).toBeVisible({ timeout: 20000 });
+    await starSignSelect.selectOption({ label: "♈ Aries (Mar 21 - Apr 19)" });
+
+    // "Looking For" checkboxes
     await page.getByText("Female").click();
     await page.getByText("Friendship").click();
 
+    await page.waitForTimeout(500);
     await clickButton(page, "Next");
 
     // --- Step 4: Location ---
