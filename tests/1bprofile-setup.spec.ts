@@ -56,12 +56,14 @@ test.describe("Profile Setup Page", () => {
 
     // --- Step 3: About You ---
     console.log("❤️ Waiting for About You section...");
+    const aboutYouHeader = page.getByText(/about you/i);
+    await expect(aboutYouHeader).toBeVisible({ timeout: 20000 });
 
-    const genderSelect = page.locator('select[name*="gender"]');
+    const genderSelect = page.getByLabel("Gender");
     await expect(genderSelect).toBeVisible({ timeout: 20000 });
     await genderSelect.selectOption({ label: "Male" });
 
-    const starSignSelect = page.locator('select[name*="star"]');
+    const starSignSelect = page.getByLabel("Star Sign");
     await expect(starSignSelect).toBeVisible({ timeout: 20000 });
     await starSignSelect.selectOption({ label: "♈ Aries (Mar 21 - Apr 19)" });
 
