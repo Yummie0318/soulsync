@@ -43,6 +43,19 @@ async function waitForFileInput(page: Page, fileInputLocator: ReturnType<Page['g
     .toBe(true);
 }
 
+// --- Polling helper for interests (Step 1) ---
+async function waitForInterests(page: Page, maxRetries = 10, interval = 1000) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const checkboxes = page.getByRole("checkbox");
+    const count = await checkboxes.count();
+    if (count > 0) return checkboxes;
+
+    console.log(`⚠️ Attempt ${attempt}: No interests found yet, retrying in ${interval}ms...`);
+    await page.waitForTimeout(interval);
+  }
+  throw new Error("❌ No interest checkboxes found after waiting");
+}
+
 // --- Test suite ---
 test.describe("Profile Setup Page", () => {
   test.beforeEach(async ({ page }) => {
@@ -53,23 +66,16 @@ test.describe("Profile Setup Page", () => {
   test("should complete all steps and submit profile setup successfully", async ({ page }) => {
     // --- Step 1: Select Interests ---
     console.log("🔍 Selecting interests...");
-    const interestCheckboxes = page.getByRole("checkbox");
-    await expect(interestCheckboxes.first()).toBeVisible({ timeout: 20000 });
-
+    const interestCheckboxes = await waitForInterests(page);
     const count = await interestCheckboxes.count();
     console.log(`✅ Found ${count} interest checkboxes`);
 
-    if (count === 0) {
-      console.warn("⚠️ No interest elements found. Skipping Step 1.");
-    } else {
-      for (let i = 0; i < Math.min(3, count); i++) {
-        const interest = interestCheckboxes.nth(i);
-        await interest.scrollIntoViewIfNeeded();
-        await interest.check({ force: true });
-        await page.waitForTimeout(300);
-      }
+    for (let i = 0; i < Math.min(3, count); i++) {
+      const interest = interestCheckboxes.nth(i);
+      await interest.scrollIntoViewIfNeeded();
+      await interest.check({ force: true });
+      await page.waitForTimeout(300);
     }
-
     await clickButton(page, "Next");
 
     // --- Step 2: Birthdate ---
