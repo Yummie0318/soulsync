@@ -34,7 +34,6 @@ test.describe("Profile Setup Page", () => {
   test("should complete all steps and submit profile setup successfully", async ({ page }) => {
     // --- Step 1: Select Interests ---
     console.log("🔍 Waiting for interest elements...");
-
     const interests = page.locator('button, input[type="checkbox"], [role="button"]');
     await expect(interests.first()).toBeVisible({ timeout: 20000 });
 
@@ -77,11 +76,29 @@ test.describe("Profile Setup Page", () => {
       await page.waitForTimeout(200);
     }
 
-    // --- Step 4: Select Star Sign (fixed locator) ---
+    // --- Step 4: Select Star Sign (✅ fixed for ♈ Aries format) ---
     console.log("✨ Selecting star sign...");
     const starSignSelect = page.locator('select[name*="star"], select').first();
     await expect(starSignSelect).toBeVisible({ timeout: 15000 });
-    await starSignSelect.selectOption({ label: "Aries" });
+
+    // Wait until dropdown options are loaded
+    await expect(async () => {
+      const count = await starSignSelect.locator("option").count();
+      expect(count).toBeGreaterThan(1);
+    }).toPass({ timeout: 20000 });
+
+    // Log available options
+    const options = await starSignSelect.locator("option").allTextContents();
+    console.log("🌟 Star sign options found:", options);
+
+    // Find the option containing "Aries"
+    const ariesOption = options.find(opt => opt.toLowerCase().includes("aries"));
+    if (!ariesOption) throw new Error("❌ 'Aries' option not found in star sign dropdown!");
+
+    // Select it using its full label (TypeScript-safe)
+    await starSignSelect.selectOption({ label: ariesOption });
+    console.log(`✅ Selected star sign: ${ariesOption}`);
+
     await page.waitForTimeout(500);
     await clickButton(page, "Next");
 
