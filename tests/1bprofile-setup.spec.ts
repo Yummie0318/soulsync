@@ -31,17 +31,15 @@ test.describe("Profile Setup Page", () => {
   test("should complete all steps and submit profile setup successfully", async ({ page }) => {
     // --- Step 1: Select Interests ---
     console.log("🔍 Selecting interests...");
-    const interests = page.locator('button, input[type="checkbox"], [role="button"]');
-    await expect(interests.first()).toBeVisible({ timeout: 20000 });
-
-    const count = await interests.count();
-    console.log(`✅ Found ${count} possible interest elements`);
+    const interestCheckboxes = page.getByRole("checkbox");
+    const count = await interestCheckboxes.count();
+    console.log(`✅ Found ${count} interest checkboxes`);
     if (count === 0) throw new Error("No interest elements found on Step 1!");
 
     for (let i = 0; i < Math.min(3, count); i++) {
-      const interest = interests.nth(i);
+      const interest = interestCheckboxes.nth(i);
       await interest.scrollIntoViewIfNeeded();
-      await interest.click({ force: true });
+      await interest.check({ force: true });
       await page.waitForTimeout(300);
     }
 
@@ -56,36 +54,39 @@ test.describe("Profile Setup Page", () => {
 
     // --- Step 3: About You ---
     console.log("❤️ Waiting for About You section...");
-    const aboutYouSection = page.getByText(/about you/i).locator('..'); // parent container
-    await expect(aboutYouSection).toBeVisible({ timeout: 30000 });
+    const aboutYouHeader = page.getByText(/about you/i);
+    await expect(aboutYouHeader).toBeVisible({ timeout: 30000 });
 
-    const genderSelect = aboutYouSection.locator('select[name*="gender"]');
+    const genderSelect = page.getByLabel("Gender");
     await expect(genderSelect).toBeVisible({ timeout: 30000 });
     await genderSelect.selectOption({ label: "Male" });
 
-    const starSignSelect = aboutYouSection.locator('select[name*="star"]');
+    const starSignSelect = page.getByLabel("Star Sign");
     await expect(starSignSelect).toBeVisible({ timeout: 30000 });
     await starSignSelect.selectOption({ label: "♈ Aries (Mar 21 - Apr 19)" });
 
     // "Looking For" checkboxes
-    await aboutYouSection.locator('text=Female').click();
-    await aboutYouSection.locator('text=Friendship').click();
+    await page.getByLabel("Female").check();
+    await page.getByLabel("Friendship").check();
 
     await page.waitForTimeout(500);
     await clickButton(page, "Next");
 
     // --- Step 4: Location ---
     console.log("📍 Filling location...");
-    await page.getByLabel(/country/i).selectOption({ index: 1 });
-    await page.getByPlaceholder(/city/i).fill("Manila");
-    await page.getByPlaceholder(/postal/i).fill("1000");
+    const countrySelect = page.getByLabel("Country");
+    await expect(countrySelect).toBeVisible({ timeout: 20000 });
+    await countrySelect.selectOption({ index: 1 });
+
+    await page.getByLabel("City").fill("Manila");
+    await page.getByLabel("Postal Code").fill("1000");
     await clickButton(page, "Next");
 
     // --- Step 5: Finishing Touches ---
     console.log("🎨 Uploading photo & quote...");
     const photoPath = "tests/fixtures/photo.png";
     await page.getByLabel(/upload photo/i).setInputFiles(photoPath);
-    await page.getByPlaceholder(/favorite quote/i).fill("Keep learning every day!");
+    await page.getByLabel(/Favorite Quote/i).fill("Keep learning every day!");
     await clickButton(page, "Finish");
 
     // --- Verify success ---
