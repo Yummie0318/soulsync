@@ -54,9 +54,10 @@ test.describe("Profile Setup Page", () => {
     await clickButton(page, "Next");
 
     // --- Step 2: Enter Birthdate ---
-    await page.getByPlaceholder(/year/i).fill("1995");
-    await page.getByPlaceholder(/month/i).fill("06");
-    await page.getByPlaceholder(/day/i).fill("15");
+    console.log("📅 Filling birthdate...");
+    await page.getByPlaceholder("YYYY").fill("1995");
+    await page.getByPlaceholder("MM").fill("06");
+    await page.getByPlaceholder("DD").fill("15");
     await page.waitForTimeout(300);
     await clickButton(page, "Next");
 
