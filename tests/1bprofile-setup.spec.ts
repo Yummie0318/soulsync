@@ -77,18 +77,22 @@ test.describe("Profile Setup Page", () => {
       await page.waitForTimeout(200);
     }
 
-    await page.getByLabel(/star sign/i).selectOption({ label: "Aries" });
+    // --- Step 4: Select Star Sign (fixed locator) ---
+    console.log("✨ Selecting star sign...");
+    const starSignSelect = page.locator('select[name*="star"], select').first();
+    await expect(starSignSelect).toBeVisible({ timeout: 15000 });
+    await starSignSelect.selectOption({ label: "Aries" });
     await page.waitForTimeout(500);
     await clickButton(page, "Next");
 
-    // --- Step 4: Location ---
+    // --- Step 5: Location ---
     await page.getByLabel(/country/i).selectOption({ index: 1 });
     await page.getByPlaceholder(/city/i).fill("Manila");
     await page.getByPlaceholder(/postal/i).fill("1000");
     await page.waitForTimeout(500);
     await clickButton(page, "Next");
 
-    // --- Step 5: Finishing Touches ---
+    // --- Step 6: Finishing Touches ---
     const photoPath = "tests/fixtures/photo.png";
     await page.getByLabel(/upload photo/i).setInputFiles(photoPath);
     await page.getByPlaceholder(/favorite quote/i).fill("Keep learning every day!");
