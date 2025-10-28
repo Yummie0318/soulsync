@@ -84,19 +84,38 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
     // include generated_by in SELECT so front-end can detect AI messages
     const messagesResult = await pool.query(
       `SELECT 
-         m.id, m.sender_id, m.receiver_id, m.content, m.message_type,
-         m.file_name, m.file_path, m.status, m.emoji_reactions,
-         m.created_at, m.edited, m.edited_at, m.deleted, m.generated_by,
-         r.id AS reply_to_id, r.content AS reply_content, r.sender_id AS reply_sender_id
+         m.id,
+         m.sender_id,
+         m.receiver_id,
+         m.content,
+         m.message_type,
+         m.file_name,
+         m.file_path,
+         m.status,
+         m.emoji_reactions,
+         m.schedule_id,
+         m.schedule_status,
+        m.rescheduled_date,  -- ✅ fixed
+         m.created_at,
+         m.edited,
+         m.edited_at,
+         m.deleted,
+         m.generated_by,
+         r.id AS reply_to_id,
+         r.content AS reply_content,
+         r.sender_id AS reply_sender_id
        FROM tblmessage m
        LEFT JOIN tblmessage r ON m.reply_to_id = r.id
-       WHERE ((m.sender_id = $1 AND m.receiver_id = $2)
-          OR (m.sender_id = $2 AND m.receiver_id = $1))
-         AND m.deleted = false
+       WHERE (
+         (m.sender_id = $1 AND m.receiver_id = $2)
+         OR (m.sender_id = $2 AND m.receiver_id = $1)
+       )
+       AND m.deleted = false
        ORDER BY m.created_at ASC`,
       [senderId, receiverId]
     );
-
+    
+    
     console.log(`💬 Loaded ${messagesResult.rows.length} messages`);
 
     const messages = messagesResult.rows.map((msg: any) => ({
@@ -228,8 +247,15 @@ export async function POST(req: Request, context: { params: Promise<{ id: string
     const row = insertResult.rows[0];
     const message = { ...row, created_at_local: toLocalISOString(row.created_at, tzOffsetMinutes) };
 
-    await emitSocket("message:new", message);
-    return NextResponse.json(message, { status: 201 });
+// send normal socket event
+await emitSocket("message:new", message);
+
+// also emit special event if scheduler
+if (message.message_type === "scheduler") {
+  await emitSocket("datescheduler:new", message);
+}
+
+return NextResponse.json(message, { status: 201 });
   } catch (err: any) {
     console.error("❌ [POST /api/messages] Error:", err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });

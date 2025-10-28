@@ -71,6 +71,19 @@ interface UserType {
   quote?: string | null;
 }
 
+interface ScheduleType {
+  id: number;
+  sender_id: number;
+  receiver_id: number;
+  proposed_date: string;
+  location: string;
+  activity: string;
+  vibe: string;
+  status: string;
+  rescheduled_date?: string;
+  ai_plan: string;
+}
+
 // --------- Updated PostType ----------
 export type PostType = {
   id: number;
@@ -137,6 +150,121 @@ export default function MyRoomPage() {
   const router = useRouter();
   const pathname = usePathname();
   const locale = pathname.split("/")[1]?.split("-")[0] ?? "en";
+
+  // BACKGROUND COLOR
+  const [bgClass, setBgClass] = useState(
+    "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200"
+  );
+
+
+// ⬇ display schedule
+const [schedules, setSchedules] = useState<ScheduleType[]>([]);
+const [loadingSchedules, setLoadingSchedules] = useState(true);
+
+// Calendar states
+const now = new Date();
+const [calendarMonth, setCalendarMonth] = useState(now.getMonth()); // 0-indexed
+const [calendarYear, setCalendarYear] = useState(now.getFullYear());
+const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+const [selectedSchedules, setSelectedSchedules] = useState<ScheduleType[]>([]);
+const [modalOpen, setModalOpen] = useState(false);
+
+// -------------------- date schedule display --------------------
+useEffect(() => {
+  if (!userId) return;
+
+  const fetchSchedules = async () => {
+    setLoadingSchedules(true);
+    try {
+      const res = await fetch(`/api/ai/datescheduler?user_id=${userId}`);
+      const data = await res.json();
+      if (data.success) {
+        setSchedules(data.schedules || []);
+      } else {
+        console.error("Failed to fetch schedules:", data.error);
+      }
+    } catch (err) {
+      console.error("Error fetching schedules:", err);
+    } finally {
+      setLoadingSchedules(false);
+    }
+  };
+
+  fetchSchedules();
+}, [userId]);
+
+  // BACKGROUND COLOR
+
+  useEffect(() => {
+    const userId = localStorage.getItem("user_id");
+    if (!userId) return;
+
+    fetch(`/api/user/background?user_id=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.background_classes) {
+          setBgClass(data.background_classes);
+        }
+      })
+      .catch(err => console.error("Failed to fetch user background:", err));
+  }, []);
+
+
+// -------------------- Filter schedules --------------------
+// Pending schedules this month
+const pendingSchedules = schedules.filter((s: ScheduleType) => {
+  const d = new Date(s.proposed_date);
+  return (
+    s.status === "pending" &&
+    d.getMonth() === calendarMonth &&
+    d.getFullYear() === calendarYear
+  );
+});
+
+// Active schedules this month (accepted or rescheduled)
+const activeSchedules = schedules.filter((s: ScheduleType) => {
+  const dateToCheck = s.rescheduled_date || s.proposed_date;
+  const d = new Date(dateToCheck);
+  return (
+    (s.status === "accepted" || !!s.rescheduled_date) &&
+    d.getMonth() === calendarMonth &&
+    d.getFullYear() === calendarYear
+  );
+});
+
+// -------------------- Map schedules per date for calendar --------------------
+const schedulesMap: Record<string, ScheduleType[]> = {};
+activeSchedules.forEach((s) => {
+  const dateStr = new Date(s.rescheduled_date || s.proposed_date).toDateString();
+  if (!schedulesMap[dateStr]) schedulesMap[dateStr] = [];
+  schedulesMap[dateStr].push(s);
+});
+
+// -------------------- Helper to get all days in current calendar month --------------------
+const getDaysInMonth = (year: number, month: number) => {
+  const date = new Date(year, month, 1);
+  const days: Date[] = [];
+  while (date.getMonth() === month) {
+    days.push(new Date(date));
+    date.setDate(date.getDate() + 1);
+  }
+  return days;
+};
+const daysInMonth = getDaysInMonth(calendarYear, calendarMonth);
+
+// -------------------- Handle date click --------------------
+const handleDateClick = (date: Date) => {
+  const dateStr = date.toDateString();
+  const schedulesForDate = schedulesMap[dateStr] || [];
+  if (schedulesForDate.length > 0) {
+    setSelectedDate(date);
+    setSelectedSchedules(schedulesForDate);
+    setModalOpen(true);
+  }
+};
+
+
+
 
   // -------------------- Effects --------------------
   useEffect(() => {
@@ -254,6 +382,18 @@ const openEditModal = (post: PostType) => {
     }
   };
 
+
+  const handleFindMatches = () => {
+    router.push(`/${locale}/finding-match`);
+  };
+  
+  const settings = () => {
+    router.push(`/${locale}/setting`);
+  };
+  
+  
+  
+  
   const handleLogout = () => {
     // 🚨 Clear user session
     localStorage.removeItem("user_id");
@@ -430,7 +570,10 @@ const handlePost = async () => {
 
   return (
     <AuthGuard>
-    <main className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 pb-24 px-2 sm:px-4">
+  <main className={`relative min-h-screen ${bgClass} pb-24 transition-all duration-500`}>
+  
+
+      
       {/* Background Glow */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-1/3 left-1/4 w-60 sm:w-72 h-60 sm:h-72 bg-pink-600/20 rounded-full blur-3xl animate-pulse" />
@@ -705,28 +848,31 @@ const handlePost = async () => {
 
                 {/* Actions */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mt-4 w-full">
-                  <motion.button
-                    className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-white text-xs sm:text-sm font-medium col-span-2 sm:col-span-1 w-full shadow-md"
-                    style={{
-                      background: "linear-gradient(45deg, #ec4899, #8b5cf6, #6366f1, #ec4899)",
-                      backgroundSize: "300% 300%"
-                    }}
-                    animate={{
-                      backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"]
-                    }}
-                    transition={{
-                      duration: 4,
-                      repeat: Infinity,
-                      ease: "linear"
-                    }}
-                  >
-                    <Search className="w-4 h-4" /> {t("findMatches")}
-                  </motion.button>
+                   <motion.button
+                      onClick={handleFindMatches}
+                      className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-white text-xs sm:text-sm font-medium col-span-2 sm:col-span-1 w-full shadow-md"
+                      style={{
+                        background: "linear-gradient(45deg, #ec4899, #8b5cf6, #6366f1, #ec4899)",
+                        backgroundSize: "300% 300%",
+                      }}
+                      animate={{
+                        backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"],
+                      }}
+                      transition={{
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                    >
+                      <Search className="w-4 h-4" /> {t("findMatches")}
+                    </motion.button>
 
-                  <button className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white text-xs sm:text-sm font-medium transition w-full">
+                    <button
+                    onClick={settings} // <-- add this
+                    className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white text-xs sm:text-sm font-medium transition w-full"
+                  >
                     <Settings className="w-4 h-4" /> {t("settings")}
                   </button>
-
                   <button
                     onClick={handleLogout}
                     className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-red-500/20 border border-white/10 text-red-400 text-xs sm:text-sm font-medium transition w-full"
@@ -802,35 +948,202 @@ const handlePost = async () => {
   )}
 </div>
 
+{/* --------------------  Date Plans (Calendar View) -------------------- */}
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.1, duration: 0.6 }}
+  className="bg-gray-800/40 backdrop-blur-md rounded-2xl shadow-md p-5 border border-white/10 w-full"
+>
+  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+    <Calendar className="w-5 h-5 text-pink-400" /> {t("datePlans")}
+  </h3>
 
+  {/* Month Navigation */}
+  <div className="flex justify-between items-center mb-2">
+    <button
+      onClick={() => {
+        if (calendarMonth === 0) {
+          setCalendarMonth(11);
+          setCalendarYear(calendarYear - 1);
+        } else setCalendarMonth(calendarMonth - 1);
+      }}
+      className="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 transition"
+    >
+      Previous
+    </button>
+    <span className="font-semibold">
+      {new Date(calendarYear, calendarMonth).toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      })}
+    </span>
+    <button
+      onClick={() => {
+        if (calendarMonth === 11) {
+          setCalendarMonth(0);
+          setCalendarYear(calendarYear + 1);
+        } else setCalendarMonth(calendarMonth + 1);
+      }}
+      className="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 transition"
+    >
+      Next
+    </button>
+  </div>
 
-    {/* Date Plans */}
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.6 }}
-        className="bg-gray-800/40 backdrop-blur-md rounded-2xl shadow-md p-5 border border-white/10 w-full"
+  {/* Calendar Grid */}
+  <div className="grid grid-cols-7 gap-2 text-center">
+    {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((day) => (
+      <div key={day} className="font-semibold text-gray-400">{day}</div>
+    ))}
+
+    {loadingSchedules
+      ? // Skeleton Loader for calendar
+        Array.from({ length: daysInMonth.length }).map((_, idx) => (
+          <div
+            key={idx}
+            className="h-10 w-10 rounded-full bg-gray-700 animate-pulse"
+          />
+        ))
+      : daysInMonth.map((date) => {
+          const dateStr = date.toDateString();
+          const hasSchedule = schedulesMap[dateStr]?.length > 0;
+
+          return (
+            <button
+              key={dateStr}
+              onClick={() => handleDateClick(date)}
+              className={`h-10 w-10 rounded-full flex items-center justify-center transition
+                ${hasSchedule ? "bg-pink-400 text-white font-bold" : "hover:bg-gray-700 text-gray-200"}
+                ${selectedDate?.toDateString() === dateStr ? "ring-2 ring-pink-500" : ""}`}
+            >
+              {date.getDate()}
+            </button>
+          );
+        })}
+  </div>
+</motion.div>
+
+{/* -------------------- Schedule Modal -------------------- */}
+{modalOpen && (
+  <div
+    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+    onClick={() => setModalOpen(false)}
+  >
+    <div
+      className="bg-gray-800/80 rounded-2xl shadow-lg p-5 w-full max-w-md relative"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <h3 className="text-lg font-semibold text-white mb-4">
+        {selectedDate?.toDateString()}
+      </h3>
+      <button
+        className="absolute top-3 right-3 text-gray-400 hover:text-white"
+        onClick={() => setModalOpen(false)}
       >
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-pink-400" /> {t("datePlans")}
-        </h3>
-        <div className="flex flex-col items-center text-center py-6">
-          <Calendar className="w-10 h-10 text-pink-400 mb-2" />
-          <p className="text-sm text-gray-400">{t("noActiveConversations")}</p>
-          <p className="text-sm text-pink-400">{t("startMatching")}</p>
+        ✕
+      </button>
+
+      <div className="space-y-3">
+        {loadingSchedules
+          ? // Skeleton for modal
+            Array.from({ length: 3 }).map((_, idx) => (
+              <div
+                key={idx}
+                className="bg-gray-700/50 p-3 rounded-xl animate-pulse flex flex-col gap-2"
+              >
+                <div className="h-4 w-1/2 bg-gray-600 rounded" />
+                <div className="h-3 w-2/3 bg-gray-600 rounded" />
+                <div className="h-3 w-1/4 bg-gray-600 rounded" />
+              </div>
+            ))
+          : selectedSchedules.map((s) => (
+              <div
+                key={s.id}
+                className="bg-gray-700/50 p-3 rounded-xl border border-white/10 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center"
+              >
+                <div className="space-y-1">
+                  <p className="text-sm sm:text-base text-white font-semibold">
+                    {new Date(s.proposed_date).toLocaleString()}
+                  </p>
+                  {s.rescheduled_date && (
+                    <p className="text-xs text-yellow-400">
+                      Rescheduled: {new Date(s.rescheduled_date).toLocaleString()}
+                    </p>
+                  )}
+                  <p className="text-xs sm:text-sm text-gray-300">{s.activity}</p>
+                  <p className="text-xs sm:text-sm text-gray-400">{s.location}</p>
+                  <p className="text-xs sm:text-sm text-pink-400">{s.vibe}</p>
+                  {s.ai_plan && (
+                    <p className="text-xs sm:text-sm text-gray-200 mt-1">AI Plan: {s.ai_plan}</p>
+                  )}
+                </div>
+                <span
+                  className={`mt-2 sm:mt-0 px-2 py-1 rounded-lg text-xs font-semibold ${
+                    s.status === "accepted"
+                      ? "bg-green-500 text-white"
+                      : s.rescheduled_date
+                      ? "bg-yellow-500 text-gray-900"
+                      : "bg-purple-500 text-white"
+                  }`}
+                >
+                  {s.rescheduled_date ? "RESCHEDULED" : s.status.toUpperCase()}
+                </span>
+              </div>
+            ))}
+      </div>
+    </div>
+  </div>
+)}
+
+{/* -------------------- Your Date Plans (Pending) -------------------- */}
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.2, duration: 0.6 }}
+  className="bg-gray-800/40 backdrop-blur-md rounded-2xl shadow-md p-5 border border-white/10 w-full mt-4"
+>
+  <h3 className="text-lg font-semibold">{t("yourDatePlans")}</h3>
+
+  {loadingSchedules
+    ? // Skeleton for pending plans
+      Array.from({ length: 3 }).map((_, idx) => (
+        <div
+          key={idx}
+          className="bg-gray-700/50 p-3 rounded-xl animate-pulse flex flex-col gap-2 mt-2"
+        >
+          <div className="h-4 w-1/3 bg-gray-600 rounded" />
+          <div className="h-3 w-2/3 bg-gray-600 rounded" />
+          <div className="h-3 w-1/4 bg-gray-600 rounded" />
         </div>
-      </motion.div>
-
-      {/* Your Date Plans */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.6 }}
-        className="bg-gray-800/40 backdrop-blur-md rounded-2xl shadow-md p-5 border border-white/10 w-full"
-      >
-        <h3 className="text-lg font-semibold">{t("yourDatePlans")}</h3>
+      ))
+    : pendingSchedules.length === 0 ? (
         <p className="text-sm text-gray-400 mt-2">{t("noDatePlans")}</p>
-      </motion.div>
+      ) : (
+        <ul className="mt-2 space-y-2">
+          {pendingSchedules.map((s) => (
+            <li
+              key={s.id}
+              className="bg-gray-700/50 p-2 rounded-lg flex flex-col sm:flex-row sm:justify-between items-start sm:items-center hover:bg-gray-700/70 transition"
+            >
+              <div className="space-y-1">
+                <p className="text-sm text-white font-semibold">{s.activity}</p>
+                <p className="text-xs text-gray-400">{s.location}</p>
+                <p className="text-xs text-pink-400">{s.vibe}</p>
+                <p className="text-xs text-gray-300">
+                  {new Date(s.proposed_date).toLocaleString()}
+                </p>
+              </div>
+              <span className="mt-2 sm:mt-0 px-2 py-1 rounded-lg text-xs font-semibold bg-yellow-500 text-gray-900">
+                PENDING
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+</motion.div>
+
+
 
 
 

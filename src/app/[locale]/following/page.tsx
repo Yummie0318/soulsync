@@ -47,6 +47,38 @@ export default function FollowingPage() {
       ? parseInt(localStorage.getItem("user_id") || "0", 10)
       : 0;
 
+
+
+
+
+
+
+        // BACKGROUND COLOR
+  const [bgClass, setBgClass] = useState(
+    "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200"
+  );
+
+  useEffect(() => {
+    const userId = localStorage.getItem("user_id");
+    if (!userId) return;
+
+    fetch(`/api/user/background?user_id=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.background_classes) {
+          setBgClass(data.background_classes);
+        }
+      })
+      .catch(err => console.error("Failed to fetch user background:", err));
+  }, []);
+
+
+
+
+
+
+
+
 // Get age: prefer server-provided age, otherwise compute from year only
 const getAge = (ageFromServer?: number | null, year?: number | null): number | null => {
   if (typeof ageFromServer === "number" && !Number.isNaN(ageFromServer)) {
@@ -128,7 +160,8 @@ const getAge = (ageFromServer?: number | null, year?: number | null): number | n
 
   return (
     <AuthGuard>
-    <main className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100">
+ <main className={`relative min-h-screen ${bgClass} text-gray-100 transition-all duration-500`}>
+
       {/* Header */}
       <div className="sticky top-0 bg-gray-900/80 backdrop-blur-md z-20 px-4 py-4 border-b border-white/10 flex items-center justify-center">
         <button

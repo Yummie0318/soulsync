@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useSocket } from "@/providers/SocketProvider";
-
+import AuthGuard from "@/components/AuthGuard"; // adjust path if needed
 /**
  * ✅ Stable CallPage.tsx
  * - fixes receiverId mismatch (black remote video)
@@ -310,6 +310,7 @@ export default function CallPage() {
   }, [socket, isConnected, call_id, caller_id, receiver_id, type, log, endCall]);
 
   return (
+    <AuthGuard>
     <div className="flex flex-col items-center justify-center h-screen bg-black text-white">
       <h2 className="text-lg font-semibold mb-4">
         {type === "video" ? "🎥 Video Call" : "🎧 Audio Call"} #{call_id}
@@ -348,5 +349,6 @@ export default function CallPage() {
         End Call
       </button>
     </div>
+    </AuthGuard>
   );
 }

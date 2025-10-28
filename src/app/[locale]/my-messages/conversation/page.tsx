@@ -10,7 +10,7 @@ import data from '@emoji-mart/data';
 import { Picker } from 'emoji-mart';
 
 import socket from "@/lib/socketClient"; // ✅ works with your current file
-
+import AuthGuard from "@/components/AuthGuard"; // adjust path if needed
 
 // ------------------------------------------------------
 // Types
@@ -39,6 +39,13 @@ type Message = {
   edited?: boolean;
   edited_at?: string | null;
   edited_at_local?: string | null;
+  generated_by?: "ai" | "user"; // <-- new field
+  schedule_id?: number; // optional
+
+  schedule_status?: "pending" | "accepted" | "declined" | "cancelled" | "rescheduled";
+
+  rescheduled_date?: string | null; 
+
 };
 
 type User = {
@@ -88,14 +95,123 @@ export default function ConversationPage() {
 
   const [showAIMenu, setShowAIMenu] = useState(false);
 
+      // Date sceduler
+  const [showDateScheduler, setShowDateScheduler] = useState(false);
+  const [dateValue, setDateValue] = useState("");
+  const [location, setLocation] = useState("");
+  const [activity, setActivity] = useState("");
+  const [vibe, setVibe] = useState("");
+  const [rescheduleId, setRescheduleId] = useState<number | null>(null);
+  const [showDateRescheduler, setShowDateRescheduler] = useState(false); // for reschedule modal
+  const [isRescheduling, setIsRescheduling] = useState(false);
+
+  const [loadingIcebreaker, setLoadingIcebreaker] = useState(false); // For Icebreaker
+
+
+// 🎨 Theme state
+// Theme
+const [showThemeModal, setShowThemeModal] = useState(false);
+const [selectedTheme, setSelectedTheme] = useState<any>(null); // stores current theme object
+const [customBackground, setCustomBackground] = useState<string | null>(null);
+const [uploading, setUploading] = useState(false);
+
+
+// Load saved background once on mount
+useEffect(() => {
+  if (!userId || !receiver) return;
+
+  const conversationKey =
+    userId < receiver.id ? `${userId}_${receiver.id}` : `${receiver.id}_${userId}`;
+
+  const fetchTheme = async () => {
+    try {
+      const res = await fetch(`/api/conversation/theme?conversationKey=${conversationKey}`);
+      const data = await res.json();
+
+      if (data.success && data.theme) {
+        setSelectedTheme(data.theme);
+      }
+    } catch (err) {
+      console.error("❌ Failed to load theme:", err);
+    }
+  };
+
+  fetchTheme();
+}, [userId, receiver]);
+
+useEffect(() => {
+  if (!socket) return;
+
+  const handleThemeUpdate = (data: any) => {
+    if (data?.conversationKey && data.theme) {
+      const conversationKey =
+        userId && receiver
+          ? userId < receiver.id
+            ? `${userId}_${receiver.id}`
+            : `${receiver.id}_${userId}`
+          : null;
+
+      if (conversationKey && data.conversationKey === conversationKey) {
+        console.log("🎨 Theme updated via socket:", data.theme);
+        setSelectedTheme(data.theme);
+      }
+    }
+  };
+
+  socket.on("conversation:theme:update", handleThemeUpdate);
+
+  return () => {
+    socket.off("conversation:theme:update", handleThemeUpdate);
+  };
+}, [socket, userId, receiver]);
+
+
+
+const handleSaveTheme = async (themeType: string, value: string | null) => {
+  if (!userId || !receiver) {
+    showNotification("Missing user info");
+    return;
+  }
+
+  const conversationKey =
+    userId < receiver.id ? `${userId}_${receiver.id}` : `${receiver.id}_${userId}`;
+
+  try {
+    setUploading(true);
+
+    const res = await fetch("/api/conversation/theme", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        conversationKey,
+        background_type: themeType,
+        background_value: value,
+        updated_by: userId,
+      }),
+    });
+
+    const data = await res.json();
+    setUploading(false);
+
+    if (res.ok && data.success) {
+      showNotification("🎨 Theme updated successfully!");
+      setSelectedTheme(data.theme);
+      setShowThemeModal(false);
+    } else {
+      showNotification(data.error || "Failed to save theme");
+    }
+  } catch (err) {
+    console.error("❌ Save theme error:", err);
+    showNotification("Error while saving theme");
+    setUploading(false);
+  }
+};
+
+
+
   const openAIIcebreaker = () => {
     // TODO: open icebreaker modal (next step)
     console.log("Open AI Icebreaker modal");
-  };
-  
-  const openAIDateScheduler = () => {
-    // TODO: open dating scheduler modal
-    console.log("Open AI Dating Scheduler");
   };
   
   const openCustomOption = () => {
@@ -215,6 +331,128 @@ const navigateToCall = async (type: "audio" | "video") => {
     console.log("[🧭 navigateToCall] Done");
   }
 };
+
+
+// ------------------------------------------------------
+// Date Scheduler
+useEffect(() => {
+  if (!socket) return;
+
+  // 🟢 Handle regular status updates (accepted / declined / pending)
+  const handleScheduleStatus = (data: {
+    message_id: number;
+    status: string;
+    sender_id?: number;
+    receiver_id?: number;
+  }) => {
+    console.log("📡 [Socket] schedule:update received", data);
+
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === data.message_id
+          ? ({ ...msg, schedule_status: data.status } as Message)
+          : msg
+      )
+    );
+  };
+
+  // 🔁 Handle reschedule updates (new date/time/location/activity/vibe)
+// 🔁 Handle reschedule updates
+const handleRescheduled = (data: {
+  message_id: number;
+  rescheduled_date?: string;
+}) => {
+  console.log("📡 [Socket] schedule:rescheduled received", data);
+
+  setMessages((prev) =>
+    prev.map((msg) =>
+      msg.id === data.message_id
+        ? ({
+            ...msg,
+            schedule_status: "rescheduled",
+            rescheduled_date: data.rescheduled_date,
+          } as Message)
+        : msg
+    )
+  );
+};
+
+  
+
+  socket.on("schedule:update", handleScheduleStatus);
+  socket.on("schedule:rescheduled", handleRescheduled);
+
+  return () => {
+    socket.off("schedule:update", handleScheduleStatus);
+    socket.off("schedule:rescheduled", handleRescheduled);
+  };  
+}, [socket]);
+
+// ------------------------------------------------------
+// Handle Reschedule Submit
+// ------------------------------------------------------
+// Handle Reschedule Submit
+const handleRescheduleSubmit = async () => {
+  if (!rescheduleId || !dateValue) {
+    showNotification("Please select a new date before submitting");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/ai/datescheduler/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message_id: rescheduleId,
+        status: "rescheduled",
+        reschedule_data: {
+          sender_id: userId,
+          receiver_id: receiver?.id,
+          date: dateValue, // ✅ only date now
+        },
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      showNotification("🔁 Date rescheduled!");
+
+      // ✅ Update local message state
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === rescheduleId
+            ? ({
+                ...m,
+                schedule_status: "rescheduled",
+                rescheduled_date: data.updatedSchedule?.rescheduled_date,
+              } as Message)
+            : m
+        )
+      );
+
+      // ✅ Broadcast to other user via socket
+      socket?.emit("schedule:rescheduled", {
+        message_id: rescheduleId,
+        sender_id: userId,
+        receiver_id: receiver?.id,
+        updatedSchedule: data.updatedSchedule,
+      });
+
+      // ✅ Reset scheduler modal
+      setShowDateScheduler(false);
+      setDateValue("");
+      setRescheduleId(null);
+    } else {
+      showNotification(data.error || "Failed to reschedule date");
+    }
+  } catch (err) {
+    console.error("❌ Reschedule error:", err);
+    showNotification("Server error while rescheduling");
+  }
+};
+
+  
 
   // ------------------------------------------------------
   // Load logged user
@@ -593,7 +831,6 @@ const handleSend = async (e?: FormEvent) => {
   }
 };
 
-
 // ------------------------------------------------------
 // Delete message
 // ------------------------------------------------------
@@ -685,7 +922,32 @@ const handleDelete = async (id: number) => {
 // Render
 // -------------------------
 return (
-  <main className="relative h-screen flex flex-col bg-gray-900 text-gray-200">
+
+  // <main className="relative h-screen flex flex-col bg-gray-900 text-gray-200">
+  <AuthGuard>
+<main
+  className="relative h-screen flex flex-col text-gray-200 transition-all duration-500"
+
+  style={{
+    background:
+      selectedTheme?.background_type === "image"
+        ? `url(${selectedTheme.background_value}) center/cover no-repeat`
+        : selectedTheme?.background_type === "color" &&
+          selectedTheme.background_value === "rose"
+        ? "linear-gradient(to bottom right, #db2777, #7e22ce)"
+        : selectedTheme?.background_type === "color" &&
+          selectedTheme.background_value === "blue"
+        ? "linear-gradient(to bottom right, #0891b2, #1d4ed8)"
+        : selectedTheme?.background_type === "color" &&
+          selectedTheme.background_value === "amber"
+        ? "linear-gradient(to bottom right, #f59e0b, #b45309)"
+        : "#111827",
+  }}
+  
+
+>
+
+
     {/* Header */}
     <header className="sticky top-0 bg-gray-900/95 backdrop-blur-md z-20 px-4 py-3 border-b border-white/10 flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -786,6 +1048,9 @@ return (
     )}
 
 
+
+
+
 {/* 💬 Messages Container */}
 <div
   ref={messagesContainerRef}
@@ -863,17 +1128,185 @@ return (
               </div>
             )}
 
+
+
+
+
+{/* RESCHEDULER DATE */}
+{showDateRescheduler && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+    {/* 🌀 Global Loader Overlay */}
+    <AnimatePresence>
+      {isRescheduling && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-[60]"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
+            className="w-10 h-10 border-4 border-yellow-400 border-t-transparent rounded-full"
+          />
+          <p className="mt-4 text-sm text-yellow-300 font-medium">
+            Please wait... Rescheduling your date
+          </p>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+    <div className="bg-gray-900 text-white rounded-2xl shadow-lg p-6 w-[90%] sm:w-[400px] space-y-4 relative z-50">
+      <h3 className="text-lg font-semibold text-yellow-400 text-center">
+        🔁 Reschedule Date
+      </h3>
+
+      <p className="text-sm text-gray-300 text-center">
+        Choose a new date and time for your meetup.
+      </p>
+
+      {/* Date/Time Input */}
+      <input
+        type="datetime-local"
+        value={dateValue}
+        onChange={(e) => setDateValue(e.target.value)}
+        disabled={isRescheduling}
+        className="w-full p-2 rounded-md bg-gray-800 border border-gray-700 text-white"
+      />
+
+      <div className="flex justify-between mt-6">
+        <button
+          onClick={() => {
+            if (isRescheduling) return;
+            setShowDateRescheduler(false);
+            setDateValue("");
+            setRescheduleId(null);
+          }}
+          disabled={isRescheduling}
+          className="px-4 py-2 rounded-md bg-gray-700 hover:bg-gray-600 text-sm disabled:opacity-50"
+        >
+          Cancel
+        </button>
+
+        <button
+          disabled={isRescheduling}
+          onClick={async () => {
+            if (!rescheduleId || !dateValue) {
+              showNotification("⚠️ Please select a new date before submitting");
+              return;
+            }
+
+            const selectedDate = new Date(dateValue);
+            const now = new Date();
+
+            // 🕒 Prevent past dates
+            if (selectedDate <= now) {
+              showNotification("🚫 You cannot select a past date. Please choose a future date.");
+              return;
+            }
+
+            try {
+              setIsRescheduling(true); // ✅ Show loader
+
+              const res = await fetch("/api/ai/datescheduler/status", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  message_id: rescheduleId,
+                  status: "rescheduled",
+                  reschedule_data: {
+                    sender_id: msg.sender_id,
+                    receiver_id: msg.receiver_id,
+                    date: dateValue,
+                    location,
+                    activity,
+                    vibe,
+                  },
+                }),
+              });
+
+              const data = await res.json();
+
+              if (data.success) {
+                showNotification("🔁 Date rescheduled successfully!");
+
+                // ✅ Update local UI
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === rescheduleId
+                      ? ({
+                          ...m,
+                          schedule_status: "rescheduled",
+                          rescheduled_date: dateValue,
+                        } as Message)
+                      : m
+                  )
+                );
+
+                // ✅ Emit via socket
+                socket?.emit("schedule:rescheduled", {
+                  message_id: rescheduleId,
+                  rescheduled_date: dateValue,
+                  sender_id: msg.sender_id,
+                  receiver_id: msg.receiver_id,
+                });
+
+                setShowDateRescheduler(false);
+                setDateValue("");
+                setRescheduleId(null);
+              } else {
+                showNotification(data.error || "❌ Failed to reschedule date");
+              }
+            } catch (err) {
+              console.error("❌ Reschedule error:", err);
+              showNotification("⚠️ Server error while rescheduling");
+            } finally {
+              setIsRescheduling(false); // ✅ Hide loader
+            }
+          }}
+          className="px-4 py-2 rounded-md bg-yellow-600 hover:bg-yellow-700 text-sm disabled:opacity-50"
+        >
+          {isRescheduling ? "Processing..." : "Confirm"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+
+
+
+
+
+
+
+
             {/* 💬 Message Bubble */}
+
             <div
-              className={`relative max-w-[85%] sm:max-w-md px-4 py-3 rounded-2xl shadow-lg transition-all ${
-                isMine
-                  ? "bg-gradient-to-r from-pink-600 to-purple-600 text-white"
-                  : "bg-white/5 text-gray-100 border border-white/10"
-              }`}
-            >
-              {/* ⋯ Action button */}
+                className={`relative max-w-[85%] sm:max-w-md px-4 py-3 rounded-2xl shadow-lg transition-all overflow-visible pointer-events-auto
+                  ${
+                    // 🎯 Different colors for message types
+                    msg.message_type === "ai_schedule"
+                      ? "bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-400 text-gray-900 border border-yellow-300/40" // Date scheduler (soft yellow tone)
+                      : msg.message_type === "ai_icebreaker"
+                      ? "bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-700 text-white border border-cyan-400/40 animate-pulse-slow" // Icebreaker (blue theme)
+                      : msg.generated_by === "ai"
+                      ? "bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-700 text-white border border-cyan-400/40 animate-pulse-slow" // AI normal message
+                      : isMine
+                      ? "bg-gradient-to-r from-pink-600 to-purple-600 text-white" // My own messages
+                      : "bg-white/5 text-gray-100 border border-white/10" // Other user's normal message
+                  }`}
+                style={{ isolation: "isolate" }}
+              >
+
+
+              {/* ⋯ Action Button */}
               <div
-                className={`absolute ${isMine ? "-left-8" : "-right-8"} top-1/2 -translate-y-1/2`}
+                className={`absolute z-40 ${isMine ? "-left-8" : "-right-8"} top-1/2 -translate-y-1/2`}
               >
                 <button
                   onClick={(e) => {
@@ -932,15 +1365,178 @@ return (
                 </div>
               )}
 
-              {/* ✉️ Message Content */}
-              {msg.content && (
-                <div className="whitespace-pre-wrap text-sm leading-relaxed break-words">
-                  {msg.content}
-                </div>
-              )}
+     {/* 🧩 Message Content */}
+  {msg.content && (
+    <div className="whitespace-pre-wrap text-sm leading-relaxed break-words relative z-30">
+      {msg.generated_by === "ai" && (
+        <span className="absolute -top-3 -right-3 bg-cyan-500 text-white text-[10px] px-2 py-[2px] rounded-full shadow-md">
+          AI
+        </span>
+      )}
+      {msg.content}
+    </div>
+  )}
+
+  
+{/* 🎯 AI Schedule Actions & Status */}
+{msg.message_type === "ai_schedule" && (
+  <div className="mt-3 flex flex-col gap-2">
+    {/* 🟡 Sender Side (My messages) */}
+    {isMine && (
+      <div className="text-xs text-gray-200 mt-1">
+        {msg.schedule_status === "pending" && (
+          <span className="px-2 py-1 bg-yellow-700/40 rounded-md">
+            ⏳ Waiting for response
+          </span>
+        )}
+
+        {msg.schedule_status === "accepted" && (
+          <span className="px-2 py-1 bg-green-700/40 rounded-md">
+            💖 Date accepted!
+          </span>
+        )}
+
+        {msg.schedule_status === "declined" && (
+          <span className="px-2 py-1 bg-red-700/40 rounded-md">
+            ❌ Date declined
+          </span>
+        )}
+
+      {msg.schedule_status === "rescheduled" && msg.rescheduled_date && (
+        <span className="px-2 py-1 bg-yellow-600/40 rounded-md text-yellow-100">
+          🔁 {isMine ? "Receiver requested a new date" : "Date has been rescheduled!"}
+          <br />
+          📅 <span className="font-semibold">
+            {new Date(msg.rescheduled_date).toLocaleString()}
+            
+          </span>
+        </span>
+      )}
+
+
+      </div>
+
+    )}
+
+    {/* 💌 Receiver Side */}
+    {!isMine && (
+      <>
+        {/* Pending — show action buttons */}
+        {msg.schedule_status === "pending" ? (
+          <div className="flex gap-2 flex-wrap">
+            {["accepted", "declined"].map((action) => (
+              <button
+                key={action}
+                onClick={async () => {
+                  try {
+                    const res = await fetch("/api/ai/datescheduler/status", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        message_id: msg.id,
+                        status: action,
+                      }),
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                      showNotification(
+                        action === "accepted"
+                          ? "💖 Date accepted!"
+                          : "❌ Date declined"
+                      );
+
+                      // ✅ Local UI update
+                      setMessages((prev) =>
+                        prev.map((m) =>
+                          m.id === msg.id
+                            ? ({ ...m, schedule_status: action } as Message)
+                            : m
+                        )
+                      );
+
+                      // ✅ Broadcast via socket so both sides update instantly
+                      socket?.emit("schedule:update", {
+                        message_id: msg.id,
+                        status: action,
+                        sender_id: msg.sender_id,
+                        receiver_id: msg.receiver_id,
+                      });
+                    } else {
+                      showNotification(data.error || "Failed to update");
+                    }
+                  } catch (err) {
+                    console.error(`❌ ${action} error:`, err);
+                    showNotification("Server error while updating");
+                  }
+                }}
+                className={`px-3 py-1 rounded-lg text-white text-xs transition ${
+                  action === "accepted"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-gray-700 hover:bg-gray-600"
+                }`}
+              >
+                {action === "accepted" ? "Accept" : "Decline"}
+              </button>
+            ))}
+
+            {/* 🔁 Reschedule */}
+            <button
+              onClick={() => {
+                setShowDateRescheduler(true);
+                setDateValue("");
+                setRescheduleId(msg.id ?? null);
+              }}
+              className="px-3 py-1 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white text-xs transition"
+            >
+              Reschedule
+            </button>
+
+
+          </div>
+        ) : (
+        // ✅ Not pending — just show status
+        <div className="text-xs text-gray-200 mt-1">
+          {msg.schedule_status === "accepted" && (
+            <span className="px-2 py-1 bg-green-700/40 rounded-md">
+              💖 You accepted this date!
+            </span>
+          )}
+
+          {msg.schedule_status === "declined" && (
+            <span className="px-2 py-1 bg-red-700/40 rounded-md">
+              ❌ You declined this date
+            </span>
+          )}
+
+          {msg.schedule_status === "rescheduled" && msg.rescheduled_date && (
+            <span className="px-2 py-1 bg-yellow-600/40 rounded-md text-yellow-100">
+              🔁 {isMine ? "Receiver requested a new date" : "Date has been rescheduled!"}
+              <br />
+              📅 <span className="font-semibold">
+                {new Date(msg.rescheduled_date).toLocaleString()}
+              </span>
+            </span>
+          )}
+
+
+        </div>
+
+        )}
+      </>
+    )}
+  </div>
+)}
+
+
 
               {/* 📎 Attachments */}
               {renderAttachmentWithPreview(msg)}
+
+
+
+
 
               {/* 😍 Emoji Reactions */}
               {(msg.emoji_reactions ?? []).length > 0 && (
@@ -1220,6 +1816,7 @@ return (
 </form>
 
 
+
 {/* 🌟 AI Tools Floating Menu */}
 <AnimatePresence>
   {showAIMenu && (
@@ -1229,66 +1826,72 @@ return (
       exit={{ opacity: 0, y: -10 }}
       className="absolute top-16 right-4 bg-gray-800 border border-gray-700 rounded-xl shadow-lg p-3 z-30 w-52"
     >
-   <button
-  onClick={async () => {
-    setShowAIMenu(false);
+      <button
+        onClick={async () => {
+          setShowAIMenu(false);
 
-    // ✅ Validate we have both sender & receiver
-    if (!userId || !receiver) return showNotification("Missing user info");
+          if (!userId || !receiver)
+            return showNotification("Missing user info");
 
-    try {
-      console.log("🧊 Sending AI Icebreaker request:", {
-        sender_id: userId,
-        receiver_id: receiver.id,
-      });
+          setLoadingIcebreaker(true); // 🌀 Show loader
 
-      const res = await fetch("/api/ai/icebreaker", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sender_id: userId, // ✅ logged-in user
-          receiver_id: receiver.id, // ✅ target user
-        }),
-      });
+          try {
+            console.log("🧊 Sending AI Icebreaker request:", {
+              sender_id: userId,
+              receiver_id: receiver.id,
+            });
 
-      const data = await res.json();
-      console.log("🧊 Icebreaker API response:", data);
+            const res = await fetch("/api/ai/icebreaker", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                sender_id: userId,
+                receiver_id: receiver.id,
+              }),
+            });
 
-      if (res.ok && data?.success && data.message) {
-        setNewMessage(data.message); // auto-fill input box
-        showNotification("💡 AI Ice Breaker ready!");
-      } else {
-        showNotification(data?.error || "Failed to generate ice breaker");
-      }
-    } catch (err) {
-      console.error("❌ AI Icebreaker error:", err);
-      showNotification("Server error while generating ice breaker");
-    }
-  }}
-  className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-700 transition text-sm"
->
-  🤖 Generate Ice Breaker
-</button>
+            const data = await res.json();
+            console.log("🧊 Icebreaker API response:", data);
 
+            if (res.ok && data?.success && data.message) {
+              setNewMessage(data.message);
+              showNotification("💡 AI Ice Breaker ready!");
+            } else {
+              showNotification(
+                data?.error || "Failed to generate ice breaker"
+              );
+            }
+          } catch (err) {
+            console.error("❌ AI Icebreaker error:", err);
+            showNotification("Server error while generating ice breaker");
+          } finally {
+            setLoadingIcebreaker(false); // ✅ Hide loader
+          }
+        }}
+        className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-700 transition text-sm"
+      >
+        🤖 Generate Ice Breaker
+      </button>
 
       <button
         onClick={() => {
           setShowAIMenu(false);
-          openAIDateScheduler();
+          setShowDateScheduler(true);
         }}
         className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-700 transition text-sm"
       >
         💌 AI Date Scheduler
       </button>
 
+      {/* 🎨 Custom Background (open modal) */}
       <button
         onClick={() => {
           setShowAIMenu(false);
-          openCustomOption();
+          setShowThemeModal(true);
         }}
         className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-700 transition text-sm"
       >
-        🧠 Custom AI Assistant
+        🎨 Custom Background
       </button>
 
       <button
@@ -1301,6 +1904,293 @@ return (
   )}
 </AnimatePresence>
 
+{/* 🌀 Global Loader Overlay (for AI Icebreaker & Scheduler) */}
+<AnimatePresence>
+  {(loading || loadingIcebreaker) && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-[9999]"
+    >
+      <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-pink-500 border-solid mb-4"></div>
+      <p className="text-gray-300 text-lg font-medium">
+        {loading ? "Generating your date plan..." : "Crafting your icebreaker..."}
+      </p>
+    </motion.div>
+  )}
+</AnimatePresence>
+
+
+
+
+
+
+{/* 💌 AI Date Scheduler Modal */}
+<AnimatePresence>
+  {showDateScheduler && (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
+    >
+      <div className="relative bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-md shadow-2xl overflow-hidden">
+        <h2 className="text-lg font-bold mb-4 text-pink-400">
+          💌 Plan a Date with AI
+        </h2>
+
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (!userId || !receiver)
+              return showNotification("Missing user info");
+
+            setLoading(true);
+            try {
+              const apiUrl = rescheduleId
+                ? "/api/ai/datescheduler/reschedule"
+                : "/api/ai/datescheduler";
+
+              const body = rescheduleId
+                ? {
+                    schedule_id: rescheduleId,
+                    new_date: dateValue,
+                    location,
+                    activity,
+                    vibe,
+                  }
+                : {
+                    sender_id: userId,
+                    receiver_id: receiver.id,
+                    date: dateValue,
+                    location,
+                    activity,
+                    vibe,
+                  };
+
+              const res = await fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+              });
+
+              const data = await res.json();
+              console.log("💌 Scheduler API response:", data);
+
+              if (res.ok && data?.success) {
+                showNotification(
+                  rescheduleId
+                    ? "🕓 Date rescheduled successfully!"
+                    : "💫 AI Date Plan generated!"
+                );
+              } else {
+                showNotification(
+                  data?.error || "Failed to schedule/reschedule date"
+                );
+              }
+            } catch (err) {
+              console.error("❌ AI Date Scheduler error:", err);
+              showNotification("Server error while scheduling date");
+            } finally {
+              setLoading(false);
+              setShowDateScheduler(false);
+              setRescheduleId(null); // reset after closing
+            }
+          }}
+          className="space-y-4"
+        >
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">
+              📅 Date & Time
+            </label>
+            <input
+              type="datetime-local"
+              value={dateValue}
+              onChange={(e) => setDateValue(e.target.value)}
+              required
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">
+              📍 Location
+            </label>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g. BGC, Manila"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">
+              🎯 Activity
+            </label>
+            <input
+              type="text"
+              value={activity}
+              onChange={(e) => setActivity(e.target.value)}
+              placeholder="e.g. dinner, hiking, museum"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">💫 Vibe</label>
+            <input
+              type="text"
+              value={vibe}
+              onChange={(e) => setVibe(e.target.value)}
+              placeholder="e.g. romantic, adventurous, chill"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              type="button"
+              onClick={() => setShowDateScheduler(false)}
+              className="px-4 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 rounded-lg bg-pink-600 hover:bg-pink-700 text-white transition disabled:opacity-50"
+            >
+              {loading ? "✨ Generating Magic..." : "Generate Plan"}
+            </button>
+          </div>
+        </form>
+
+        {/* 🌸 Loader Overlay */}
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center rounded-2xl z-50"
+          >
+            {/* Pulsing heart animation */}
+            <div className="flex space-x-2 mb-4">
+              <div className="w-3 h-3 bg-pink-400 rounded-full animate-bounce"></div>
+              <div className="w-3 h-3 bg-pink-500 rounded-full animate-bounce delay-150"></div>
+              <div className="w-3 h-3 bg-pink-600 rounded-full animate-bounce delay-300"></div>
+            </div>
+
+            <p className="text-pink-300 text-sm font-medium text-center">
+              💭 AI is crafting your perfect date plan...
+            </p>
+            <p className="text-gray-400 text-xs mt-1 text-center">
+              This usually takes a few seconds — hang tight!
+            </p>
+          </motion.div>
+        )}
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
+
+
+
+{/* 🎨 Theme / Background Modal */}
+{/* 🎨 Theme / Background Modal */}
+<AnimatePresence>
+  {showThemeModal && (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
+    >
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-[90%] max-w-md shadow-2xl space-y-4 text-gray-200">
+        <h2 className="text-lg font-bold text-center text-pink-400">
+          🎨 Customize Chat Background
+        </h2>
+
+        <p className="text-sm text-gray-400 text-center">
+          Pick a theme color or upload your own background.
+        </p>
+
+        {/* Preset Colors */}
+        <div className="grid grid-cols-4 gap-3 mt-4">
+          {[
+            { id: "default", label: "Default", color: "bg-gray-900" },
+            { id: "rose", label: "Rose", color: "bg-gradient-to-r from-pink-600 to-purple-700" },
+            { id: "blue", label: "Blue", color: "bg-gradient-to-r from-cyan-600 to-blue-700" },
+            { id: "amber", label: "Amber", color: "bg-gradient-to-r from-amber-500 to-orange-600" },
+          ].map((theme) => (
+            <button
+              key={theme.id}
+              onClick={() => {
+                setCustomBackground(theme.id);
+                localStorage.setItem("chat-bg", theme.id);
+                handleSaveTheme(
+                  theme.id === "default" ? "default" : "color",
+                  theme.id
+                ); // ✅ save to DB
+              }}
+              className={`h-16 rounded-xl shadow-md border border-white/10 transition hover:scale-105 ${theme.color}`}
+              title={theme.label}
+              disabled={uploading}
+            ></button>
+          ))}
+        </div>
+
+        {/* File Upload */}
+        <div className="mt-6 text-center">
+          <label
+            htmlFor="bgUpload"
+            className={`cursor-pointer inline-block bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm transition ${
+              uploading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            {uploading ? "⏳ Uploading..." : "📁 Choose File"}
+          </label>
+
+          <input
+            id="bgUpload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            disabled={uploading}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = async () => {
+                  const imageUrl = reader.result as string;
+                  setCustomBackground(imageUrl);
+                  localStorage.setItem("chat-bg", imageUrl);
+
+                  // ✅ Save as "image" theme type
+                  await handleSaveTheme("image", imageUrl);
+                };
+                reader.readAsDataURL(file);
+              }
+            }}
+          />
+        </div>
+
+        {/* Cancel Button */}
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={() => setShowThemeModal(false)}
+            className="px-4 py-2 rounded-md bg-gray-700 hover:bg-gray-600 text-sm"
+            disabled={uploading}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
 
     {/* Image Preview */}
@@ -1333,6 +2223,7 @@ return (
       )}
     </AnimatePresence>
   </main>
+  </AuthGuard>
 );
 
 }

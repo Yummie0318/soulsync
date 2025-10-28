@@ -70,7 +70,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     s.on("connect", () => {
       setIsConnected(true);
       log("✅ Connected to server", { socketId: s.id });
-      showNotification("🟢 Connected to call server");
+      // showNotification("🟢 Connected to call server");
 
       const userId = localStorage.getItem("user_id");
       if (userId) {
@@ -87,7 +87,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     s.on("disconnect", (reason) => {
       setIsConnected(false);
       log("⚪ Disconnected", { reason }, "gray");
-      showNotification("⚪ Disconnected from call server");
+      // showNotification("⚪ Disconnected from call server");
     });
 
     // ======================================================
@@ -96,7 +96,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     s.on("connect_error", (err) => {
       setIsConnected(false);
       log("🔴 Connection error", { message: err.message, stack: err.stack }, "red");
-      showNotification("🔴 Socket connection failed");
+      // showNotification("🔴 Socket connection failed");
     });
 
     // ======================================================
