@@ -1054,7 +1054,6 @@ const handlePost = async () => {
       })}
 </div>
 </motion.div>
-
 {/* -------------------- Schedule Modal -------------------- */}
 {modalOpen && (
   <div
