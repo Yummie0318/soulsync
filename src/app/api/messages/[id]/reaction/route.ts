@@ -42,24 +42,23 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       updatedReactions.push({ emoji, user_id, username });
     }
 
-    // 🟢 4. Save back to DB with UTC timestamp
-    const nowUtc = new Date().toISOString(); // UTC timestamp
+    // 🟢 4. Save back to DB
     const result = await pool.query(
       `
       UPDATE tblmessage
       SET emoji_reactions = $1::jsonb,
-          updated_at = $2
-      WHERE id = $3
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $2
       RETURNING id, sender_id, receiver_id, emoji_reactions
       `,
-      [JSON.stringify(updatedReactions), nowUtc, messageId]
+      [JSON.stringify(updatedReactions), messageId]
     );
 
     const updatedRow = result.rows[0];
 
-    // 🟢 5. Emit via /emit endpoint
+    // 🟢 5. Emit via /emit endpoint (not socket.emit!)
     try {
-      await fetch("https://soulsync-socket-server.onrender.com/emit", {
+      const emitRes = await fetch("https://soulsync-socket-server.onrender.com/emit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -69,11 +68,10 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             sender_id: updatedRow.sender_id,
             receiver_id: updatedRow.receiver_id,
             emoji_reactions: updatedRow.emoji_reactions,
-            updated_at: nowUtc, // include UTC timestamp
           },
         }),
       });
-      console.log("📤 [message:reaction] Emit sent");
+      console.log("📤 [message:reaction] Emit sent →", emitRes.status);
     } catch (emitErr) {
       console.error("❌ Emit failed:", emitErr);
     }
@@ -82,7 +80,6 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       success: true,
       message_id: updatedRow.id,
       emoji_reactions: updatedRow.emoji_reactions,
-      updated_at: nowUtc, // send UTC timestamp to client
     });
   } catch (err: any) {
     console.error("❌ [API] /api/messages/[id]/reaction Error:", err);
