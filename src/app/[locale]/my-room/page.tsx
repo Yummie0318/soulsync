@@ -172,6 +172,7 @@ export default function MyRoomPage() {
       .catch(err => console.error("Failed to fetch user background:", err));
   }, []);
 
+
 // ⬇ display schedule
 const [schedules, setSchedules] = useState<ScheduleType[]>([]);
 const [loadingSchedules, setLoadingSchedules] = useState(true);
@@ -184,37 +185,7 @@ const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 const [selectedSchedules, setSelectedSchedules] = useState<ScheduleType[]>([]);
 const [modalOpen, setModalOpen] = useState(false);
 
-// -------------------- Helper to parse UTC date --------------------
-const parseUTC = (dateStr?: string) => {
-  if (!dateStr) return null;
-  return new Date(dateStr + "Z"); // Force UTC parsing
-};
-
-// -------------------- Helper to format UTC date for display --------------------
-const formatUTC = (dateStr?: string | Date) => {
-  if (!dateStr) return "";
-  const d = typeof dateStr === "string" ? parseUTC(dateStr) : dateStr;
-  if (!d) return "";
-  return d.toLocaleString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: "UTC", // keep everything in UTC
-  });
-};
-
-// Helper to get UTC year/month/day key
-const getUTCDateKey = (dateStr: string) => {
-  const d = parseUTC(dateStr);
-  if (!d) return "";
-  return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
-};
-
-// -------------------- Fetch schedules --------------------
+// -------------------- date schedule display --------------------
 useEffect(() => {
   if (!userId) return;
 
@@ -237,6 +208,19 @@ useEffect(() => {
 
   fetchSchedules();
 }, [userId]);
+
+// -------------------- Helper to parse UTC date --------------------
+const parseUTC = (dateStr: string) => {
+  if (!dateStr) return null;
+  return new Date(dateStr + "Z"); // Force UTC parsing
+};
+
+// Helper to get UTC year/month/day key
+const getUTCDateKey = (dateStr: string) => {
+  const d = parseUTC(dateStr);
+  if (!d) return "";
+  return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+};
 
 // -------------------- Filter schedules --------------------
 // Pending schedules this month
@@ -295,6 +279,7 @@ const handleDateClick = (date: Date) => {
     setModalOpen(true);
   }
 };
+
 
 
 
@@ -1070,8 +1055,6 @@ const handlePost = async () => {
 </div>
 </motion.div>
 
-
-{/* -------------------- Schedule Modal -------------------- */}
 {/* -------------------- Schedule Modal -------------------- */}
 {modalOpen && (
   <div
@@ -1086,12 +1069,7 @@ const handlePost = async () => {
       <div className="flex justify-between items-center p-5 border-b border-gray-700">
         <h3 className="text-xl font-bold text-white">
           {selectedDate
-            ? new Date(selectedDate).toLocaleDateString(undefined, {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })
+            ? new Date(selectedDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
             : ""}
         </h3>
         <button
@@ -1104,24 +1082,8 @@ const handlePost = async () => {
 
       {/* Content */}
       <div className="overflow-y-auto p-5 space-y-4">
-        {/* Helper: format UTC date */}
-        {(() => {
-          const formatUTC = (dateStr?: string) => {
-            if (!dateStr) return "";
-            const d = new Date(dateStr + "Z"); // Force UTC parsing
-            return d.toLocaleString(undefined, {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-            });
-          };
-
-          if (loadingSchedules) {
-            // Skeleton loading
-            return Array.from({ length: 3 }).map((_, idx) => (
+        {loadingSchedules
+          ? Array.from({ length: 3 }).map((_, idx) => (
               <div
                 key={idx}
                 className="bg-gray-700/50 p-4 rounded-xl animate-pulse flex flex-col gap-2"
@@ -1130,60 +1092,46 @@ const handlePost = async () => {
                 <div className="h-3 w-2/3 bg-gray-600 rounded" />
                 <div className="h-3 w-1/4 bg-gray-600 rounded" />
               </div>
-            ));
-          }
-
-          if (selectedSchedules.length === 0) {
-            return <p className="text-sm text-gray-400 mt-2">No schedules found.</p>;
-          }
-
-          return (
-            <ul className="space-y-2">
-              {selectedSchedules.map((s) => (
-                <li
-                  key={s.id}
-                  className="bg-gray-800/70 p-4 rounded-xl border border-gray-700 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center hover:bg-gray-700/80 transition"
-                >
-                  <div className="space-y-1">
-                    <p className="text-sm sm:text-base text-white font-semibold">{s.activity}</p>
-                    <p className="text-xs sm:text-sm text-gray-400">{s.location}</p>
-                    <p className="text-xs sm:text-sm text-pink-400">{s.vibe}</p>
-                    <p className="text-xs sm:text-sm text-gray-300">
-                      {formatUTC(s.proposed_date)}
+            ))
+          : selectedSchedules.map((s) => (
+              <div
+                key={s.id}
+                className="bg-gray-800/70 p-4 rounded-xl border border-gray-700 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center transition hover:bg-gray-700/80"
+              >
+                <div className="space-y-1">
+                  <p className="text-sm sm:text-base text-white font-semibold">
+                    {new Date(s.proposed_date).toLocaleString()}
+                  </p>
+                  {s.rescheduled_date && (
+                    <p className="text-xs text-yellow-400">
+                      Rescheduled: {new Date(s.rescheduled_date).toLocaleString()}
                     </p>
-                    {s.rescheduled_date && (
-                      <p className="text-xs sm:text-sm text-yellow-400">
-                        Rescheduled: {formatUTC(s.rescheduled_date)}
-                      </p>
-                    )}
-                    {s.ai_plan && (
-                      <p className="text-xs sm:text-sm text-gray-200 mt-1">
-                        AI Plan: {s.ai_plan}
-                      </p>
-                    )}
-                  </div>
+                  )}
+                  <p className="text-xs sm:text-sm text-gray-300">{s.activity}</p>
+                  <p className="text-xs sm:text-sm text-gray-400">{s.location}</p>
+                  <p className="text-xs sm:text-sm text-pink-400">{s.vibe}</p>
+                  {s.ai_plan && (
+                    <p className="text-xs sm:text-sm text-gray-200 mt-1">AI Plan: {s.ai_plan}</p>
+                  )}
+                </div>
 
-                  <span
-                    className={`mt-3 sm:mt-0 px-3 py-1 rounded-lg text-xs font-semibold ${
-                      s.status === "accepted"
-                        ? "bg-green-500 text-white"
-                        : s.rescheduled_date
-                        ? "bg-yellow-500 text-gray-900"
-                        : "bg-purple-500 text-white"
-                    }`}
-                  >
-                    {s.rescheduled_date ? "RESCHEDULED" : s.status.toUpperCase()}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          );
-        })()}
+                <span
+                  className={`mt-3 sm:mt-0 px-3 py-1 rounded-lg text-xs font-semibold ${
+                    s.status === "accepted"
+                      ? "bg-green-500 text-white"
+                      : s.rescheduled_date
+                      ? "bg-yellow-500 text-gray-900"
+                      : "bg-purple-500 text-white"
+                  }`}
+                >
+                  {s.rescheduled_date ? "RESCHEDULED" : s.status.toUpperCase()}
+                </span>
+              </div>
+            ))}
       </div>
     </div>
   </div>
 )}
-
 
 {/* -------------------- Your Date Plans (Pending) -------------------- */}
 <motion.div
