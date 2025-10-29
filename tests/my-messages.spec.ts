@@ -21,7 +21,7 @@ test("💬 Verify Messages Page loads with conversations", async ({ page }) => {
     const firstConversation = page.locator("section button").first();
     await expect(firstConversation).toBeVisible();
   } else {
-    // No conversations yet message is visible
+    // No conversations yet message is visibles
     await expect(page.locator("text=No conversations yet 💬")).toBeVisible();
   }
 
