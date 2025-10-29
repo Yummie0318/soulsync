@@ -5,12 +5,12 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import getPool from "@/lib/db";
 
+// -------------------- POST Handler --------------------
 export async function POST(req: Request) {
   console.log("💌 [POST /api/ai/datescheduler] Request received...");
 
   try {
-    const { sender_id, receiver_id, date, location, activity, vibe } =
-      await req.json();
+    const { sender_id, receiver_id, date, location, activity, vibe } = await req.json();
 
     if (!sender_id || !receiver_id || !date) {
       return NextResponse.json(
@@ -126,21 +126,23 @@ Shared Interests: ${sharedInterests.length ? sharedInterests.join(", ") : "None"
 
     console.log("💌 AI Plan Generated!");
 
-    // 💾 Insert schedule (default: pending)
+    // 💾 Save schedule — store UTC ISO string
+    const utcDate = new Date(date).toISOString();
+
     const scheduleRes = await pool.query(
       `INSERT INTO tblaischedule 
          (sender_id, receiver_id, proposed_date, location, activity, vibe, ai_plan, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')
        RETURNING *`,
-      [sender_id, receiver_id, date, location, activity, vibe, aiPlan]
+      [sender_id, receiver_id, utcDate, location, activity, vibe, aiPlan]
     );
 
     const schedule = scheduleRes.rows[0];
 
-    // 💬 Insert message referencing schedule
+    // 💬 Insert AI-generated message
     const msgRes = await pool.query(
       `INSERT INTO tblmessage 
-       (sender_id, receiver_id, content, message_type, status, deleted, generated_by, schedule_id, schedule_status)
+         (sender_id, receiver_id, content, message_type, status, deleted, generated_by, schedule_id, schedule_status)
        VALUES ($1, $2, $3, 'ai_schedule', 'sent', false, 'ai', $4, 'pending')
        RETURNING *`,
       [
@@ -153,10 +155,10 @@ Shared Interests: ${sharedInterests.length ? sharedInterests.join(", ") : "None"
 
     const message = msgRes.rows[0];
 
-    // 🔗 Back-link tblaischedule.ai_message_id
+    // 🔗 Link message back to schedule
     await pool.query(
       `UPDATE tblaischedule 
-       SET ai_message_id = $1, updated_at = NOW()
+         SET ai_message_id = $1, updated_at = NOW()
        WHERE id = $2`,
       [message.id, schedule.id]
     );
@@ -200,7 +202,21 @@ export async function GET(req: Request) {
       [userId]
     );
 
-    return NextResponse.json({ success: true, schedules: res.rows });
+    // ✅ Normalize all date fields to UTC ISO
+    const schedules = res.rows.map((s) => ({
+      ...s,
+      proposed_date: s.proposed_date
+        ? new Date(s.proposed_date).toISOString()
+        : null,
+      rescheduled_date: s.rescheduled_date
+        ? new Date(s.rescheduled_date).toISOString()
+        : null,
+      updated_at: s.updated_at
+        ? new Date(s.updated_at).toISOString()
+        : null,
+    }));
+
+    return NextResponse.json({ success: true, schedules });
   } catch (err: any) {
     console.error("❌ [AI Scheduler GET Error]:", err);
     return NextResponse.json(

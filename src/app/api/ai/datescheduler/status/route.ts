@@ -66,6 +66,8 @@ export async function POST(req: Request) {
       const schedule_id = scheduleQuery.rows[0].id;
 
       // 🕒 Update tblaischedule
+      const utcRescheduleDate = new Date(date).toISOString();
+
       const scheduleUpdate = await pool.query(
         `
         UPDATE tblaischedule
@@ -79,8 +81,9 @@ export async function POST(req: Request) {
         WHERE id = $5
         RETURNING *;
         `,
-        [date, location, activity, vibe, schedule_id]
+        [utcRescheduleDate, location, activity, vibe, schedule_id]
       );
+      
 
       const updatedSchedule = scheduleUpdate.rows[0];
 

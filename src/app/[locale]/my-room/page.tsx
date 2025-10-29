@@ -156,6 +156,22 @@ export default function MyRoomPage() {
     "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200"
   );
 
+    // BACKGROUND COLOR
+
+    useEffect(() => {
+      const userId = localStorage.getItem("user_id");
+      if (!userId) return;
+  
+      fetch(`/api/user/background?user_id=${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.background_classes) {
+            setBgClass(data.background_classes);
+          }
+        })
+        .catch(err => console.error("Failed to fetch user background:", err));
+    }, []);
+
 
 // ⬇ display schedule
 const [schedules, setSchedules] = useState<ScheduleType[]>([]);
@@ -168,6 +184,23 @@ const [calendarYear, setCalendarYear] = useState(now.getFullYear());
 const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 const [selectedSchedules, setSelectedSchedules] = useState<ScheduleType[]>([]);
 const [modalOpen, setModalOpen] = useState(false);
+
+
+
+// 🕒 Helper to format UTC → Local time nicely
+function formatLocalDate(dateString?: string) {
+  if (!dateString) return "—";
+  const date = new Date(dateString);
+
+  return date.toLocaleString(undefined, {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 // -------------------- date schedule display --------------------
 useEffect(() => {
@@ -193,21 +226,7 @@ useEffect(() => {
   fetchSchedules();
 }, [userId]);
 
-  // BACKGROUND COLOR
 
-  useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    if (!userId) return;
-
-    fetch(`/api/user/background?user_id=${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.background_classes) {
-          setBgClass(data.background_classes);
-        }
-      })
-      .catch(err => console.error("Failed to fetch user background:", err));
-  }, []);
 
 
 // -------------------- Filter schedules --------------------
@@ -948,6 +967,7 @@ const handlePost = async () => {
   )}
 </div>
 
+
 {/* --------------------  Date Plans (Calendar View) -------------------- */}
 <motion.div
   initial={{ opacity: 0, y: 20 }}
@@ -998,8 +1018,7 @@ const handlePost = async () => {
     ))}
 
     {loadingSchedules
-      ? // Skeleton Loader for calendar
-        Array.from({ length: daysInMonth.length }).map((_, idx) => (
+      ? Array.from({ length: daysInMonth.length }).map((_, idx) => (
           <div
             key={idx}
             className="h-10 w-10 rounded-full bg-gray-700 animate-pulse"
@@ -1035,7 +1054,12 @@ const handlePost = async () => {
       onClick={(e) => e.stopPropagation()}
     >
       <h3 className="text-lg font-semibold text-white mb-4">
-        {selectedDate?.toDateString()}
+        {selectedDate?.toLocaleDateString(undefined, {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })}
       </h3>
       <button
         className="absolute top-3 right-3 text-gray-400 hover:text-white"
@@ -1046,8 +1070,7 @@ const handlePost = async () => {
 
       <div className="space-y-3">
         {loadingSchedules
-          ? // Skeleton for modal
-            Array.from({ length: 3 }).map((_, idx) => (
+          ? Array.from({ length: 3 }).map((_, idx) => (
               <div
                 key={idx}
                 className="bg-gray-700/50 p-3 rounded-xl animate-pulse flex flex-col gap-2"
@@ -1057,40 +1080,55 @@ const handlePost = async () => {
                 <div className="h-3 w-1/4 bg-gray-600 rounded" />
               </div>
             ))
-          : selectedSchedules.map((s) => (
-              <div
-                key={s.id}
-                className="bg-gray-700/50 p-3 rounded-xl border border-white/10 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center"
-              >
-                <div className="space-y-1">
-                  <p className="text-sm sm:text-base text-white font-semibold">
-                    {new Date(s.proposed_date).toLocaleString()}
-                  </p>
-                  {s.rescheduled_date && (
-                    <p className="text-xs text-yellow-400">
-                      Rescheduled: {new Date(s.rescheduled_date).toLocaleString()}
-                    </p>
-                  )}
-                  <p className="text-xs sm:text-sm text-gray-300">{s.activity}</p>
-                  <p className="text-xs sm:text-sm text-gray-400">{s.location}</p>
-                  <p className="text-xs sm:text-sm text-pink-400">{s.vibe}</p>
-                  {s.ai_plan && (
-                    <p className="text-xs sm:text-sm text-gray-200 mt-1">AI Plan: {s.ai_plan}</p>
-                  )}
-                </div>
-                <span
-                  className={`mt-2 sm:mt-0 px-2 py-1 rounded-lg text-xs font-semibold ${
-                    s.status === "accepted"
-                      ? "bg-green-500 text-white"
-                      : s.rescheduled_date
-                      ? "bg-yellow-500 text-gray-900"
-                      : "bg-purple-500 text-white"
-                  }`}
+          : selectedSchedules.map((s) => {
+              const proposedLocal = new Date(s.proposed_date).toLocaleString(undefined, {
+                dateStyle: "medium",
+                timeStyle: "short",
+              });
+              const rescheduledLocal = s.rescheduled_date
+                ? new Date(s.rescheduled_date).toLocaleString(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })
+                : null;
+
+              return (
+                <div
+                  key={s.id}
+                  className="bg-gray-700/50 p-3 rounded-xl border border-white/10 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center"
                 >
-                  {s.rescheduled_date ? "RESCHEDULED" : s.status.toUpperCase()}
-                </span>
-              </div>
-            ))}
+                  <div className="space-y-1">
+                    <p className="text-sm sm:text-base text-white font-semibold">
+                      {proposedLocal}
+                    </p>
+                    {rescheduledLocal && (
+                      <p className="text-xs text-yellow-400">
+                        Rescheduled: {rescheduledLocal}
+                      </p>
+                    )}
+                    <p className="text-xs sm:text-sm text-gray-300">{s.activity}</p>
+                    <p className="text-xs sm:text-sm text-gray-400">{s.location}</p>
+                    <p className="text-xs sm:text-sm text-pink-400">{s.vibe}</p>
+                    {s.ai_plan && (
+                      <p className="text-xs sm:text-sm text-gray-200 mt-1">
+                        AI Plan: {s.ai_plan}
+                      </p>
+                    )}
+                  </div>
+                  <span
+                    className={`mt-2 sm:mt-0 px-2 py-1 rounded-lg text-xs font-semibold ${
+                      s.status === "accepted"
+                        ? "bg-green-500 text-white"
+                        : s.rescheduled_date
+                        ? "bg-yellow-500 text-gray-900"
+                        : "bg-purple-500 text-white"
+                    }`}
+                  >
+                    {s.rescheduled_date ? "RESCHEDULED" : s.status.toUpperCase()}
+                  </span>
+                </div>
+              );
+            })}
       </div>
     </div>
   </div>
@@ -1106,8 +1144,7 @@ const handlePost = async () => {
   <h3 className="text-lg font-semibold">{t("yourDatePlans")}</h3>
 
   {loadingSchedules
-    ? // Skeleton for pending plans
-      Array.from({ length: 3 }).map((_, idx) => (
+    ? Array.from({ length: 3 }).map((_, idx) => (
         <div
           key={idx}
           className="bg-gray-700/50 p-3 rounded-xl animate-pulse flex flex-col gap-2 mt-2"
@@ -1121,24 +1158,29 @@ const handlePost = async () => {
         <p className="text-sm text-gray-400 mt-2">{t("noDatePlans")}</p>
       ) : (
         <ul className="mt-2 space-y-2">
-          {pendingSchedules.map((s) => (
-            <li
-              key={s.id}
-              className="bg-gray-700/50 p-2 rounded-lg flex flex-col sm:flex-row sm:justify-between items-start sm:items-center hover:bg-gray-700/70 transition"
-            >
-              <div className="space-y-1">
-                <p className="text-sm text-white font-semibold">{s.activity}</p>
-                <p className="text-xs text-gray-400">{s.location}</p>
-                <p className="text-xs text-pink-400">{s.vibe}</p>
-                <p className="text-xs text-gray-300">
-                  {new Date(s.proposed_date).toLocaleString()}
-                </p>
-              </div>
-              <span className="mt-2 sm:mt-0 px-2 py-1 rounded-lg text-xs font-semibold bg-yellow-500 text-gray-900">
-                PENDING
-              </span>
-            </li>
-          ))}
+          {pendingSchedules.map((s) => {
+            const proposedLocal = new Date(s.proposed_date).toLocaleString(undefined, {
+              dateStyle: "medium",
+              timeStyle: "short",
+            });
+
+            return (
+              <li
+                key={s.id}
+                className="bg-gray-700/50 p-2 rounded-lg flex flex-col sm:flex-row sm:justify-between items-start sm:items-center hover:bg-gray-700/70 transition"
+              >
+                <div className="space-y-1">
+                  <p className="text-sm text-white font-semibold">{s.activity}</p>
+                  <p className="text-xs text-gray-400">{s.location}</p>
+                  <p className="text-xs text-pink-400">{s.vibe}</p>
+                  <p className="text-xs text-gray-300">{proposedLocal}</p>
+                </div>
+                <span className="mt-2 sm:mt-0 px-2 py-1 rounded-lg text-xs font-semibold bg-yellow-500 text-gray-900">
+                  PENDING
+                </span>
+              </li>
+            );
+          })}
         </ul>
       )}
 </motion.div>

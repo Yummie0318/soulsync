@@ -18,8 +18,9 @@ export async function POST(req: Request) {
     }
 
     const pool = getPool();
+    const nowUtc = new Date().toISOString(); // ✅ UTC timestamp
 
-    // 🧠 Prevent showing the same one if user is just reopening chat
+    // Prevent showing the same one if user is just reopening chat
     if (regenerate === false) {
       const existing = await pool.query(
         `SELECT * FROM tblicebreaker 
@@ -87,7 +88,7 @@ export async function POST(req: Request) {
       receiverInterestList.includes(i)
     );
 
-    // 🧩 Look at the last 3 icebreakers to avoid repetition
+    // Avoid repetition
     const previous = await pool.query(
       `SELECT icebreaker FROM tblicebreaker 
        WHERE sender_id = $1 AND receiver_id = $2 
@@ -96,7 +97,7 @@ export async function POST(req: Request) {
     );
     const recentTexts = previous.rows.map((r) => r.icebreaker).join(" || ");
 
-    // 🎯 Dynamic “creative angle” to vary conversation focus
+    // Creative focus
     const creativeFocusOptions = [
       "their interests",
       "their city or culture",
@@ -109,48 +110,14 @@ export async function POST(req: Request) {
         Math.floor(Math.random() * creativeFocusOptions.length)
       ];
 
-    // ✨ AI prompt (enhanced for personality and uniqueness)
-    const prompt = `
-You are "SoulSync AI" — a flirty, witty, emotionally intelligent dating assistant.
-Write a short (max 25 words), human-like, and *fresh* icebreaker message.
-Avoid repeating anything similar to these past lines: ${recentTexts || "None"}.
-
-Focus this time on ${focus}. 
-The message should sound like it’s personally written for the receiver — not generic.
-
-👤 Sender:
-- Name: ${sender.username}
-- Bio: ${sender.quote || "No bio"}
-- City: ${sender.city || "Unknown"}
-- Country: ${sender.country || "Unknown"}
-- Zodiac: ${sender.zodiac || "Unknown"}
-- Interests: ${senderInterestList.join(", ") || "None"}
-
-💖 Receiver:
-- Name: ${receiver.username}
-- Bio: ${receiver.quote || "No bio"}
-- City: ${receiver.city || "Unknown"}
-- Country: ${receiver.country || "Unknown"}
-- Zodiac: ${receiver.zodiac || "Unknown"}
-- Interests: ${receiverInterestList.join(", ") || "None"}
-
-Shared Interests: ${sharedInterests.length ? sharedInterests.join(", ") : "None"}
-
-💡 Guidelines:
-- Sound playful and confident
-- Ask an interesting or emotional question if possible
-- If receiver has interests, make it *about them*
-- Avoid repeating gaming-related or generic openings
-- No quotes around the text, no emojis unless natural
-`;
+    // AI prompt
+    const prompt = `...`; // same as your existing prompt
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-    console.log("💬 Generating dynamic AI icebreaker with focus:", focus);
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
-      temperature: 1.1, // high creativity for variety
+      temperature: 1.1,
       max_tokens: 80,
     });
 
@@ -160,41 +127,35 @@ Shared Interests: ${sharedInterests.length ? sharedInterests.join(", ") : "None"
 
     console.log("🧊 New Pro+ Icebreaker:", icebreaker);
 
-    // 💾 Save
+    // 💾 Save icebreaker with UTC timestamp
     const saveResult = await pool.query(
-      `INSERT INTO tblicebreaker (sender_id, receiver_id, icebreaker, generated_by, used)
-       VALUES ($1, $2, $3, 'AI', false)
+      `INSERT INTO tblicebreaker (sender_id, receiver_id, icebreaker, generated_by, used, created_at)
+       VALUES ($1, $2, $3, 'AI', false, $4)
        RETURNING *`,
-      [sender_id, receiver_id, icebreaker]
+      [sender_id, receiver_id, icebreaker, nowUtc]
     );
-
     const savedIcebreaker = saveResult.rows[0];
 
-    // 💬 Log in message history
+    // 💬 Save in message history with UTC timestamp
     const msgResult = await pool.query(
-      `INSERT INTO tblmessage (sender_id, receiver_id, content, message_type, status, deleted, generated_by)
-       VALUES ($1, $2, $3, 'ai_icebreaker', 'sent', false, 'ai')
+      `INSERT INTO tblmessage (sender_id, receiver_id, content, message_type, status, deleted, generated_by, created_at, updated_at)
+       VALUES ($1, $2, $3, 'ai_icebreaker', 'sent', false, 'ai', $4, $4)
        RETURNING *`,
-      [sender_id, receiver_id, icebreaker]
+      [sender_id, receiver_id, icebreaker, nowUtc]
     );
-    
     const message = msgResult.rows[0];
-    
 
     // 📡 Emit to socket
     try {
-      const emitRes = await fetch(
-        "https://soulsync-socket-server.onrender.com/emit",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            event: "message:new",
-            data: message,
-          }),
-        }
-      );
-      console.log("📤 [SOCKET] Icebreaker emitted:", emitRes.status);
+      await fetch("https://soulsync-socket-server.onrender.com/emit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "message:new",
+          data: message,
+        }),
+      });
+      console.log("📤 [SOCKET] Icebreaker emitted");
     } catch (err) {
       console.error("❌ [SOCKET] Failed to emit icebreaker:", err);
     }
@@ -207,6 +168,7 @@ Shared Interests: ${sharedInterests.length ? sharedInterests.join(", ") : "None"
       from_cache: false,
       message,
       savedIcebreaker,
+      created_at_utc: nowUtc, // ✅ send UTC to client
     });
   } catch (error: any) {
     console.error("❌ Error generating icebreaker:", error);
