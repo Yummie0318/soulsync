@@ -962,6 +962,8 @@ const handlePost = async () => {
   )}
 </div>
 
+
+
 {/* --------------------  Date Plans (Calendar View) -------------------- */}
 <motion.div
   initial={{ opacity: 0, y: 20 }}
@@ -1049,33 +1051,38 @@ const handlePost = async () => {
       })}
 </div>
 </motion.div>
-
 {/* -------------------- Schedule Modal -------------------- */}
 {modalOpen && (
   <div
-    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
     onClick={() => setModalOpen(false)}
   >
     <div
-      className="bg-gray-800/80 rounded-2xl shadow-lg p-5 w-full max-w-md relative"
+      className="bg-gray-900/95 rounded-2xl shadow-xl w-full max-w-lg relative flex flex-col max-h-[80vh] overflow-hidden"
       onClick={(e) => e.stopPropagation()}
     >
-      <h3 className="text-lg font-semibold text-white mb-4">
-        {selectedDate?.toLocaleDateString()} {/* Local display */}
-      </h3>
-      <button
-        className="absolute top-3 right-3 text-gray-400 hover:text-white"
-        onClick={() => setModalOpen(false)}
-      >
-        ✕
-      </button>
+      {/* Header */}
+      <div className="flex justify-between items-center p-5 border-b border-gray-700">
+        <h3 className="text-xl font-bold text-white">
+          {selectedDate
+            ? new Date(selectedDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+            : ""}
+        </h3>
+        <button
+          className="text-gray-400 hover:text-white text-2xl font-bold"
+          onClick={() => setModalOpen(false)}
+        >
+          ✕
+        </button>
+      </div>
 
-      <div className="space-y-3">
+      {/* Content */}
+      <div className="overflow-y-auto p-5 space-y-4">
         {loadingSchedules
           ? Array.from({ length: 3 }).map((_, idx) => (
               <div
                 key={idx}
-                className="bg-gray-700/50 p-3 rounded-xl animate-pulse flex flex-col gap-2"
+                className="bg-gray-700/50 p-4 rounded-xl animate-pulse flex flex-col gap-2"
               >
                 <div className="h-4 w-1/2 bg-gray-600 rounded" />
                 <div className="h-3 w-2/3 bg-gray-600 rounded" />
@@ -1085,7 +1092,7 @@ const handlePost = async () => {
           : selectedSchedules.map((s) => (
               <div
                 key={s.id}
-                className="bg-gray-700/50 p-3 rounded-xl border border-white/10 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center"
+                className="bg-gray-800/70 p-4 rounded-xl border border-gray-700 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center transition hover:bg-gray-700/80"
               >
                 <div className="space-y-1">
                   <p className="text-sm sm:text-base text-white font-semibold">
@@ -1103,8 +1110,9 @@ const handlePost = async () => {
                     <p className="text-xs sm:text-sm text-gray-200 mt-1">AI Plan: {s.ai_plan}</p>
                   )}
                 </div>
+
                 <span
-                  className={`mt-2 sm:mt-0 px-2 py-1 rounded-lg text-xs font-semibold ${
+                  className={`mt-3 sm:mt-0 px-3 py-1 rounded-lg text-xs font-semibold ${
                     s.status === "accepted"
                       ? "bg-green-500 text-white"
                       : s.rescheduled_date
@@ -1120,6 +1128,7 @@ const handlePost = async () => {
     </div>
   </div>
 )}
+
 
 
 {/* -------------------- Your Date Plans (Pending) -------------------- */}
