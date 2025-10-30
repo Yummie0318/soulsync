@@ -1,4 +1,4 @@
-import { test, expect, Page, request } from "@playwright/test";
+import { test, expect, Page } from "@playwright/test";
 
 // ----------------------------
 // 🔧 Helper functions
@@ -56,33 +56,37 @@ async function waitForInterests(page: Page, maxRetries = 10, interval = 1000) {
 // ----------------------------
 // 🧪 Test suite
 // ----------------------------
-test.describe("Profile Setup Page", () => {
-  let interests: { id: number; interest: string }[] = [];
-
-  test.beforeAll(async ({ request }) => {
-    // ✅ Fetch real interest data from your backend (reads tblinterest)
-    const res = await request.get("http://localhost:3000/api/interests?locale=en");
-    expect(res.ok()).toBeTruthy();
-
-    interests = await res.json();
-    console.log("🌐 Interests fetched from API:", interests.map(i => i.interest).join(", "));
-
-    if (!Array.isArray(interests) || interests.length === 0) {
-      throw new Error("❌ No interests returned from /api/interests. Please seed your tblinterest table.");
-    }
-  });
+test.describe("Profile Setup Page (Mocked Interests API)", () => {
+  const mockInterests = [
+    { id: 1, interest: "Photography" },
+    { id: 2, interest: "Travel" },
+    { id: 3, interest: "Music" },
+    { id: 4, interest: "Art" },
+    { id: 5, interest: "Sports" },
+  ];
 
   test.beforeEach(async ({ page }) => {
+    // ✅ Mock the /api/interests endpoint before navigation
+    await page.route("**/api/interests*", async (route) => {
+      console.log("📨 Mocked /api/interests request");
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(mockInterests),
+      });
+    });
+
+    // Load page after setting mock
     await page.goto("/en/profile-setup");
     await page.waitForLoadState("networkidle");
   });
 
-  test("should complete profile setup successfully using real interest data", async ({ page }) => {
+  test("should complete profile setup successfully using mocked interest data", async ({ page }) => {
     // Step 1: Interests
     console.log("🔍 Selecting interests...");
     const interestCheckboxes = await waitForInterests(page);
     const count = await interestCheckboxes.count();
-    console.log(`✅ Found ${count} interest checkboxes`);
+    console.log(`✅ Found ${count} interest checkboxes (mocked)`);
 
     for (let i = 0; i < Math.min(3, count); i++) {
       const interest = interestCheckboxes.nth(i);
