@@ -19,7 +19,7 @@ export default function AiDrawingPage() {
   const { locale } = useParams() as { locale: string };
   const t = useTranslations("AiDrawing");
 
-  // Progress + redirect
+  // Progress + redirect test
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((prev) => {
