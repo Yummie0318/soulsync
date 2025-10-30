@@ -92,11 +92,19 @@ test("🧩 Complete mocked profile setup flow", async ({ page }) => {
   // -------------------------------
   // 🔹 STEP 1: Select Interests
   // -------------------------------
-  const interestButtons = await page.locator("button", { hasText: "Photography" }).all();
-  expect(interestButtons.length).toBeGreaterThan(0);
-  await page.getByRole("button", { name: "Photography" }).click();
-  await page.getByRole("button", { name: "Music" }).click();
-  await page.getByRole("button", { name: "Gaming" }).click();
+  try {
+    // Wait for interests to render
+    await page.waitForSelector('button:has-text("Photography")', { timeout: 20000 });
+    console.log("🌐 Interests loaded successfully");
+
+    await page.getByRole("button", { name: "Photography" }).click();
+    await page.getByRole("button", { name: "Music" }).click();
+    await page.getByRole("button", { name: "Gaming" }).click();
+  } catch (error) {
+    console.error("❌ Interests failed to load in time. Taking screenshot...");
+    await page.screenshot({ path: "interests_load_error.png", fullPage: true });
+    throw error;
+  }
 
   // Wait for button to become enabled
   const nextBtn = page.getByRole("button", { name: /next/i });
@@ -135,7 +143,6 @@ test("🧩 Complete mocked profile setup flow", async ({ page }) => {
   // -------------------------------
   // 🔹 STEP 5: Final Touches
   // -------------------------------
-  // Mock file upload
   const photoUpload = page.locator('input[type="file"]');
   await photoUpload.setInputFiles({
     name: "avatar.jpg",
@@ -150,6 +157,6 @@ test("🧩 Complete mocked profile setup flow", async ({ page }) => {
   // -------------------------------
   // 🔹 Verify successful mock POST
   // -------------------------------
-  await page.waitForTimeout(500); // wait for transition or redirect
+  await page.waitForTimeout(500); // brief transition wait
   console.log("🎉 Mocked profile setup completed!");
 });
