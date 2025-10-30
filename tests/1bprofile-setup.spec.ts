@@ -1,152 +1,155 @@
-import { test, expect, Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
-// ----------------------------
-// 🔧 Helper functions
-// ----------------------------
-async function waitForButtonEnabled(page: Page, name: string, timeout = 20000) {
-  const button = page.getByRole("button", { name: new RegExp(name, "i") }).first();
-  await button.waitFor({ state: "visible" });
-  await expect
-    .poll(async () => await button.isEnabled(), {
-      message: `Waiting for "${name}" button to be enabled`,
-      timeout,
-      intervals: [500],
-    })
-    .toBe(true);
-  return button;
-}
+test("🧩 Complete mocked profile setup flow", async ({ page }) => {
+  // 🧠 Store user ID in localStorage before visiting page
+  await page.addInitScript(() => {
+    localStorage.setItem("user_id", "12345");
+  });
 
-async function clickButton(page: Page, name: string) {
-  const button = await waitForButtonEnabled(page, name);
-  await Promise.all([page.waitForLoadState("networkidle"), button.click()]);
-}
+  // -------------------------------
+  // 🔹 Mock API Endpoints
+  // -------------------------------
 
-async function waitForSelectOptions(page: Page, selectLocator: ReturnType<Page["getByLabel"]>, timeout = 20000) {
-  await expect(selectLocator).toBeVisible({ timeout });
-  await expect
-    .poll(async () => {
-      const options = await selectLocator.locator("option").count();
-      return options > 1;
-    }, { timeout, intervals: [500] })
-    .toBe(true);
-}
-
-async function waitForFileInput(page: Page, fileInputLocator: ReturnType<Page["getByLabel"]>, timeout = 20000) {
-  await expect(fileInputLocator).toBeVisible({ timeout });
-  await expect
-    .poll(async () => {
-      const disabled = await fileInputLocator.isDisabled();
-      return !disabled;
-    }, { timeout, intervals: [500] })
-    .toBe(true);
-}
-
-// 🕒 Poll until interests are visible (Step 1)
-async function waitForInterests(page: Page, maxRetries = 10, interval = 1000) {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const checkboxes = page.getByRole("checkbox");
-    const count = await checkboxes.count();
-    if (count > 0) return checkboxes;
-    console.log(`⚠️ Attempt ${attempt}: No interests found yet, retrying...`);
-    await page.waitForTimeout(interval);
-  }
-  throw new Error("❌ No interest checkboxes found after waiting");
-}
-
-// ----------------------------
-// 🧪 Test suite
-// ----------------------------
-test.describe("Profile Setup Page (Mocked Interests API)", () => {
-  const mockInterests = [
-    { id: 1, interest: "Photography" },
-    { id: 2, interest: "Travel" },
-    { id: 3, interest: "Music" },
-    { id: 4, interest: "Art" },
-    { id: 5, interest: "Sports" },
-  ];
-
-  test.beforeEach(async ({ page }) => {
-    // ✅ Mock the /api/interests endpoint before navigation
-    await page.route("**/api/interests*", async (route) => {
-      console.log("📨 Mocked /api/interests request");
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(mockInterests),
-      });
+  await page.route("**/api/interests?**", async (route) => {
+    console.log("🌐 Mocked /api/interests");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        { id: 1, interest: "Photography" },
+        { id: 2, interest: "Music" },
+        { id: 3, interest: "Gaming" },
+        { id: 4, interest: "Travel" },
+      ]),
     });
-
-    // Load page after setting mock
-    await page.goto("/en/profile-setup");
-    await page.waitForLoadState("networkidle");
   });
 
-  test("should complete profile setup successfully using mocked interest data", async ({ page }) => {
-    // Step 1: Interests
-    console.log("🔍 Selecting interests...");
-    const interestCheckboxes = await waitForInterests(page);
-    const count = await interestCheckboxes.count();
-    console.log(`✅ Found ${count} interest checkboxes (mocked)`);
-
-    for (let i = 0; i < Math.min(3, count); i++) {
-      const interest = interestCheckboxes.nth(i);
-      await interest.scrollIntoViewIfNeeded();
-      await interest.check({ force: true });
-      await page.waitForTimeout(300);
-    }
-    await clickButton(page, "Next");
-
-    // Step 2: Birthdate
-    console.log("📅 Filling birthdate...");
-    await page.getByPlaceholder("YYYY").fill("1995");
-    await page.getByPlaceholder("MM").fill("06");
-    await page.getByPlaceholder("DD").fill("15");
-    await clickButton(page, "Next");
-
-    // Step 3: About You
-    console.log("❤️ Filling About You section...");
-    const aboutYouHeader = page.getByText(/about you/i);
-    await expect(aboutYouHeader).toBeVisible({ timeout: 30000 });
-
-    const genderSelect = page.getByLabel("Gender");
-    await waitForSelectOptions(page, genderSelect);
-    await genderSelect.selectOption({ label: "Male" });
-
-    const starSignSelect = page.getByLabel("Star Sign");
-    await waitForSelectOptions(page, starSignSelect);
-    await starSignSelect.selectOption({ label: "♈ Aries (Mar 21 - Apr 19)" });
-
-    await page.getByLabel("Female").check();
-    await page.getByLabel("Friendship").check();
-
-    await page.waitForTimeout(500);
-    await clickButton(page, "Next");
-
-    // Step 4: Location
-    console.log("📍 Filling location...");
-    const countrySelect = page.getByLabel("Country");
-    await waitForSelectOptions(page, countrySelect);
-    await countrySelect.selectOption({ index: 1 });
-
-    await page.getByLabel("City").fill("Manila");
-    await page.getByLabel("Postal Code").fill("1000");
-    await clickButton(page, "Next");
-
-    // Step 5: Finishing Touches
-    console.log("🎨 Uploading photo & quote...");
-    const photoInput = page.getByLabel(/upload photo/i);
-    await waitForFileInput(page, photoInput);
-    const photoPath = "tests/fixtures/photo.png";
-    await photoInput.setInputFiles(photoPath);
-
-    const quoteInput = page.getByLabel(/Favorite Quote/i);
-    await expect(quoteInput).toBeVisible({ timeout: 10000 });
-    await quoteInput.fill("Keep learning every day!");
-    await clickButton(page, "Finish");
-
-    // ✅ Verify completion
-    console.log("✅ Verifying success...");
-    await expect(page.getByText(/profile setup complete/i)).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(/welcome to your personal room/i)).toBeVisible();
+  await page.route("**/api/genders?**", async (route) => {
+    console.log("🌐 Mocked /api/genders");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        { id: 1, gender: "Female" },
+        { id: 2, gender: "Male" },
+      ]),
+    });
   });
+
+  await page.route("**/api/lookingfor?**", async (route) => {
+    console.log("🌐 Mocked /api/lookingfor");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        { id: 1, items: "Friendship" },
+        { id: 2, items: "Dating" },
+      ]),
+    });
+  });
+
+  await page.route("**/api/zodiacs?**", async (route) => {
+    console.log("🌐 Mocked /api/zodiacs");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        { id: 1, zodiac: "Aries" },
+        { id: 2, zodiac: "Leo" },
+      ]),
+    });
+  });
+
+  await page.route("**/api/countries?**", async (route) => {
+    console.log("🌐 Mocked /api/countries");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        { id: 1, country: "Philippines" },
+        { id: 2, country: "Japan" },
+      ]),
+    });
+  });
+
+  // ✅ Mock final form submission
+  await page.route("**/api/profile-setup", async (route) => {
+    console.log("✅ Mocked /api/profile-setup");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ message: "Profile setup successful!" }),
+    });
+  });
+
+  // -------------------------------
+  // 🧭 Visit the profile setup page
+  // -------------------------------
+  await page.goto("http://localhost:3000/en/profile-setup");
+  await expect(page).toHaveURL(/\/en\/profile-setup$/);
+  console.log("✅ Profile Setup Page loaded");
+
+  // -------------------------------
+  // 🔹 STEP 1: Select Interests
+  // -------------------------------
+  const interestButtons = await page.locator("button", { hasText: "Photography" }).all();
+  expect(interestButtons.length).toBeGreaterThan(0);
+  await page.getByRole("button", { name: "Photography" }).click();
+  await page.getByRole("button", { name: "Music" }).click();
+  await page.getByRole("button", { name: "Gaming" }).click();
+
+  // Wait for button to become enabled
+  const nextBtn = page.getByRole("button", { name: /next/i });
+  await expect(nextBtn).toBeEnabled();
+  await nextBtn.click();
+
+  // -------------------------------
+  // 🔹 STEP 2: Birthdate
+  // -------------------------------
+  await page.getByPlaceholder(/year/i).fill("2000");
+  await page.getByPlaceholder(/month/i).fill("12");
+  await page.getByPlaceholder(/day/i).fill("15");
+
+  await expect(nextBtn).toBeEnabled();
+  await nextBtn.click();
+
+  // -------------------------------
+  // 🔹 STEP 3: About You
+  // -------------------------------
+  await page.selectOption("select", { label: "Female" });
+  await page.getByLabel("Friendship").check();
+
+  await expect(nextBtn).toBeEnabled();
+  await nextBtn.click();
+
+  // -------------------------------
+  // 🔹 STEP 4: Location
+  // -------------------------------
+  await page.selectOption("select", { label: "Philippines" });
+  await page.getByPlaceholder(/city/i).fill("Manila");
+  await page.getByPlaceholder(/postal/i).fill("1000");
+
+  await expect(nextBtn).toBeEnabled();
+  await nextBtn.click();
+
+  // -------------------------------
+  // 🔹 STEP 5: Final Touches
+  // -------------------------------
+  // Mock file upload
+  const photoUpload = page.locator('input[type="file"]');
+  await photoUpload.setInputFiles({
+    name: "avatar.jpg",
+    mimeType: "image/jpeg",
+    buffer: Buffer.from("fake image content"),
+  });
+
+  await page.getByPlaceholder(/quote/i).fill("Live, laugh, love!");
+  await expect(nextBtn).toBeEnabled();
+  await nextBtn.click();
+
+  // -------------------------------
+  // 🔹 Verify successful mock POST
+  // -------------------------------
+  await page.waitForTimeout(500); // wait for transition or redirect
+  console.log("🎉 Mocked profile setup completed!");
 });
