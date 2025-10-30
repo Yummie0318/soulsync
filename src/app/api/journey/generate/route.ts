@@ -5,7 +5,33 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: Request) {
   try {
-    const { trait_key } = await req.json();
+    // 🛡️ Handle empty or invalid JSON body safely
+    let trait_key = null;
+    try {
+      const bodyText = await req.text();
+      if (!bodyText) {
+        console.error("⚠️ Empty request body received in /api/journey/generate");
+        return NextResponse.json(
+          { success: false, error: "Empty request body" },
+          { status: 400 }
+        );
+      }
+      const body = JSON.parse(bodyText);
+      trait_key = body.trait_key;
+    } catch (err) {
+      console.error("⚠️ Invalid JSON input in /api/journey/generate:", err);
+      return NextResponse.json(
+        { success: false, error: "Invalid JSON input" },
+        { status: 400 }
+      );
+    }
+
+    if (!trait_key) {
+      return NextResponse.json(
+        { success: false, error: "Missing 'trait_key' in request" },
+        { status: 400 }
+      );
+    }
 
     const prompt = `
       Generate a psychological assessment question related to "${trait_key}".
@@ -52,7 +78,7 @@ export async function POST(req: Request) {
     try {
       parsed = JSON.parse(jsonString);
     } catch (err) {
-      console.error("⚠️ Failed to parse JSON from AI:", cleaned);
+      console.error("⚠️ Failed to parse JSON from AI output:", cleaned);
       return NextResponse.json(
         { success: false, error: "Invalid AI output format" },
         { status: 500 }
@@ -70,6 +96,7 @@ export async function POST(req: Request) {
       );
     }
 
+    // ✅ Return same structure as before
     return NextResponse.json({
       success: true,
       questions: [parsed],

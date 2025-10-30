@@ -7,21 +7,25 @@ test.describe("🤖 AI Assessment Page", () => {
       localStorage.setItem("user_id", "456");
     });
 
-    // Mock generate endpoint
+    // ✅ Updated generate endpoint mock to match new API shape
     await page.route("**/api/journey/generate", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          question: {
-            question_text: "What is your favorite color?",
-            trait_key: "empathy",
-            options: [
-              { text: "Red", score: 1 },
-              { text: "Blue", score: 2 },
-              { text: "Green", score: 3 },
-            ],
-          },
+          success: true,
+          questions: [
+            {
+              question_text: "What is your favorite color?",
+              trait_key: "empathy",
+              why_text: "Colors can reflect emotional tendencies and empathy levels.",
+              options: [
+                { text: "Red", score: 1 },
+                { text: "Blue", score: 2 },
+                { text: "Green", score: 3 },
+              ],
+            },
+          ],
         }),
       });
     });
@@ -60,8 +64,8 @@ test.describe("🤖 AI Assessment Page", () => {
     await page.getByText("Blue").click();
     await page.getByRole("button", { name: /Save & Next/i }).click();
 
-    // When the next question is loaded
-    await expect(page.getByText("What is your favorite color?")).toBeVisible(); // Mock returns same text for now
+    // Mock returns same question for now
+    await expect(page.getByText("What is your favorite color?")).toBeVisible();
   });
 
   test("should complete assessment and show finish screen", async ({ page }) => {
