@@ -70,44 +70,51 @@ test.describe("👤 Profile Setup full flow", () => {
     // -------------------------------------------------------------
     await page.goto("/en/profile-setup");
 
-    await expect(page.getByText(/Complete/i)).toBeVisible();
+    // Wait for translated title from en.json
+    await expect(page.getByText("Complete Your Profile")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("Let's set up your profile...")).toBeVisible();
 
     // === STEP 1: Interests ===
-    await page.waitForSelector('button:has-text("Photography")');
+    await expect(page.getByText("Your Interests")).toBeVisible();
+    await expect(page.getByText("Select at least 3 interests")).toBeVisible();
+
     await page.getByRole("button", { name: "Photography" }).click();
     await page.getByRole("button", { name: "Gaming" }).click();
     await page.getByRole("button", { name: "Music" }).click();
 
-    const nextBtn = page.getByRole("button", { name: /Next/i });
-    await expect(nextBtn).toBeEnabled();
+    // ✅ Fix: strict text for "Next"
+    const nextBtn = page.getByRole("button", { name: /^Next$/ });
+    await expect(nextBtn).toBeEnabled({ timeout: 10000 });
     await nextBtn.click();
 
     // === STEP 2: Birthdate ===
-    await page.getByPlaceholder(/Year/i).fill("1998");
-    await page.getByPlaceholder(/Month/i).fill("12");
-    await page.getByPlaceholder(/Day/i).fill("15");
+    await expect(page.getByText("Your Age")).toBeVisible();
+    await page.getByPlaceholder("YYYY").fill("1998");
+    await page.getByPlaceholder("MM").fill("12");
+    await page.getByPlaceholder("DD").fill("15");
     await nextBtn.click();
 
     // === STEP 3: About You ===
-    await page.waitForSelector("select");
+    await expect(page.getByText("About You")).toBeVisible();
     await page.selectOption("select", { value: "1" }); // Male
     await page.getByText("Friendship").click();
     await nextBtn.click();
 
     // === STEP 4: Location ===
-    await page.waitForSelector("select");
+    await expect(page.getByText("Enter your location")).toBeVisible();
     await page.selectOption("select", { value: "1" }); // Philippines
-    await page.getByPlaceholder(/City/i).fill("Manila");
-    await page.getByPlaceholder(/Postal/i).fill("1000");
+    await page.getByPlaceholder("City").fill("Manila");
+    await page.getByPlaceholder("Postal Code (required)").fill("1000");
     await nextBtn.click();
 
     // === STEP 5: Finishing Touches ===
-    await expect(page.getByText(/Favorite Quote/i)).toBeVisible();
-    await page.getByRole("textbox").fill("Keep moving forward.");
-    await page.getByRole("button", { name: /Finish/i }).click();
+    await expect(page.getByText("Favorite Quote")).toBeVisible({ timeout: 10000 });
+    await page.getByPlaceholder("Share a quote that inspires you...").fill("Keep moving forward.");
+    await page.getByRole("button", { name: /^Finish$/ }).click();
 
     // === VERIFY ===
-    await page.waitForTimeout(1000); // let router push happen
+    await page.waitForTimeout(1000);
     await expect(page).toHaveURL(/my-room/);
+    await expect(page.getByText("🎉 Profile setup complete!")).toBeVisible();
   });
 });
