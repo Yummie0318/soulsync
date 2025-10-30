@@ -41,5 +41,12 @@ body {
   background: linear-gradient(90deg, #ff69b4, #00bfff); /* stronger colors on hover */
 }
 
+/* Fixes for scheduler interactivity */
+.scheduler-bubble,
+.scheduler-bubble * {
+  pointer-events: auto !important;
+  z-index: 60 !important;
+  position: relative;
+}
 
 

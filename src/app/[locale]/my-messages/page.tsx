@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Phone, Video } from "lucide-react";
 import { useNotification } from "@/context/NotificationContext";
+import AuthGuard from "@/components/AuthGuard"; // adjust path if needed
 
 type Friend = {
   id: number;
@@ -35,6 +36,30 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [search, setSearch] = useState("");
 
+
+  
+  // BACKGROUND COLOR
+  const [bgClass, setBgClass] = useState(
+    "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200"
+  );
+
+  useEffect(() => {
+    const userId = localStorage.getItem("user_id");
+    if (!userId) return;
+
+    fetch(`/api/user/background?user_id=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.background_classes) {
+          setBgClass(data.background_classes);
+        }
+      })
+      .catch(err => console.error("Failed to fetch user background:", err));
+  }, []);
+
+
+
+  
   // 🧍 Get user id
   useEffect(() => {
     const stored = localStorage.getItem("user_id");
@@ -159,7 +184,8 @@ export default function MessagesPage() {
   };
 
   return (
-    <main className="relative min-h-screen flex flex-col bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800 text-gray-100">
+    <AuthGuard>
+  <main className={`relative min-h-screen flex flex-col ${bgClass} text-gray-100 transition-all duration-500`}>
       
       {/* Header */}
       <div className="sticky top-0 bg-gray-900/80 backdrop-blur-lg z-20 px-4 py-4 border-b border-white/10 flex items-center justify-center shadow-md">
@@ -300,6 +326,7 @@ export default function MessagesPage() {
         )}
       </section>
     </main>
+    </AuthGuard>
   );
   
 }

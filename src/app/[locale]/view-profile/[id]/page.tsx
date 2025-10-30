@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ArrowLeft, User, Home, MapPin, Heart, Pencil } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
+import AuthGuard from "@/components/AuthGuard"; // adjust path if needed
 
 function getAge(year?: number, month?: number, day?: number) {
   if (!year) return null;
@@ -32,6 +33,30 @@ export default function ViewProfile() {
 
   // ✅ Get logged-in user from localStorage
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+
+
+    // BACKGROUND COLOR
+    const [bgClass, setBgClass] = useState(
+      "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200"
+    );
+  
+    useEffect(() => {
+      const userId = localStorage.getItem("user_id");
+      if (!userId) return;
+  
+      fetch(`/api/user/background?user_id=${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.background_classes) {
+            setBgClass(data.background_classes);
+          }
+        })
+        .catch(err => console.error("Failed to fetch user background:", err));
+    }, []);
+
+    
+
+
 
   useEffect(() => {
     const storedId = localStorage.getItem("user_id");
@@ -118,7 +143,8 @@ export default function ViewProfile() {
 
 
   return (
-    <main className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 pb-24 px-2 sm:px-4">
+    <AuthGuard>
+  <main className={`relative min-h-screen ${bgClass} text-gray-200 pb-24 px-2 sm:px-4 transition-all duration-500`}>
       {/* Background Glow */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-1/3 left-1/4 w-60 sm:w-72 h-60 sm:h-72 bg-pink-600/20 rounded-full blur-3xl animate-pulse" />
@@ -180,11 +206,14 @@ export default function ViewProfile() {
   
                 {/* ✅ Message Button */}
                 <button
-                  onClick={() => router.push(`/messages/${user.id}`)}
+                  onClick={() =>
+                    router.push(`/en/my-messages/conversation?receiverId=${user.id}`)
+                  }
                   className="px-4 py-2 rounded-xl bg-pink-500 hover:bg-pink-600 text-white font-medium shadow-md transition w-full sm:w-auto"
                 >
                   Message
                 </button>
+
               </div>
   
               {user.quote && (
@@ -353,7 +382,7 @@ export default function ViewProfile() {
       <BottomNav />
     </main>
 
-
+    </AuthGuard>
   );
   
 }

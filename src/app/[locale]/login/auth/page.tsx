@@ -78,7 +78,7 @@ export default function RegisterPage() {
   // Step 2: Verify OTP → create user
   const handleVerifyOtp = async () => {
     if (!otp) {
-      showNotification("Please enter OTP");
+      showNotification(t("pleaseEnterOtp"));
       return;
     }
 
