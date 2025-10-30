@@ -11,7 +11,7 @@ test("mock register + OTP flow (English locale) → redirects to profile setup",
     });
   });
 
-  // 🧩 2️⃣ Mock /api/verify-otp → successful verification
+  // 🧩 2️⃣ Mock /api/verify-otp → successful verifications
   await page.route("**/api/verify-otp", async (route) => {
     console.log("✅ Mocked /api/verify-otp");
     await route.fulfill({
