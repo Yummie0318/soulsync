@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     const pool = getPool();
     const nowUtc = new Date().toISOString(); // ✅ UTC timestamp
 
-    // Prevent showing the same one if user is just reopening chat
+    // 🧩 Return cached icebreaker if not regenerating
     if (regenerate === false) {
       const existing = await pool.query(
         `SELECT * FROM tblicebreaker 
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Fetch sender + receiver with zodiac + country
+    // 🧭 Fetch user data
     const senderData = await pool.query(
       `SELECT u.username, u.quote, u.city, z.zodiac, c.country
        FROM tbluser u
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Interests
+    // 💞 Interests
     const senderInterests = await pool.query(
       `SELECT i.interest 
        FROM tblinterest_user iu
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
       receiverInterestList.includes(i)
     );
 
-    // Avoid repetition
+    // 🚫 Avoid repetition
     const previous = await pool.query(
       `SELECT icebreaker FROM tblicebreaker 
        WHERE sender_id = $1 AND receiver_id = $2 
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
     );
     const recentTexts = previous.rows.map((r) => r.icebreaker).join(" || ");
 
-    // Creative focus
+    // ✨ Creative focus
     const creativeFocusOptions = [
       "their interests",
       "their city or culture",
@@ -110,8 +110,29 @@ export async function POST(req: Request) {
         Math.floor(Math.random() * creativeFocusOptions.length)
       ];
 
-    // AI prompt
-    const prompt = `...`; // same as your existing prompt
+    // 🧠 AI prompt
+    const prompt = `
+You are "SoulSync AI" — a charming, emotionally intelligent assistant helping users start fun and natural conversations.
+
+Generate a short and engaging **icebreaker message** that ${sender.username} could send to ${receiver.username}.
+
+💫 Context:
+- Sender: ${sender.username} from ${sender.city || "Unknown"}, ${sender.country || "Unknown"}
+- Receiver: ${receiver.username} from ${receiver.city || "Unknown"}, ${receiver.country || "Unknown"}
+- Sender Bio: ${sender.quote || "No bio"}
+- Receiver Bio: ${receiver.quote || "No bio"}
+- Sender Zodiac: ${sender.zodiac || "Unknown"}
+- Receiver Zodiac: ${receiver.zodiac || "Unknown"}
+- Shared Interests: ${sharedInterests.length ? sharedInterests.join(", ") : "None"}
+
+🎯 Focus on ${focus}.
+Avoid generic greetings like “Hi” or “Hello.”  
+Keep it under 40 words.  
+Make it sound natural, curious, playful, and personal — like a real message someone might send on a dating app.  
+Avoid repeating these past icebreakers: ${recentTexts || "None"}.
+`;
+
+    console.log("🧊 AI Icebreaker Prompt:\n", prompt);
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const completion = await openai.chat.completions.create({
@@ -127,7 +148,7 @@ export async function POST(req: Request) {
 
     console.log("🧊 New Pro+ Icebreaker:", icebreaker);
 
-    // 💾 Save icebreaker with UTC timestamp
+    // 💾 Save to DB
     const saveResult = await pool.query(
       `INSERT INTO tblicebreaker (sender_id, receiver_id, icebreaker, generated_by, used, created_at)
        VALUES ($1, $2, $3, 'AI', false, $4)
@@ -136,7 +157,7 @@ export async function POST(req: Request) {
     );
     const savedIcebreaker = saveResult.rows[0];
 
-    // 💬 Save in message history with UTC timestamp
+    // 💬 Log in message history
     const msgResult = await pool.query(
       `INSERT INTO tblmessage (sender_id, receiver_id, content, message_type, status, deleted, generated_by, created_at, updated_at)
        VALUES ($1, $2, $3, 'ai_icebreaker', 'sent', false, 'ai', $4, $4)
@@ -145,7 +166,7 @@ export async function POST(req: Request) {
     );
     const message = msgResult.rows[0];
 
-    // 📡 Emit to socket
+    // 📡 Emit via socket
     try {
       await fetch("https://soulsync-socket-server.onrender.com/emit", {
         method: "POST",
@@ -168,7 +189,7 @@ export async function POST(req: Request) {
       from_cache: false,
       message,
       savedIcebreaker,
-      created_at_utc: nowUtc, // ✅ send UTC to client
+      created_at_utc: nowUtc,
     });
   } catch (error: any) {
     console.error("❌ Error generating icebreaker:", error);
