@@ -49,6 +49,39 @@ export default function IslandPickerPage() {
   const [saving, setSaving] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+
+
+
+
+
+
+
+
+    // BACKGROUND COLOR
+    const [bgClass, setBgClass] = useState(
+      "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200"
+    );
+  
+    useEffect(() => {
+      const userId = localStorage.getItem("user_id");
+      if (!userId) return;
+  
+      fetch(`/api/user/background?user_id=${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.background_classes) {
+            setBgClass(data.background_classes);
+          }
+        })
+        .catch(err => console.error("Failed to fetch user background:", err));
+    }, []);
+
+    
+
+
+
+
+
   const t = useTranslations("IslandPicker");
 
   // Currency symbols per locale
@@ -147,7 +180,8 @@ const handleChooseIsland = async () => {
 
   return (
     <AuthGuard>
-    <main className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100 flex flex-col">
+<main className={`relative min-h-screen ${bgClass} text-gray-100 flex flex-col transition-all duration-500`}>
+
       {/* Header */}
       <div className="sticky top-0 bg-gray-900/80 backdrop-blur-md z-20 px-4 py-4 border-b border-white/10 flex items-center">
         <button

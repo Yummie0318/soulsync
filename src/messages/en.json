@@ -15,6 +15,7 @@
     "choose": "Choose your language",
     "continue": "Continue"
   },
+  
   "Login": {
     "welcomeBack": "Welcome Back!",
     "signingIn": "Sign in to continue your journey",
@@ -62,6 +63,7 @@
   "cta": "Sign Up",
   "footerPrompt": "Ready to find your perfect match?"
 },
+
 "SignUp": {
   "title": "Join SoulSync AI",
   "subtitle": "Create your account to access your personalized island experience",
@@ -77,6 +79,8 @@
   "orContinueWith": "OR CONTINUE WITH",
   "alreadyHaveAccount": "Already have an account?",
   "signIn": "Sign in",
+  "pleaseEnterOtp": "Please enter OTP",
+
 
   "fillAllFields": "Please fill in all fields.",
   "passwordMismatch": "Passwords do not match!",
@@ -270,7 +274,7 @@
   "analysisText": "Advanced AI analyzes your responses to understand your unique personality traits and preferences.",
   "matches": "Compatible Matches",
   "matchesText": "Find people who truly complement your personality, values, and lifestyle choices.",
-  "duration": "1-2 minutes • 4 questions minimum",
+  "duration": "1-2 minutes • 10 questions minimum",
   "button": "Start AI Assessment"
 }
 }
