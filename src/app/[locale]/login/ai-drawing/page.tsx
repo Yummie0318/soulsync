@@ -19,7 +19,7 @@ export default function AiDrawingPage() {
   const { locale } = useParams() as { locale: string };
   const t = useTranslations("AiDrawing");
 
-  // Progress + redirect
+  // Progress + redirect test
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((prev) => {
@@ -51,14 +51,14 @@ export default function AiDrawingPage() {
     ctxRef.current = ctx;
   }, []);
 
-  // Update stroke color
+  // Update stroke color / eraser
   useEffect(() => {
     if (ctxRef.current) {
       ctxRef.current.strokeStyle = isEraser ? "#f3f4f6" : color; // light gray as eraser
     }
   }, [color, isEraser]);
 
-  // Drawing handlers
+  // Get pointer position
   const getPos = (e: React.MouseEvent | React.TouchEvent) => {
     const rect = canvasRef.current!.getBoundingClientRect();
     if ("touches" in e) {
@@ -74,16 +74,20 @@ export default function AiDrawingPage() {
     }
   };
 
+  // Start drawing
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
     drawing.current = true;
     lastPoint.current = getPos(e);
-    if (ctxRef.current) {
+    if (ctxRef.current && lastPoint.current) {
       ctxRef.current.beginPath();
       ctxRef.current.moveTo(lastPoint.current.x, lastPoint.current.y);
     }
   };
 
+  // Draw line
   const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
     if (!drawing.current || !ctxRef.current) return;
     const pos = getPos(e);
 
@@ -99,11 +103,14 @@ export default function AiDrawingPage() {
     }
   };
 
-  const endDrawing = () => {
+  // Stop drawing
+  const endDrawing = (e?: React.MouseEvent | React.TouchEvent) => {
+    e?.preventDefault();
     drawing.current = false;
     lastPoint.current = null;
   };
 
+  // Clear canvas
   const clearCanvas = () => {
     if (ctxRef.current && canvasRef.current) {
       ctxRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
@@ -141,10 +148,10 @@ export default function AiDrawingPage() {
         </div>
 
         {/* Drawing Area */}
-        <div className="mt-6 mx-auto w-72 h-72 bg-gray-100 rounded-2xl shadow-lg border-4 border-pink-400/50 relative">
+        <div className="mt-6 mx-auto w-72 h-72 bg-gray-100 rounded-2xl shadow-lg border-4 border-pink-400/50 relative overflow-hidden">
           <canvas
             ref={canvasRef}
-            className="w-full h-full rounded-2xl cursor-crosshair"
+            className="w-full h-full rounded-2xl cursor-crosshair touch-none select-none"
             onMouseDown={startDrawing}
             onMouseUp={endDrawing}
             onMouseMove={draw}
